@@ -5,12 +5,13 @@
 .idea/
 .mypy_cache/
 .~lock.*
+*.swp
 
 # Environment
 .venv/
 venv/
-env/
 .env/
+env/
 
 # Python
 *.pyc
