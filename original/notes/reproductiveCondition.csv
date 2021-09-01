@@ -1,0 +1,1228 @@
+value,count
+NULL,19822319
+,2542900
+NotDetermined,542473
+flowers,311133
+flowering,180938
+Flower,142904
+flowers and fruits,70562
+fruiting,60447
+Fertile,59681
+fruits,59293
+fertile,58749
+flowering=early,52121
+flowering + fruiting=mid,46613
+Flr,42563
+Fruit,39528
+Flr & Frt,31842
+vegetative,31282
+Flowering,27692
+flower,25699
+flowering/fruiting,25456
+fl,25212
+flowering and fruiting,16740
+fr,16704
+Frt,12958
+fruit,12731
+sterile/vegetative,12311
+Flower: Y Fruit: N Vegetation: Y Bud: N,12138
+fl-fr,11891
+flowering + fruting=mid,9357
+flowers & fruit,9233
+Flower: N Fruit: N Vegetation: Y Bud: N,9026
+fruiting=late,8847
+Flower | Fruit,8811
+Flower: N Fruit: Y Vegetation: Y Bud: N,8203
+sterile,7892
+FlowerAndFruit,7873
+"fl,fr",7211
+Fl,6879
+flower & fruit,6851
+fruting=late,6349
+Unknown,5464
+flower and fruit,4934
+Veg,4688
+uncertain,4615
+flo,4493
+veg,4156
+Bud,4007
+fruit and flower,3933
+Flower and fruit,3833
+Flowers,3131
+buds,3127
+Flower and Fruit,2837
+Immature Fruit,2822
+Fruiting,2733
+Flower | Immature Fruit,2485
+Flowering & Fruiting,2342
+Fr,2168
+flower buds,2120
+Bud | Flower,2008
+flowers & leaves,1934
+Flower: Y Fruit: Y Vegetation: Y Bud: N,1791
+Sterile,1602
+Vegetative,1551
+F/F,1256
+immature fruit,1236
+Flower | Bud,1213
+Flower: N Fruit: N Vegetation: Y Bud: Y,1166
+Flower: N Fruit: Y Vegetation: Y Bud: Y,1133
+flrs,1130
+flowering or fruiting,1034
+fl buds,972
+fru,908
+fl. & fr.,862
+flowering and immature fruit,839
+Flowering or fruiting,768
+fruit & leaves,759
+"Flower, Fruit",748
+fruiting-developing,739
+reproductive,736
+Flower | Fertile,659
+mature,603
+Flowers.,568
+remnants,530
+Bud | Flower | Fruit,528
+FL,496
+Phenology: Flowering and Fruiting.,460
+Vegetation: Y Bud: N,435
+Bud | Immature Fruit,432
+"flowers, fruit & leaves",427
+flower/fruit,421
+in bloom,417
+flowering-immature,396
+Flowering and fruiting,392
+"Flowering, Fruiting",389
+Flo,384
+fruit & seed,379
+Fruits,367
+flower or fruit,353
+Flowering and Fruiting,340
+Fertile | Flower,330
+Bud | Fruit,324
+f/f,320
+"fl, fr",320
+flowering-mature,320
+leaves,314
+Fruit | Flower,313
+flw,309
+No Data,294
+"flower, fruit & seed",282
+fruiting-ripe,261
+"flower, vegetation",255
+cones,254
+"Bud, Flower",252
+Immature Fruit | Fruit,234
+"Flower, fruit",233
+ff,216
+Fertile | Fruit,215
+Flr/Frt,213
+Flowers and Fruits,208
+Flowering; Fruiting,205
+Flowering and/or Fruiting,201
+budding,200
+flowers and fruit,199
+ft,198
+Bud | Flower | Immature Fruit | Fruit,195
+FL.,194
+flowers & fruits,191
+Flower or Fruit,187
+winter / dormant condition,183
+fruiting-old persisting,182
+seed,168
+Flower: Y Fruit: N Vegetation: Y Bud: Y,167
+S,166
+v,160
+flowering-old persisting,157
+flowers & leaf,151
+Fruit and Flower,148
+unknown,147
+in fruit,145
+Flower | Flower,141
+FL/FR,136
+FR,131
+frts,127
+"Flowers, fruit",125
+Flower & Fruit,124
+Bud | Flower | Immature Fruit,123
+"Fruit, flower",120
+Flower: Y Fruit: N Vegetation: N Bud: N,115
+juvenile,110
+Flowers and fruits,109
+fruit & stems,109
+"flower, fruit",106
+flower & leaves,104
+Flowers and fruit.,104
+bud,101
+stems,101
+Ft,100
+Flower 100%,99
+"v,fl,fr",98
+Reproductive,95
+Fertile | Bud,94
+Flower: N Fruit: Y Vegetation: N Bud: N,93
+leaf,88
+Flowers Present,86
+fruit bearing,86
+Full bloom.,86
+Flower: N Fruit: N Vegetation: N Bud: N,85
+Flowering/Fruiting,85
+"v,fl",85
+st,83
+Flowers and fruit,82
+Flowering.,81
+not flowering,79
+spores,79
+Flower.,76
+"flowering, fruiting",76
+??,74
+Acorns,73
+Flowering to fruiting,71
+frt,67
+capsules,65
+"in bloom, fruit bearing",64
+Flrs,62
+fruit & leaf,61
+Fruit.,61
+Flower | Immature Fruit | Fruit,60
+Flr & Bulblet,60
+seeds,59
+Bud | Fertile,58
+Flowering and Fruiting.,58
+flowering; fruiting,56
+Fruit | Immature Fruit,51
+Fruit | Bud,49
+in bloom and fruit,47
+Flower & fruit,46
+Flower/Fruit,46
+Immature Fruit | Flower,46
+bulbils,44
+In flower,44
+Frt & Flr,43
+flower buds and fruit,42
+Flowering & fruiting,41
+Fruit 100%,41
+Phenology: Flowering.,41
+"flrs, frts",38
+Fruit-bearing,37
+stem,36
+"v, fl",36
+vegetation,35
+"Flower 75%, Fruit 25%",33
+flowering & fruiting,33
+flowers and fru,33
+FR.,33
+fruit-bearing,33
+in bud,33
+"flower, fruit, seed",32
+yfr,32
+fruiting/flowering,31
+"In bloom, fruit-bearing",31
+fl.,30
+flo & fruit,30
+flower & stems,30
+"Fl, Fr",29
+Flower | Bud | Fertile,29
+"flower, leaves & stems",29
+Buds,28
+"Flower 75%, Bud 25%",28
+Flower/fruit,28
+"Flower 50%, Bud 50%",27
+Flr.,27
+"Bud, Flower, Fruit",26
+Fertile | Immature Fruit,26
+fl & ft.,26
+"Flowers, fruit.",26
+flr,26
+Fruit | Fertile,26
+pods,26
+Flower: Y Fruit: N Vegetation: N Bud: Y,25
+Shattering,25
+V.,25
+Flower or fruit,24
+Fertile | Flower | Fruit,23
+flower & bud,23
+Flower |,23
+"in bloom, fruit-bearing",23
+"fl, ft",22
+Dispersal,21
+Fertile |,21
+flower & seeds,21
+Flowering &/or fruiting,21
+flowers & stems,21
+Fruiting.,21
+Grass,21
+Flower | Bud | Immature Fruit,20
+Flower: N Fruit: N Vegetation: N Bud: Y,20
+Fruit or Flower,20
+"v,fr",20
+Bud | Immature Fruit | Fruit,19
+Frutos,19
+"Flower 25%, Bud 75%",18
+"Flower 50%, Fruit 50%",18
+image,18
+Past flowering,18
+Bud and Flower,17
+f,17
+Flores,17
+Flower | Bud | Fruit,17
+Flower and fruiting,17
+Flower: Y Vegetation: Y,17
+"flowers, fruit & leaf",17
+Flr and Frt,17
+Immature fruit,17
+Immature Fruit | Bud,17
+senescent,17
+Flower: Y Fruit: Y Vegetation: N Bud: N,16
+Flowering and with fruit.,16
+"flowers, fruit",16
+Sterile.,16
+Bud to Flowering,15
+fl & fr,15
+Flower | Immature Fruit | Bud,15
+"Flowering, fruiting",15
+flowers & pads,15
+"flowers, fruit, leaves & stems",15
+in young fruit,15
+vg,15
+Flower and fruit.,14
+"Flower, Bud",14
+Bud | Flower | Fertile,13
+buds & leaves,13
+Flower | Fertile | Bud,13
+Flower 75%,13
+flower and/or fruit,13
+fruit (immature) & leaves,13
+Fruiting and flowering,13
+Fruits.,13
+In bloom,13
+bud & flower,12
+Budding,12
+Flower: N Fruit: Y Vegetation: N Bud: Y,12
+Flower: Y Fruit: Y Vegetation: Y Bud: Y,12
+Frt.,12
+Fruit | Bud | Fertile,12
+Fruiting & shattering,12
+"Fruiting, Flowering",12
+ft.,12
+LEAF,12
+leaves & stem,12
+budding (flower),11
+Flower | Fertile | Fruit,11
+Flower | Fruit | Bud,11
+"Flower 25%, Fruit 75%",11
+"flowers, leaves & stems",11
+"flowers, leaves, roots & stems",11
+"fr,fl",11
+Fruit: Y Vegetation: Y,11
+Veg.,11
+Bud to flower,10
+flower & stem,10
+Flowering/fruiting,10
+flowers and/or fruit,10
+"flowers, fruit, leaves, roots & stems",10
+fruit and seed,10
+"Fruit, disarticulating",10
+Mature fruit,10
+Phenology: Flowering,10
+Phenology: Fruiting.,10
+Buds only,9
+Bulblets & Flr,9
+"fl, fr.",9
+Flower & early fruit,9
+flowers & stem,9
+leaves & stems,9
+"vegetation, fruit",9
+flower (immature),8
+"Flower 33%, Bud 66%",8
+Flower buds,8
+Flowering + Fruiting,8
+Flowering to fruit,8
+flowers & unripe fruit,8
+Flr &Frt,8
+"fr, fl",8
+fr?,8
+fruit & seeds,8
+fruit & spines,8
+fruiting/dispersing,8
+seedling,8
+Seeds,8
+steril,8
+Vegetation: Y,8
+bark & leaves,7
+Flower and/or Fruit,7
+"flowers, fruits",7
+Flw,7
+flw-fr,7
+Fruit |,7
+fruits & seeds,7
+"fruits, flowers",7
+immature fruits,7
+non-reproductive,7
+old infl,7
+pod,7
+buds & leaf,6
+Bulblet,6
+Early fruit,6
+fl/ft,6
+flower buds and immature fruit,6
+flower fruit,6
+Flower: Y Fruit: N Vegetation: Y,6
+flowers & spine,6
+Flr/ Frt,6
+"flrs, buds",6
+frs,6
+fruit & stem,6
+"Fruit, Flower",6
+Fruiting & Flowering,6
+In bud,6
+infertile,6
+leaf & stem,6
+post flowering,6
+post-Frt,6
+Shattered,6
+STEM,6
+Tuberculo,6
+W,6
+yes,6
+Bud |,5
+Bud | Flower | Immature Fruit | Flower,5
+bulblets,5
+Esteril,5
+"fl,ft",5
+fl?,5
+flower & fruit & seed,5
+"Flowering, seeds",5
+Flowers yellow,5
+frls,5
+Fruit | Flower | Bud,5
+Fruit | Fruit,5
+Fruit and Flowers,5
+Fruit Present,5
+fruits & leaves,5
+imm. fruit,5
+Immature flowering,5
+in seed,5
+seed pod,5
+Yellow flowers,5
+0,4
+*,4
+Bud | Fertile | Flower,4
+Bud 100%,4
+"bud, flower",4
+Buds and Flowers,4
+Bulblets,4
+Developing fruit,4
+"fl ,fr",4
+"Fl, fr",4
+"fl, yfr",4
+fl*,4
+flower & capsules,4
+flower & fruits,4
+Flower | Fruit | Bud | Fertile,4
+Flower | Fruit | Immature Fruit,4
+Flower 50%,4
+"flower, vegetation, fruit",4
+Flower: N Fruit: Y Vegetation: Y,4
+Flower: Y Fruit: Y Vegetation: N Bud: Y,4
+Flower: Y Fruit: Y Vegetation: Y,4
+FLowering & Fruiting,4
+Flowering to Fruiting,4
+Flowering with fruit.,4
+flowers (spent),4
+Flowers and seed.,4
+Flowers purple,4
+fr & fl,4
+fruit and Flower,4
+Fruiting to shattering,4
+"heads, roots & stems",4
+Herb,4
+In Flower,4
+In fruit,4
+infl,4
+male strobili,4
+old flowers,4
+pads,4
+Post dispersal,4
+Remnants,4
+spore,4
+Vegetation: N Bud: N,4
+vegetative - lower culm,4
+yfl,4
+1,3
+[Frt],3
+[inflorescence present - bhc 2014],3
+bud & pads,3
+Bud to fruit,3
+"Bud, Fruit",3
+"buds, flowers & leaves",3
+early frts,3
+F - 1,3
+fern & leaves,3
+Fertile flowers.,3
+"Fertile, Fruit",3
+fkrs,3
+fl & ft,3
+"FL, FR",3
+fleurs,3
+flower & Fruit,3
+Flower | Fruit | Fertile,3
+Flower | Immature Fruit | Fertile,3
+"Flower 25%, Bud 25%, Fruit 50%",3
+Flower and Fruit.,3
+"Flower, Fruit, Bud",3
+Flower/developing fruit,3
+Flowerin,3
+flowering + fruiting,3
+Flowering and fruiting.,3
+Flowering or Fruiting,3
+FLowers,3
+Flowers & fruit,3
+flowers & fruit (Immature),3
+Flowers & fruits.,3
+flowers & immature fruit,3
+flowers & seeds,3
+Flowers and Fruit,3
+Flowers and Fruit present,3
+flowers and fruit.,3
+Flowers Present; Fruit Present,3
+"flowers, buds",3
+"Flowers, Fruit",3
+"Flowers, fruits.",3
+flowers; fruit,3
+Flr & frt,3
+flr./frt.,3
+Fores,3
+fr.,3
+fr*,3
+Fru,3
+Fruit | Flower | Fertile,3
+Fruit | Immature Fruit | Bud,3
+Fruit | Immature Fruit | Flower,3
+Fruit and flower,3
+Fruit and post-dispersal,3
+Fruit deciduous,3
+Fruit dispersal,3
+"fruit, leaves & seeds",3
+"fruit, leaves & stems",3
+fruits and flowers,3
+Fruits dispersed,3
+"fruits, seeds",3
+"ft,fl",3
+"imm fl, ft",3
+Immature flowers,3
+immature flowers,3
+Immature Fruit | Flower | Fertile,3
+in bud and flower,3
+"leaf, bulbils",3
+Mature,3
+ofl,3
+old fruit,3
+Past fruiting,3
+rep,3
+S/FL,3
+seeds?,3
+Steril,3
+Sterlie,3
+V,3
+"v, fl, fr",3
+"vegetative, flower",3
+young fruit,3
+60,2
+Acorn,2
+acorns,2
+anthesis,2
+blooming,2
+Blue flowers,2
+Bud | Flower | Flower,2
+bud and flowers,2
+Bud to flowering,2
+"bud, flower & fruit",2
+"Bud, Flower, and Fruit",2
+Budding;Flowering,2
+buds & young flowers,2
+Buds to fruits,2
+bulbil,2
+"bulbils, leaf",2
+capsules & seeds,2
+Early flowering,2
+early flwr bud,2
+early fruiting,2
+erect herbaceous perennial,2
+F,2
+Fertile | Flower | Immature Fruit,2
+fertiler,2
+florets,2
+Flowe,2
+flower (male - anthers dry & empty),2
+flower & early fruit,2
+flower & joints,2
+"Flower 20%, Bud 40%, Fruit 40%",2
+"Flower 75%, Fruit and Bud 25%",2
+flower and seeds,2
+flower buds & flowers,2
+Flower to fruit,2
+"Flower, Flower",2
+"flower, fruit & seeds",2
+"flower, fruit, leaves & stems",2
+"flower, fruits & seed",2
+flower; fruit,2
+Flower: Y Vegetation: Y Bud: N,2
+Flower/ Fruit,2
+Flowering & fruit,2
+flowering & Fruiting,2
+Flowering & Fruting,2
+Flowering and flower buds,2
+Flowering and fruit,2
+Flowering and in fruit,2
+Flowering and/or Fruiting`,2
+Flowering Fruiting,2
+Flowering In bud,2
+Flowering or friuting,2
+"Flowering, Female and Male",2
+"Flowering, Fruiting, Dispersing",2
+flowering.,2
+Flowerings,2
+flowers (faded) & fruit,2
+flowers (immature),2
+flowers & fruit & seed,2
+Flowers & fruits,2
+flowers & fruits (immature),2
+flowers & staminate,2
+Flowers and immature fruits,2
+Flowers white,2
+"flowers,  fruit & stems",2
+"flowers, fruit & seed",2
+"flowers, fruit & stems",2
+"Flowers, fruits",2
+"flowers, fruits & leaves",2
+"Flowers, immature fruits",2
+"flowers, seed & fruit",2
+"flowers, seeds & fruit",2
+FLr,2
+Flr & Flr,2
+FLr & Frt,2
+Flr & Ft,2
+Flr + Frt,2
+Flr 7 Frt,2
+Flr NL,2
+flr/frt,2
+FlrNL,2
+"flrs, early frts",2
+FLW,2
+FR/S,2
+Frt & Frt,2
+fruit - immature,2
+fruit (sterile),2
+Fruit | Bud | Immature Fruit,2
+"Fruit 50%, Flower 50%",2
+Fruit and dispersal,2
+Fruit and flowers.,2
+fruit or flower,2
+fruit or seed,2
+fruit pods,2
+fruit-bearing and flowers,2
+fruiting (immature),2
+Fruiting and flowering.,2
+Fruiting capsules.,2
+"fruiting, flowering",2
+fruiting; flowering,2
+fruits & leaf,2
+Fruits & Seeds,2
+Frut,2
+ft & fl,2
+"ft, fl",2
+images,2
+Immature Fruit |,2
+Immature Fruit | Bud | Flower,2
+Immature Fruit | Fertile,2
+immature fruit and in bud,2
+Immature fruits,2
+In flower and early fruit.,2
+In flower and fruit,2
+in flower and fruit,2
+In flower and fruit.,2
+Inflorescence not yet formed,2
+Just beginning to bloom.,2
+Late flower & fruit,2
+Leaf,2
+Leaves and flowers,2
+lvs,2
+mature fruit,2
+Not quite flowering,2
+old fruits,2
+Pads,2
+past fruiting,2
+phenology,2
+photos,2
+plant,2
+Post fruit,2
+Post fruiting,2
+Post-frt,2
+Pre-anthesis,2
+pre-anthesis,2
+r,2
+Seed,2
+seed pods,2
+Seed?,2
+seeding,2
+Seedling,2
+Seeds.,2
+some fruits,2
+Specimen vegetative,2
+spines,2
+Stem and leaves,2
+Stems.,2
+unkown,2
+veeg,2
+Vegetation,2
+"vegetative, flower, fruit",2
+"vegetative, fruit",2
+vegetative: no flowers or flower buds,2
+Vegetative.,2
+Vegitative,2
+W/FR,2
+White flowers,2
+With fruit.,2
+yellow flowers,2
+"Yellow flowers, fruits",2
+Young fruit,2
+109,1
+1979,1
+1984,1
+2105,1
+181926,1
+?,1
+?Second flowering?,1
+.,1
+[in flower - bhc 2012],1
+[Inflorescence present - bhc 27 June 2012],1
+`,1
+"75% Flowering, 25% Fruit and Buds",1
+A Flower,1
+about to flower,1
+Abundant fruit,1
+Almost flowering,1
+almost flowering,1
+ant,1
+Anthesis,1
+ASU,1
+barely anthesis,1
+bark,1
+"bark, flowers & leaves",1
+"bark, flowers & stems",1
+"bark, fruit & leaves",1
+berries,1
+big frts,1
+blrs,1
+Bolting,1
+Botones florales,1
+bracts,1
+branch,1
+breaking bud,1
+Bubils,1
+Bud & flower,1
+Bud | Flower | Immature Fruit | Immature Fruit,1
+Bud | Fruit | Flower,1
+Bud | Fruit | Immature Fruit,1
+bud to flower,1
+bud to fruit,1
+Bud to lowering,1
+"Bud, Flower, Flower",1
+"Bud, Flowering",1
+"bud, fr",1
+Budding to Fruiting,1
+"Budding, flowering, fruiting",1
+Buddung,1
+buds & flowers,1
+buds & flowers & leaves,1
+buds & fruit,1
+buds & stems,1
+Buds and Flower,1
+Buds and fruit,1
+Buds and fruiting,1
+"buds, flowers",1
+"buds, flrs",1
+"buds, flrs, frts (no leaf)",1
+"buds, frts",1
+buds?,1
+Buds.,1
+bulb & flower,1
+bulbils present,1
+but to early flower,1
+capsules & umbel,1
+Clump grass.,1
+Cones,1
+Cones present,1
+Corolla bright white,1
+"Corolla mostly white or very pale purple, equipped with tiny dark purple spots; tall, robust plants, some to over 1 m high, with strongly pungent foliage",1
+DAC,1
+dl,1
+dormant,1
+early,1
+Early bloom.,1
+Early flower,1
+early flower,1
+Early fruiting,1
+"early fruits, bracts",1
+"early fruits, old flowers",1
+Erect fruits,1
+"erect, herbaceous",1
+"erect, herbacious",1
+erect. hebacious perennial,1
+f;,1
+f;p,1
+F`,1
+f`,1
+fe,1
+Fertile | Bud | Flower,1
+Fertile | Flower | Bud,1
+Fertile | Fruit | Bud,1
+Fertile flower & stems,1
+"Fertile flowers, fruit & stems",1
+Fertile specimen,1
+few flrs,1
+fFruiting,1
+Fk,1
+fk,1
+fkmfr,1
+Fkowers,1
+fL,1
+FL - 1,1
+fl & frt,1
+fl bud,1
+"fl buds, fr",1
+fl fr,1
+fl ft,1
+fl-r,1
+"FL, LEAF",1
+"fl, yft",1
+"fl,yfr",1
+fl; fr,1
+fl; ft,1
+fl;ft,1
+"fl., fr.",1
+FL/S,1
+fl&ft,1
+Fllowers,1
+Flor amarilla,1
+Flores azules.,1
+Flores y frutos,1
+Flores y frutos.,1
+Flores/Frutos,1
+Florets brownish-purple,1
+Florida,1
+flow,1
+Floweing,1
+floweing,1
+FLOWER,1
+FLower,1
+Flower  and stems,1
+flower - immature,1
+flower - just emerging,1
+flower - not yet open,1
+flower (albino form),1
+Flower (immature),1
+Flower (male),1
+flower (old),1
+flower & fruit & bulbil,1
+flower & fruit and seeds,1
+"flower & fruit, and seed",1
+flower & green fruit,1
+flower & immature fruit,1
+flower & leaf,1
+flower & leave,1
+flower & pod,1
+flower & rhizomes,1
+flower & seds,1
+flower & seed,1
+flower & seed pod,1
+flower + fruit,1
+Flower <25%,1
+"Flower <25%, Bud <25%, Fruit >75%",1
+"Flower <25%, Bud >75%",1
+"Flower <25%, Bud<25%, Fruit >50%",1
+"Flower <25%, Fruit >75%",1
+Flower | Bud | Fertile | Fruit,1
+Flower | Bud | Flower,1
+Flower | Immature Fruit | Flower,1
+"Flower 15%, Bud 30%, Fruit 55%",1
+"Flower 20%, Bud 80%",1
+"Flower 25%, Bud 50%, Fruit 25%",1
+"Flower 30%, Bud 15%, Fruit 55%",1
+"Flower 30%, Bud 70%",1
+"Flower 40%, Bud 60%",1
+"Flower 50% , Fruit 50%",1
+"Flower 50%, Bud 25%, Bud 25%",1
+"Flower 50%, Bud 25%, Fruit 25%",1
+"Flower 50%, Bud and Fruit 50%",1
+"Flower 50%, Fruit 25%, Bud 25%",1
+"Flower 66%, Bud 33%",1
+"Flower 75%, bud 25%",1
+"Flower 75%, Fruit 25%`",1
+Flower and Bud,1
+flower and Fruit,1
+Flower and Fruits,1
+flower and immature fruit,1
+flower and old fruit,1
+Flower and/or fruit,1
+Flower bud,1
+flower bud,1
+Flower or fruiting,1
+Flower with seeds,1
+"Flower, beginning fruit",1
+"flower, capsules & seeds",1
+"flower, dehisced fruit",1
+"flower, fruit & stem",1
+"flower, fruit, seeds",1
+"flower, fruits & spines",1
+"flower, immature fruit",1
+"flower, seed & stem",1
+"flower, seeds & debric",1
+"flower, vegetative",1
+Flower; Fruit,1
+Flower: N Vegetation: Y Bud: Y,1
+flower?,1
+flower.,1
+Flower. Immature fruit.,1
+flower/early fruit,1
+Flower/fruit (developing),1
+Flower/fruit.,1
+Flower`,1
+Flowera,1
+flowerin,1
+FLowering,1
+flowering ?,1
+flowering (bud),1
+Flowering (Female plants),1
+Flowering (Female plants0,1
+Flowering (male plants),1
+Flowering [according to label],1
+Flowering [male],1
+Flowering & early Fruiting,1
+Flowering + fruit,1
+Flowering and buds,1
+flowering and early fruiting,1
+Flowering and Fruit,1
+flowering and in fruit,1
+Flowering and seeding,1
+Flowering and with immature fruit.,1
+Flowering of Fruiting,1
+flowering-budding,1
+"Flowering, Budding",1
+"flowering, immature fruit",1
+"Flowering, just beginning to fruit",1
+"Flowering, Male and Female flowers present",1
+"Flowering,fruiting",1
+Flowering;In bud,1
+flowering: mostly open flowers (>1/2 open),1
+flowering/ early fruiting,1
+flowering/early fruiting,1
+Flowering& Fruiting.,1
+Flowering`,1
+floweringa,1
+Floweringto fruiting,1
+Flowerint,1
+Flowerring,1
+flowerrs,1
+flowers - immature,1
+Flowers (buds),1
+flowers (old),1
+flowers (spent) & fruit (immature),1
+"flowers (spent), fruits",1
+flowers (staminate),1
+flowers [catkins],1
+flowers [photos],1
+flowers & bulbs,1
+flowers & frui,1
+flowers & fruit & seeds,1
+flowers & fruit & spines,1
+Flowers & fruit.,1
+flowers & old fruit,1
+flowers & seed,1
+flowers and  fruit,1
+flowers and bulbils,1
+flowers and capsules,1
+Flowers and fruits.,1
+Flowers and sterile fruit.,1
+Flowers are yellow.,1
+flowers both staminate and pistillate s,1
+flowers corolla carmine,1
+Flowers orange,1
+flowers rays lavender,1
+flowers rays purple,1
+flowers yellow,1
+Flowers yellowish-white,1
+"Flowers, Buds",1
+"Flowers, fading",1
+"flowers, fruit & bulbils",1
+"flowers, fruit & joints",1
+"flowers, fruit & leave",1
+"flowers, fruit & stem",1
+"flowers, fruit, leaves & seeds",1
+"flowers, leaves",1
+"flowers, leaves & root",1
+"flowers, seed & stems",1
+"Flowers, seed.",1
+"flowers, seeds",1
+"flowers, sterile",1
+"Flowers, white with yellow tips",1
+flowers.,1
+Flowers/fruit,1
+flowers/seeds,1
+flowerss,1
+Flowre,1
+Flowring & Fruiting,1
+Flowwering,1
+Flr & Bulblets,1
+flr & frt,1
+Flr & Frt(?),1
+Flr & Frt],1
+Flr & NLFrt,1
+Flr & Veg,1
+Flr Flr,1
+Flr/frt,1
+Flr& Frt,1
+FLRS,1
+Flrs.,1
+flruiting,1
+Fls,1
+"flw, fr",1
+"flw, frt",1
+Flwoering,1
+"Flwoering, immature",1
+Flwoers,1
+Flwr and Frt,1
+follicles mature and dehisced on most plants,1
+"FR, FL",1
+"fr,st",1
+frs-fl,1
+Frt and Flr,1
+"frt, bulbils",1
+"frts, buda",1
+"frts, flrs",1
+fruf,1
+Frui,1
+fruit (acorns),1
+fruit (cones),1
+Fruit (immature),1
+fruit (immature),1
+fruit (old),1
+fruit (spent) & leaves,1
+fruit & flowers,1
+fruit & green,1
+Fruit & Seed,1
+fruit & spine,1
+fruit & stamen,1
+Fruit | Bud | Flower,1
+Fruit | Fertile | Flower,1
+Fruit | Flower | Immature Fruit,1
+Fruit and buds,1
+Fruit and flower.,1
+fruit and flowers,1
+Fruit deciduous; buds,1
+Fruit or flower,1
+Fruit red,1
+"fruit, flower",1
+"fruit, flower, vegatiation",1
+"fruit, leaves & seed",1
+"fruit, past prime.",1
+"fruit, seeds & stems",1
+"fruit, vegetation",1
+"fruit, vegetative",1
+Fruit/flower,1
+fruiting (imm. fruit),1
+fruiting (last year's),1
+Fruiting abundantly,1
+Fruiting and dispersin,1
+"Fruiting, Dispersal",1
+"fruiting, seeding",1
+"Fruiting, seeds dropped.",1
+fruiting/late flower,1
+Fruitr,1
+fruits (spent),1
+fruits [photos],1
+Fruits and Flowers,1
+fruits dull,1
+fruits glossy,1
+Frutis,1
+fs,1
+ft;fl,1
+ft/fl,1
+Full bloom with few just beginning to set fruit.,1
+Full Bloom.,1
+Furits,1
+fw,1
+g,1
+germinating seeds,1
+gl,1
+gltd,1
+i,1
+iamge,1
+image of frts,1
+images inf lr,1
+imm. ft,1
+imm. ft.,1
+Immature fruiting,1
+immature seeds,1
+"immature, near anthesis",1
+In bloom and fruit,1
+in bloom; fruit bearing,1
+in bloom?,1
+in bud July 27,1
+In bud.,1
+In flower.,1
+In flower/fruit,1
+in frit,1
+"in fruit June 21, 1958; in flower May 21, 1959",1
+in fruits,1
+in mature fruit,1
+in young leaf,1
+infl past fruiting,1
+inflorescence,1
+JFlr & Frt,1
+jFlr & Frt,1
+Just flowering,1
+just flowering,1
+just Fruiting,1
+Just past full bloom.,1
+L,1
+L:eaf and flowers,1
+last year's infructescence,1
+Last yr. heads,1
+Late (open capsule) fruit,1
+late flower,1
+Late fruit,1
+Late fruiting,1
+LEAF & FL,1
+leaf frags,1
+leaf portion,1
+"LEAF, FL",1
+"Leaf, flowers, leaf & seeds",1
+leaves & seed,1
+Leavesa nd fruit,1
+leavesw,1
+lfrs,1
+LIN,1
+"low, erect, herbaceouss perennial",1
+lowers and fruit,1
+Mid-flower.,1
+Most fruits dispersed,1
+NL,1
+no fruits seen here,1
+Not flowering,1
+old flrs,1
+"old flrs, frts",1
+old frts,1
+"old infl, bulbil",1
+"old infl, bulbils",1
+"old infl, leaf",1
+old infl.,1
+other notes: a few abies concolor here-more above.,1
+Ovaries abortive,1
+Oxf,1
+panicle,1
+Pappus white,1
+past,1
+past anthesis,1
+past fl,1
+past flowering,1
+peduncles,1
+"Perennial, 20cm tall, sticky stems. Common along trail.",1
+Phenology,1
+Phenology: Fruit.,1
+photo only,1
+Pink flowers,1
+"Pink flowers, fruits",1
+pistillate,1
+"Pistillate, fruit",1
+Plant in full flower,1
+Plants mostly in fruit,1
+pod & seed,1
+pod legumes,1
+Post flowering,1
+post-disarticulation inflorescence,1
+Post-Flr,1
+post-frt,1
+Post-fruiting,1
+pr-anthesis,1
+pre-flowering,1
+"pre-leaf, pre-flower",1
+preflowering,1
+Pretty well past blooming at this date,1
+"Rays white, disk yellow",1
+red fruits,1
+Red to pink flowers,1
+remnants and buds,1
+roots,1
+"Roots, stems, heads",1
+"Roots, stems, leaves, flowers, fruit",1
+Rosacea,1
+rosette,1
+RR depot,1
+rt,1
+S (bud),1
+S*,1
+S/FR,1
+S/HS,1
+S/W,1
+Scattered.,1
+seed cap,1
+Seed dispersal,1
+Seed pod,1
+seed testa,1
+Seed.,1
+Seeding,1
+seeds & stems,1
+seeds immature,1
+Shrub,1
+spines & stems,1
+Spores,1
+Stamens,1
+Stems,1
+Stems/roots,1
+Ster,1
+ster,1
+Steriile,1
+sterile fruit,1
+sterile plants,1
+"sterile, infected",1
+sterile; immature,1
+strobili,1
+summer state,1
+Tree,1
+U,1
+ue,1
+unripe fruit,1
+"v, fr",1
+Veg (current year),1
+Veg & Frt,1
+Veg & post-Frt,1
+Veg & post-frt,1
+Vegatative,1
+vegetaive - lower culm,1
+Vegetative - culm,1
+Vegetative - lower culm,1
+vegetative - lower culms,1
+vegetative - lower stem,1
+Vegetative (Roots),1
+Vegetative [with flr. buds],1
+Vegetative and Flower,1
+"vegetative, bud",1
+Vegetatuve,1
+vegitative,1
+vegy,1
+very early fruits,1
+"vetgetative, flower",1
+vg.,1
+vining,1
+W/FL,1
+White Flowers,1
+White/pinkish flowers,1
+"Winter buds, no leaves",1
+winter dormant,1
+With flowers.,1
+with fruit and seeds,1
+With young fruit,1
+yellow,1
+young twigs; tomentose,1
