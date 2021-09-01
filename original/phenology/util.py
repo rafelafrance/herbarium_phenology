@@ -1,6 +1,7 @@
 """Misc. utilities that don't fit in any other module."""
 
 from contextlib import contextmanager
+from shutil import rmtree
 from tempfile import mkdtemp
 
 
