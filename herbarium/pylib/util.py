@@ -13,7 +13,6 @@ class DotDict(dict):
     __delattr__ = dict.__delitem__
 
 
-
 @contextmanager
 def make_temp_dir(where=None, prefix=None, keep=False):
     """Handle creation and deletion of temporary directory."""

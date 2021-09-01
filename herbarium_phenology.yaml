@@ -1,0 +1,32 @@
+gpu:
+  batch:   2
+  workers: 2
+  device:  cuda:0
+
+processes:
+  batch: 10
+  cpus:  6
+
+idigbio:
+  db:       data/idigbio_2021-02.sqlite.db
+  batch:    1000000
+  zip_file: data/iDigBio_snapshot_2021-02.zip
+  csv_files:
+    - occurrent_raw.csv
+
+itis:
+  db: data/ITIS.sqlite
+
+path:
+  sheets_dir: data/herbarium-sheets
+
+models:
+  - faster_rcnn_2021-09-02
+  - faster_rcnn_2021-09-01
+
+col_filters: ["."]
+row_keep: [".@dwc:genus"]
+row_exclude: ["fossilspecimen@dwc:basisOfRecord"]
+
+csv_file: "occurrence_raw.csv"
+table_name: "occurrence_raw"
