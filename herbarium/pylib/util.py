@@ -5,16 +5,9 @@ from shutil import rmtree
 from tempfile import mkdtemp
 
 
-class Struct(dict):
-    """Allow dot.notation access to dictionary items."""
-    __getattr__ = dict.get
-    __setattr__ = dict.__setitem__
-    __delattr__ = dict.__delitem__
-
-
 @contextmanager
 def make_temp_dir(where=None, prefix=None, keep=False):
-    """Handle creation and deletion of temporary directory outside of /tmp."""
+    """Handle creation and deletion of temporary directory in/outside of /tmp."""
     temp_dir = mkdtemp(prefix=prefix, dir=where)
     try:
         yield temp_dir
