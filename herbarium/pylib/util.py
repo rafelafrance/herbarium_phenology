@@ -5,9 +5,8 @@ from shutil import rmtree
 from tempfile import mkdtemp
 
 
-class DotDict(dict):
+class Struct(dict):
     """Allow dot.notation access to dictionary items."""
-
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
@@ -15,10 +14,15 @@ class DotDict(dict):
 
 @contextmanager
 def make_temp_dir(where=None, prefix=None, keep=False):
-    """Handle creation and deletion of temporary directory."""
+    """Handle creation and deletion of temporary directory outside of /tmp."""
     temp_dir = mkdtemp(prefix=prefix, dir=where)
     try:
         yield temp_dir
     finally:
-        if not keep or not where:
+        if not (keep and where):
             rmtree(temp_dir, ignore_errors=True)
+
+
+def collate_fn(batch):
+    """Turn batches into tuples."""
+    return tuple(zip(*batch))
