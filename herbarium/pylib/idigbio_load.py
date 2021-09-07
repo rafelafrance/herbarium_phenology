@@ -12,7 +12,7 @@ import tqdm
 
 # The name of columns in the iDigBio zip file & what they're renamed to in the database
 OCCURRENCE: dict[str, str] = {
-    # original CSV field name -> database column name
+    # old CSV field name -> database column name
     "coreid": "coreid",
     "dwc:basisOfRecord": "basisOfRecord",
     "dwc:order": "order_",
@@ -31,7 +31,7 @@ OCCURRENCE: dict[str, str] = {
 
 # The name of columns in the iDigBio zip file & what they're renamed to in the database
 OCCURRENCE_RAW: dict[str, str] = {
-    # original CSV field name -> database column name
+    # old CSV field name -> database column name
     "coreid": "coreid",
     "dwc:reproductiveCondition": "reproductiveCondition",
     "dwc:occurrenceRemarks": "occurrenceRemarks",
@@ -41,7 +41,7 @@ OCCURRENCE_RAW: dict[str, str] = {
 
 # The name of columns in the iDigBio zip file & what they're renamed to in the database
 MULTIMEDIA: dict[str, str] = {
-    # original CSV field name -> database column name
+    # old CSV field name -> database column name
     "coreid": "coreid",
     "ac:accessURI": "accessURI",
 }
