@@ -20,8 +20,8 @@ class Config:
         self.module = module if module else Path(sys.argv[0]).stem
 
     @staticmethod
-    def read_file(path):
-        """Read data from config file."""
+    def read_file(path: Path):
+        """Read all configurations from the given config file path."""
         configs = ConfigParser(interpolation=ExtendedInterpolation())
 
         with open(path) as cfg_file:
@@ -30,7 +30,7 @@ class Config:
         return configs
 
     def module_defaults(self):
-        """Get argument module_defaults."""
+        """Get module_default arguments."""
         return SimpleNamespace(**self.configs[self.module])
 
     def default_list(self, key, section=''):

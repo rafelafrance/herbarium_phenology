@@ -2,11 +2,11 @@
 
 import logging
 import sys
-from os.path import basename, splitext
+from pathlib import Path
 
 
 def setup_logger() -> None:
-    """Setup the logger."""
+    """Setup a logger."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s: %(message)s",
@@ -16,7 +16,7 @@ def setup_logger() -> None:
 
 def module_name() -> str:
     """Get the current module name."""
-    return splitext(basename(sys.argv[0]))[0]
+    return Path(sys.argv[0]).stem
 
 
 def started() -> None:
