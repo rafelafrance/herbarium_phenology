@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 """Load iDibBio data relevant to this project."""
-
 import argparse
 import textwrap
 from pathlib import Path
 
-import pylib.idigbio_load as idigbio_load
+from pylib import idigbio_load
 from pylib import log
-from pylib.config import Config
 
 
 def main(args):
@@ -30,33 +28,31 @@ def parse_args():
 
         The files in the iDigBio snapshot are too big to work with easily on a laptop.
         So, we extract CSV files from it and create a database from those CSV."""
+
     arg_parser = argparse.ArgumentParser(
         description=textwrap.dedent(description), fromfile_prefix_chars="@"
     )
 
-    configs = Config()
-    defaults = configs.module_defaults()
-
     arg_parser.add_argument(
         "--database",
-        default=defaults.idigbio_db,
         metavar="PATH",
         type=Path,
-        help="""Path to the output SQLite3 database. (default: %(default)s)""",
+        required=True,
+        help="""Path to the output SQLite3 database.""",
     )
 
     arg_parser.add_argument(
         "--zip-file",
-        default=defaults.idigbio_zip_file,
         metavar="PATH",
         type=Path,
-        help="""The zip file containing the iDigBio snapshot. (default: %(default)s)""",
+        required=True,
+        help="""The zip file containing the iDigBio snapshot.""",
     )
 
     arg_parser.add_argument(
         "--chunk-size",
         type=int,
-        default=defaults.idigbio_chunk,
+        default=1_000_000,
         metavar="N",
         help="""The number of lines read from the CSV file at a time.
             (default: %(default)s)""",
