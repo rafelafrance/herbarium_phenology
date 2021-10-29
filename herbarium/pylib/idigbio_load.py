@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-"""Load iDibBio data relevant to this project."""
+"""Load iDigbBio data relevant to this project."""
 import logging
 import sqlite3
 import zipfile
@@ -7,27 +6,22 @@ from pathlib import Path
 from typing import IO
 
 import pandas as pd
-import tqdm
+from tqdm import tqdm
 
 # The name of columns in the iDigBio zip file that we want
-OCCURRENCE: list[
-    str
-] = """
-    coreid dwc:basisOfRecord dwc:order dwc:family dwc:genus dwc:specificEpithet
-    dwc:scientificName dwc:eventDate dwc:continent dwc:country dwc:stateProvince
-    dwc:county dwc:locality idigbio:geoPoint
+OCCURRENCE = """ coreid dwc:basisOfRecord dwc:kingdom dwc:phylum dwc:class
+    dwc:order dwc:family dwc:genus dwc:specificEpithet dwc:scientificName
+    dwc:eventDate dwc:continent dwc:country dwc:stateProvince dwc:county dwc:locality
+    idigbio:geoPoint
     """.split()
 
 # The name of columns we want in the iDigBio zip file
-OCCURRENCE_RAW: list[
-    str
-] = """
-    coreid dwc:reproductiveCondition dwc:occurrenceRemarks dwc:dynamicProperties
-    dwc:fieldNotes
+OCCURRENCE_RAW = """ coreid dwc:reproductiveCondition dwc:occurrenceRemarks
+    dwc:dynamicProperties dwc:fieldNotes
     """.split()
 
 # The name of columns we want in the iDigBio zip file
-MULTIMEDIA: list[str] = """ coreid ac:accessURI """.split()
+MULTIMEDIA = """ coreid ac:accessURI """.split()
 
 
 def load_idigbio_data(db: Path, zip_file: Path, chunk_size: int) -> None:
@@ -40,7 +34,6 @@ def load_idigbio_data(db: Path, zip_file: Path, chunk_size: int) -> None:
 def load_multimedia(db: Path, zip_file: Path, chunk_size: int) -> set[str]:
     """Load the multimedia.csv file into the sqlite3 database."""
     table = "multimedia"
-    renames = {c: c.split(":")[-1] for c in MULTIMEDIA}
 
     logging.info(f"Loading {table}")
 
@@ -53,9 +46,7 @@ def load_multimedia(db: Path, zip_file: Path, chunk_size: int) -> set[str]:
 
                 if_exists = "replace"
 
-                for df in tqdm.tqdm(reader):
-                    df = df.rename(columns=renames)
-
+                for df in tqdm(reader):
                     coreid |= set(df.index.tolist())
 
                     df.to_sql(table, cxn, if_exists=if_exists)
@@ -74,8 +65,6 @@ def load_csv(
     """Load an occurrence*.csv file into the sqlite3 database."""
     logging.info(f"Loading {table}")
 
-    renames = {c: c.split(":")[-1] for c in MULTIMEDIA}
-
     with sqlite3.connect(db) as cxn:
         with zipfile.ZipFile(zip_file) as zippy:
             with zippy.open(f"{table}.csv") as in_csv:
@@ -83,18 +72,8 @@ def load_csv(
 
                 if_exists = "replace"
 
-                for df in tqdm.tqdm(reader):
-                    df = df.rename(columns=renames)
-
+                for df in tqdm(reader):
                     df = df.loc[df.index.isin(coreid)]
-
-                    # We don't want fossils
-                    if "basisOfRecord" in df.columns:
-                        df = df.loc[df["basisOfRecord"] != "fossilspecimen"]
-
-                    # We don't want columns without a genus
-                    if "genus" in df.columns:
-                        df = df.loc[df["genus"] != ""]
 
                     df.to_sql(table, cxn, if_exists=if_exists)
 
