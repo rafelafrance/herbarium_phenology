@@ -67,8 +67,8 @@ def create_image_table(database: DbPath, drop: bool = False) -> None:
     """Create a table with paths to the valid herbarium sheet images."""
     sql = """
         create table if not exists images (
-            coreid   integer primary key,
-            path     text    unique,
+            coreid   text primary key,
+            path     text unique,
             width    integer,
             height   integer
         );

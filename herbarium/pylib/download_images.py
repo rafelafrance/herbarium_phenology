@@ -86,10 +86,13 @@ def validate_images(image_dir, database, error=None, glob="*.jpg"):
                 image = Image.open(path)
                 width, height = image.size
                 images.append({
-                    "path": str(path), "width": width, "height": height,
+                    "coreid": path.stem,
+                    "path": str(path).replace("../", ""),
+                    "width": width,
+                    "height": height,
                 })
             except UnidentifiedImageError:
-                err.write(f"Could not download: {path}\n")
+                err.write(f"Could not open: {path}\n")
                 err.flush()
             finally:
                 if image:
