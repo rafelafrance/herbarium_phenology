@@ -2,6 +2,7 @@
 import os
 import socket
 import sys
+import warnings
 from itertools import cycle, groupby
 from random import sample
 from urllib.error import HTTPError, URLError
@@ -17,14 +18,20 @@ from herbarium.pylib import db
 
 def sample_records(database, csv_dir, count=10_050, splits=10):
     """Get a broad sample of herbarium specimens."""
-    sql = """select family, genus, coreid, accessuri
-        from angiosperms
-        where reproductivecondition <> ''
-        and family <> ''
-        and genus <> ''
-        and accessuri <> ''
+    sql = """
+        with multiples as (
+            select coreid, count(*) as n
+              from angiosperms
+          group by coreid
+            having n > 1)
+        select family, genus, coreid, accessuri
+          from angiosperms
+         where coreid not in (select coreid from multiples)
+           and reproductivecondition <> ''
+           and family <> ''
+           and genus <> ''
+           and accessuri <> ''
         """
-    # and accessuri not like 'http://bgbaseserver.eeb.uconn.edu/DATABASEIMAGES/%'
     rows = db.rows_as_dicts(database, sql, [])
     rows = sample(rows, k=len(rows))
 
@@ -79,24 +86,26 @@ def validate_images(image_dir, database, error=None, glob="*.jpg"):
     """Put valid image paths into a database."""
     error = error if error else sys.stderr
     images = []
-    with open(error, "a") as err:
-        for path in image_dir.glob(glob):
-            image = None
-            try:
-                image = Image.open(path)
-                width, height = image.size
-                images.append({
-                    "coreid": path.stem,
-                    "path": str(path).replace("../", ""),
-                    "width": width,
-                    "height": height,
-                })
-            except UnidentifiedImageError:
-                err.write(f"Could not open: {path}\n")
-                err.flush()
-            finally:
-                if image:
-                    image.close()
+    with warnings.catch_warnings():  # Turn off EXIF warnings
+        warnings.filterwarnings("ignore", category=UserWarning)
+        with open(error, "a") as err:
+            for path in image_dir.glob(glob):
+                image = None
+                try:
+                    image = Image.open(path)
+                    width, height = image.size
+                    images.append({
+                        "coreid": path.stem,
+                        "path": str(path).replace("../", ""),
+                        "width": width,
+                        "height": height,
+                    })
+                except UnidentifiedImageError:
+                    err.write(f"Could not open: {path}\n")
+                    err.flush()
+                finally:
+                    if image:
+                        image.close()
 
-    db.create_image_table(database)
+    db.create_image_table(database, drop=True)
     db.insert_images(database, images)
