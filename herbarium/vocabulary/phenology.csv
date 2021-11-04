@@ -1,0 +1,108 @@
+label,pattern
+abbrev_flowering,fl
+abbrev_flowering,flo
+abbrev_flowering_fruiting,f
+abbrev_fruiting,fr
+abbrev_fruiting,fru
+abbrev_leaf_out,lvs
+abbrev_leaf_out,v
+abbrev_leaf_out,vg
+flowering,blooming
+flowering,corolla
+flowering,corollas
+flowering,cyme
+flowering,cymes
+flowering,flor
+flowering,flores
+flowering,flower
+flowering,flowering
+flowering,flowers
+flowering,flr
+flowering,flrs
+flowering,fls
+flowering,flw
+flowering,in bloom
+flowering,inflor
+flowering,inflorescence
+flowering,inflorescence
+flowering,inflorescences
+flowering,petal
+flowering,petals
+flowering,raceme
+flowering,racemes
+flowering,ray
+flowering,rays
+flowering,sepal
+flowering,sepals
+flowering,spike
+flowering,spikes
+flowering,stamen
+flowering,stamens
+flowering,staminode
+flowering,staminodes
+flowering,stigma
+flowering,stigmas
+flowering,stigmata
+flowering,tepal
+flowering,tepals
+flowering_fruiting,flowerandfruit
+fruiting,achene
+fruiting,achenes
+fruiting,achenium
+fruiting,achenocarp
+fruiting,akene
+fruiting,capsule
+fruiting,capsules
+fruiting,caryopsis
+fruiting,drupe
+fruiting,drupes
+fruiting,follicle
+fruiting,follicles
+fruiting,frt
+fruiting,frts
+fruiting,fruit
+fruiting,fruit
+fruiting,fruited
+fruiting,fruits
+fruiting,fruta
+fruiting,nut
+fruiting,nutlet
+fruiting,nutlets
+fruiting,nuts
+fruiting,pepo
+fruiting,pepos
+fruiting,pod
+fruiting,pods
+fruiting,pulse
+fruiting,pulses
+fruiting,samara
+fruiting,seed
+fruiting,seeds
+leaf_out,blade
+leaf_out,blades
+leaf_out,bract
+leaf_out,bracts
+leaf_out,folhas
+leaf_out,foliage
+leaf_out,hoja
+leaf_out,leaf
+leaf_out,leaves
+leaf_out,veg
+leaf_out,vegetative
+not_flowering,flower: n
+not_flowering,no flowers
+not_flowering,not flowering
+not_flowering,past flowering
+not_flowering,post-flowering
+not_flowering,pre-flowering
+not_fruiting,fruit: n
+not_fruiting,no fruits
+not_fruiting,not fruiting
+not_fruiting,past fruiting
+not_fruiting,post-frt
+not_fruiting,post-fruit
+not_fruiting,sterile
+not_leaf_out,non-reproductive
+not_leaf_out,post-leaf
+not_leaf_out,pre-leaf
+not_leaf_out,vegetation: n
