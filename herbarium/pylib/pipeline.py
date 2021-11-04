@@ -1,7 +1,7 @@
 """Create a trait pipeline."""
 import spacy
-from traiter.tokenizer_util import append_tokenizer_regexes
 from traiter.pipes.add_entity_data import ADD_ENTITY_DATA
+from traiter.tokenizer_util import append_tokenizer_regexes
 
 from herbarium.pylib.const import TERMS
 
@@ -18,6 +18,6 @@ def pipeline():
     )
     term_ruler.add_patterns(TERMS.for_entity_ruler())
 
-    nlp.add_pipe(ADD_ENTITY_DATA, config={'dispatch': {}})
+    nlp.add_pipe(ADD_ENTITY_DATA, config={"dispatch": {}})
 
     return nlp
