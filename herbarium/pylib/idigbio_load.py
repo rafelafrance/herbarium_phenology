@@ -23,6 +23,9 @@ OCCURRENCE_RAW = """ coreid dwc:reproductiveCondition dwc:occurrenceRemarks
 # The name of columns we want in the iDigBio zip file
 MULTIMEDIA = """ coreid ac:accessURI """.split()
 
+# Extra flags
+FLAGS = """ flowering fruiting leaf_out """.split()
+
 
 def load_idigbio_data(db: Path, zip_file: Path, chunk_size: int) -> None:
     """Load the iDigBio data into a database."""

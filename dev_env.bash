@@ -18,6 +18,9 @@ source ./.venv/bin/activate
 python -m pip install --upgrade pip setuptools wheel
 if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
+python -m spacy download en_core_web_sm
+
+pip install -e ../traiter/traiter
 
 # ##############################################################################
 # Dev only pip installs (not required b/c they're personal preference)

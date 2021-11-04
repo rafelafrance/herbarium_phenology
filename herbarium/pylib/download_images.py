@@ -3,9 +3,11 @@ import os
 import socket
 import sys
 import warnings
-from itertools import cycle, groupby
+from itertools import cycle
+from itertools import groupby
 from random import sample
-from urllib.error import HTTPError, URLError
+from urllib.error import HTTPError
+from urllib.error import URLError
 from urllib.request import urlretrieve
 
 import numpy as np
@@ -51,14 +53,18 @@ def sample_records(database, csv_dir, count=10_050, splits=10):
 
     splits = np.array_split(uris, splits)
     for i, data_set in enumerate(splits, 1):
-        data = [(d['coreid'], d['accessURI']) for d in data_set]
+        data = [(d["coreid"], d["accessURI"]) for d in data_set]
         path = csv_dir / f"uris_{i:02d}.csv"
-        df = pd.DataFrame(data=data, columns=['coreid', 'accessuri'])
+        df = pd.DataFrame(data=data, columns=["coreid", "accessuri"])
         df.to_csv(path, index=False)
 
 
 def download_images(
-    csv_file, image_dir, error=None, url_column='accessuri', timeout=20,
+    csv_file,
+    image_dir,
+    error=None,
+    url_column="accessuri",
+    timeout=20,
 ):
     """Download iDigBio images out of a CSV file."""
     os.makedirs(image_dir, exist_ok=True)
@@ -94,12 +100,14 @@ def validate_images(image_dir, database, error=None, glob="*.jpg"):
                 try:
                     image = Image.open(path)
                     width, height = image.size
-                    images.append({
-                        "coreid": path.stem,
-                        "path": str(path).replace("../", ""),
-                        "width": width,
-                        "height": height,
-                    })
+                    images.append(
+                        {
+                            "coreid": path.stem,
+                            "path": str(path).replace("../", ""),
+                            "width": width,
+                            "height": height,
+                        }
+                    )
                 except UnidentifiedImageError:
                     err.write(f"Could not open: {path}\n")
                     err.flush()
