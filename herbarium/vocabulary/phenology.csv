@@ -1,13 +1,19 @@
 label,pattern
 abbrev_flowering,fl
 abbrev_flowering,flo
-abbrev_flowering_fruiting,f
+abbrev_flowering,fls
+abbrev_flowering,flw
+abbrev_flowering,yfl
+abbrev_flowering_fruiting,f/f
 abbrev_fruiting,fr
 abbrev_fruiting,fru
+abbrev_fruiting,yfr
 abbrev_leaf_out,lvs
 abbrev_leaf_out,v
 abbrev_leaf_out,vg
+flowering,bloom
 flowering,blooming
+flowering,blooms
 flowering,corolla
 flowering,corollas
 flowering,cyme
@@ -19,8 +25,6 @@ flowering,flowering
 flowering,flowers
 flowering,flr
 flowering,flrs
-flowering,fls
-flowering,flw
 flowering,in bloom
 flowering,inflor
 flowering,inflorescence
@@ -90,7 +94,9 @@ leaf_out,leaves
 leaf_out,veg
 leaf_out,vegetative
 not_flowering,flower: n
+not_flowering,no blooms
 not_flowering,no flowers
+not_flowering,not blooming
 not_flowering,not flowering
 not_flowering,past flowering
 not_flowering,post flowering

@@ -36,8 +36,9 @@ def build_where(sql: str, **kwargs) -> tuple[str, list]:
     return sql, params
 
 
-def rows_as_dicts(database: DbPath, sql: str, params: list):
+def rows_as_dicts(database: DbPath, sql: str, params: list = None):
     """Convert the SQL execute cursor to a list of dicts."""
+    params = params if params else []
     with sqlite3.connect(database) as cxn:
         cxn.row_factory = sqlite3.Row
         rows = [dict(r) for r in cxn.execute(sql, params)]
@@ -45,14 +46,14 @@ def rows_as_dicts(database: DbPath, sql: str, params: list):
 
 
 def insert_batch(database: DbPath, sql: str, batch: list) -> None:
-    """Insert a batch of sheets records."""
+    """Insert a batch of records."""
     if batch:
         with sqlite3.connect(database) as cxn:
             cxn.executemany(sql, batch)
 
 
 def create_table(database: DbPath, sql: str, table: str, *, drop: bool = False) -> None:
-    """Create a table with paths to the valid herbarium sheet images."""
+    """Create a table."""
     with sqlite3.connect(database) as cxn:
         if drop:
             cxn.executescript(f"""drop table if exists {table};""")

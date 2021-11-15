@@ -1,4 +1,5 @@
 """Given a CSV file of iDigBio records, download the images."""
+
 import os
 import socket
 import sys
@@ -22,10 +23,10 @@ def sample_records(database, csv_dir, count=10_050, splits=10):
     """Get a broad sample of herbarium specimens."""
     sql = """
         with multiples as (
-            select coreid, count(*) as n
+            select coreid
               from angiosperms
           group by coreid
-            having n > 1)
+            having count(*) > 1)
         select family, genus, coreid, accessuri
           from angiosperms
          where coreid not in (select coreid from multiples)

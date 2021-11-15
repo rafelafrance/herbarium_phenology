@@ -10,7 +10,7 @@ from pylib.filter_records import filter_records
 
 def main(args: argparse.Namespace) -> None:
     """Filter the records."""
-    filter_records(args.in_db, args.out_db, args.chunk_size)
+    filter_records(args.in_db, args.out_db)
 
 
 def parse_args() -> argparse.Namespace:
@@ -35,15 +35,6 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         required=True,
         help="""Path to the output SQLite3 database.""",
-    )
-
-    arg_parser.add_argument(
-        "--chunk-size",
-        type=int,
-        default=1_000_000,
-        metavar="N",
-        help="""The number of lines read from the CSV file at a time.
-            (default: %(default)s)""",
     )
 
     args = arg_parser.parse_args()
