@@ -2,7 +2,6 @@
 
 import sqlite3
 from pathlib import Path
-from sqlite3 import connect
 
 from tqdm import tqdm
 
@@ -10,6 +9,7 @@ from . import db
 from . import idigbio_load as load
 from . import pipeline
 
+ON, OFF = 1, ""
 
 LABELS = {
     "flowering": ["flowering"],
@@ -28,8 +28,9 @@ REPRO_LABELS = LABELS | {
     "abbrev_leaf_out": ["leaf_out"],
 }
 
-ON = 1
-OFF = ""
+# Search the row fields for flowering fruiting leaf_out in this order
+SEARCH_FIELDS = """
+    reproductivecondition occurrenceremarks fieldnotes dynamicproperties """.split()
 
 
 def filter_records(in_db: Path, out_db: Path) -> None:
@@ -41,48 +42,43 @@ def filter_records(in_db: Path, out_db: Path) -> None:
 
     batch = []
 
-    with connect(in_db) as in_cxn, connect(out_db) as out_cxn:
+    with sqlite3.connect(in_db) as in_cxn, sqlite3.connect(out_db) as out_cxn:
         in_cxn.row_factory = sqlite3.Row
-
-        phyla = taxa(in_cxn, "select * from phyla")
-        classes = taxa(in_cxn, "select * from classes")
-        orders = taxa(in_cxn, "select * from orders")
-        families = get_families(in_cxn)
 
         create_angiosperms_table(out_cxn, list(renames.values()) + load.FLAGS)
 
         for raw in tqdm(in_cxn.execute(in_sql)):
             row = dict(raw)
 
-            if is_fossil(row):
-                continue
-
-            if not is_angiosperm(row, phyla, classes, orders, families):
-                continue
-
             # Add empty flags to the record
             for field in load.FLAGS:
                 row[field] = OFF
 
-            set_row_flags(row, nlp, "reproductivecondition")
-            set_row_flags(row, nlp, "dynamicproperties")
-            set_row_flags(row, nlp, "occurrenceremarks")
-            set_row_flags(row, nlp, "fieldnotes")
-
-            if any(row[f] for f in load.FLAGS):
-                batch.append(row)
+            for field in SEARCH_FIELDS:
+                if set_row_flags(row, nlp, field):
+                    batch.append(row)
+                    break
 
     db.insert_batch(out_db, build_insert(renames), batch)
 
 
 def set_row_flags(row, nlp, field):
     """Set the row flags for traits."""
+    flags_set = False
+    if not row[field]:
+        return flags_set
+
     doc = nlp(row[field])
     for ent in doc.ents:
         trait = ent._.data["trait"]
+
         flags = REPRO_LABELS if field == "reproductivecondition" else LABELS
+
         for flag in flags.get(trait, []):
             row[flag] = ON
+            flags_set = True
+
+    return flags_set
 
 
 def get_families(in_cxn):
@@ -113,13 +109,21 @@ def build_select(renames):
             select coreid
               from multimedia
           group by coreid
-            having count(*) > 1)
+            having count(*) > 1),
+          families as (select name as family from apg_ii_family_names
+                 union select name           from apg_iv_family_names)
         select {fields}
         from multimedia
         join occurrence using (coreid)
         join occurrence_raw using (coreid)
        where coreid not in (select coreid from multiples)
          and accessuri <> ''
+         and `dwc:basisofrecord` <> 'fossilspecimen'
+         and (   `dwc:phylum` in (select phylum from phyla)
+              or `dwc:class`  in (select class_ from classes)
+              or `dwc:order`  in (select order_ from orders)
+              or `dwc:family` in (select family from families)
+             )
        """
     return sql
 
@@ -132,11 +136,6 @@ def build_insert(renames):
     values = ", ".join(values)
     sql = f""" insert into angiosperms ({fields}) values ({values}); """
     return sql
-
-
-def is_fossil(row):
-    """Remove fossils from the data."""
-    return row["basisofrecord"] == "fossilspecimen"
 
 
 def is_angiosperm(row, phyla, classes, orders, families):

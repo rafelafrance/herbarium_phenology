@@ -21,3 +21,12 @@ class TestTerm(unittest.TestCase):
                 {"end": 32, "start": 19, "trait": "not_leaf_out"},
             ],
         )
+
+    def test_term_03(self):
+        self.assertEqual(
+            test("flowering/fruiting"),
+            [
+                {"end": 9, "start": 0, "trait": "flowering"},
+                {"end": 18, "start": 10, "trait": "fruiting"},
+            ]
+        )

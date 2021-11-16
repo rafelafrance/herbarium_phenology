@@ -58,6 +58,8 @@ fruiting,akene
 fruiting,capsule
 fruiting,capsules
 fruiting,caryopsis
+fruiting,cone
+fruiting,cones
 fruiting,drupe
 fruiting,drupes
 fruiting,follicle
@@ -65,8 +67,8 @@ fruiting,follicles
 fruiting,frt
 fruiting,frts
 fruiting,fruit
-fruiting,fruit
 fruiting,fruited
+fruiting,fruiting
 fruiting,fruits
 fruiting,fruta
 fruiting,nut
@@ -96,6 +98,7 @@ leaf_out,vegetative
 not_flowering,flower: n
 not_flowering,no blooms
 not_flowering,no flowers
+not_flowering,non-reproductive
 not_flowering,not blooming
 not_flowering,not flowering
 not_flowering,past flowering
@@ -109,7 +112,6 @@ not_fruiting,past fruiting
 not_fruiting,post-frt
 not_fruiting,post-fruit
 not_fruiting,sterile
-not_leaf_out,non-reproductive
 not_leaf_out,post-leaf
 not_leaf_out,pre-leaf
 not_leaf_out,vegetation: n
