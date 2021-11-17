@@ -1,76 +1,59 @@
 """Given a CSV file of iDigBio records, download the images."""
 
 import os
+import random
 import socket
+import sqlite3
 import sys
+import time
 import warnings
-from itertools import cycle
-from itertools import groupby
-from random import sample
 from urllib.error import HTTPError
 from urllib.error import URLError
 from urllib.request import urlretrieve
 
-import numpy as np
 import pandas as pd
 from PIL import Image
 from PIL import UnidentifiedImageError
 
 from herbarium.pylib import db
+from herbarium.pylib.idigbio_load import FLAGS
+
+# Don't hit the site too hard
+SLEEP_MID = 3
+SLEEP_RADIUS = 2
+SLEEP_RANGE = (SLEEP_MID - SLEEP_RADIUS, SLEEP_MID + SLEEP_RADIUS)
+
+# Make a few attempts to download a page
+ATTEMPTS = 3
+
+# Set a timeout for requests
+TIMEOUT = 30
+socket.setdefaulttimeout(TIMEOUT)
+
+# The column that holds the image URL
+COLUMN = "accessuri"
 
 
-def sample_records(database, csv_dir, count=10_050, splits=10):
+def sample_records(database, csv_dir, limit=10_000):
     """Get a broad sample of herbarium specimens."""
-    sql = """
-        with multiples as (
-            select coreid
-              from angiosperms
-          group by coreid
-            having count(*) > 1)
-        select family, genus, coreid, accessuri
+    sql_template = """
+        select coreid, accessuri
           from angiosperms
-         where coreid not in (select coreid from multiples)
-           and reproductivecondition <> ''
-           and family <> ''
-           and genus <> ''
-           and accessuri <> ''
+         where {} = 1
+      order by random()
+         limit {};
         """
-    rows = db.rows_as_dicts(database, sql, [])
-    rows = sample(rows, k=len(rows))
+    queries = {f"uris_{f}.csv": sql_template.format(f, limit) for f in FLAGS}
 
-    row_groups = groupby(rows, key=lambda r: (r["family"], r["genus"]))
-    groups = [list(g) for k, g in row_groups]
-    groups = cycle(groups)
-
-    uris = []
-    for i in range(count):
-        for j in range(1000):
-            group = next(groups)
-            if group:
-                uris.append(group.pop(0))
-                break
-        else:
-            raise ValueError("Ran out of groups.")
-
-    splits = np.array_split(uris, splits)
-    for i, data_set in enumerate(splits, 1):
-        data = [(d["coreid"], d["accessURI"]) for d in data_set]
-        path = csv_dir / f"uris_{i:02d}.csv"
-        df = pd.DataFrame(data=data, columns=["coreid", "accessuri"])
-        df.to_csv(path, index=False)
+    with sqlite3.connect(database) as cxn:
+        for file_name, query in queries.items():
+            df = pd.read_sql(query, cxn)
+            df.to_csv(csv_dir / file_name, index=False)
 
 
-def download_images(
-    csv_file,
-    image_dir,
-    error=None,
-    url_column="accessuri",
-    timeout=20,
-):
+def download_images(csv_file, image_dir, error=None):
     """Download iDigBio images out of a CSV file."""
     os.makedirs(image_dir, exist_ok=True)
-
-    socket.setdefaulttimeout(timeout)
 
     error = error if error else sys.stderr
 
@@ -81,12 +64,16 @@ def download_images(
             path = image_dir / f"{coreid}.jpg"
             if path.exists():
                 continue
-            try:
-                urlretrieve(row[url_column], path)
-            except (HTTPError, URLError):
-                err.write(f"Could not download: {row[url_column]}\n")
-                err.flush()
-                continue
+
+            for attempt in range(ATTEMPTS):
+                try:
+                    urlretrieve(row[COLUMN], path)
+                    time.sleep(random.randint(SLEEP_RANGE[0], SLEEP_RANGE[1]))
+                    break
+                except (TimeoutError, socket.timeout, HTTPError, URLError):
+                    pass
+            else:
+                print(f"Could not download: {row[COLUMN]}", file=err)
 
 
 def validate_images(image_dir, database, error=None, glob="*.jpg"):

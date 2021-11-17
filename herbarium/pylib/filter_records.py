@@ -123,7 +123,7 @@ def build_select(renames):
               or `dwc:class`  in (select class_ from classes)
               or `dwc:order`  in (select order_ from orders)
               or `dwc:family` in (select family from families)
-             )
+             );
        """
     return sql
 
