@@ -28,5 +28,5 @@ class TestTerm(unittest.TestCase):
             [
                 {"end": 9, "start": 0, "trait": "flowering"},
                 {"end": 18, "start": 10, "trait": "fruiting"},
-            ]
+            ],
         )

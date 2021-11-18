@@ -1,14 +1,9 @@
 """Given a CSV file of iDigBio records, download the images."""
-
 import os
-import random
 import socket
 import sqlite3
 import sys
-import time
 import warnings
-from urllib.error import HTTPError
-from urllib.error import URLError
 from urllib.request import urlretrieve
 
 import pandas as pd
@@ -18,23 +13,18 @@ from PIL import UnidentifiedImageError
 from herbarium.pylib import db
 from herbarium.pylib.idigbio_load import FLAGS
 
-# Don't hit the site too hard
-SLEEP_MID = 3
-SLEEP_RADIUS = 2
-SLEEP_RANGE = (SLEEP_MID - SLEEP_RADIUS, SLEEP_MID + SLEEP_RADIUS)
-
 # Make a few attempts to download a page
 ATTEMPTS = 3
 
 # Set a timeout for requests
-TIMEOUT = 30
+TIMEOUT = 10
 socket.setdefaulttimeout(TIMEOUT)
 
 # The column that holds the image URL
 COLUMN = "accessuri"
 
 
-def sample_records(database, csv_dir, limit=10_000):
+def sample_records(database, csv_dir, limit=1000):
     """Get a broad sample of herbarium specimens."""
     sql_template = """
         select coreid, accessuri
@@ -68,12 +58,12 @@ def download_images(csv_file, image_dir, error=None):
             for attempt in range(ATTEMPTS):
                 try:
                     urlretrieve(row[COLUMN], path)
-                    time.sleep(random.randint(SLEEP_RANGE[0], SLEEP_RANGE[1]))
                     break
-                except (TimeoutError, socket.timeout, HTTPError, URLError):
+                except Exception:  # pylint: disable=broad-except
+                    # And catching 8+ exceptions isn't ideal either
                     pass
             else:
-                print(f"Could not download: {row[COLUMN]}", file=err)
+                print(f"Could not download: {row[COLUMN]}", file=err, flush=True)
 
 
 def validate_images(image_dir, database, error=None, glob="*.jpg"):

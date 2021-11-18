@@ -1,5 +1,4 @@
 """Filter iDigBio data."""
-
 import sqlite3
 from pathlib import Path
 
@@ -81,16 +80,6 @@ def set_row_flags(row, nlp, field):
     return flags_set
 
 
-def get_families(in_cxn):
-    """get the family names for angiosperms."""
-    family_sql = """
-              select name from apg_ii_family_names
-        union select name from apg_iv_family_names
-        """
-    families = taxa(in_cxn, family_sql)
-    return families
-
-
 def get_column_renames():
     """Get the output column names."""
     columns = sorted(set(load.MULTIMEDIA + load.OCCURRENCE + load.OCCURRENCE_RAW))
@@ -136,17 +125,6 @@ def build_insert(renames):
     values = ", ".join(values)
     sql = f""" insert into angiosperms ({fields}) values ({values}); """
     return sql
-
-
-def is_angiosperm(row, phyla, classes, orders, families):
-    """Only keep angiosperm records."""
-    return (row["phylum"] in phyla or row["class_"] in classes
-            or row["order_"] in orders or row["family"] in families)
-
-
-def taxa(in_cxn: sqlite3.Connection, sql: str):
-    """Get taxon names."""
-    return [r[0] for r in in_cxn.execute(sql)]
 
 
 def create_angiosperms_table(out_cxn, columns):
