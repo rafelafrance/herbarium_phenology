@@ -60,7 +60,7 @@ def download_images(csv_file, image_dir, error=None):
                     urlretrieve(row[COLUMN], path)
                     break
                 except Exception:  # pylint: disable=broad-except
-                    # And catching 8+ exceptions isn't ideal either
+                    # And catching 8+ different exceptions isn't ideal either
                     pass
             else:
                 print(f"Could not download: {row[COLUMN]}", file=err, flush=True)

@@ -3,7 +3,7 @@ import logging
 import sqlite3
 import zipfile
 from pathlib import Path
-from typing import IO
+from typing import Any
 
 import pandas as pd
 from tqdm import tqdm
@@ -85,7 +85,7 @@ def load_csv(
                     if_exists = "append"
 
 
-def _csv_reader(in_csv: IO[bytes], chunk_size: int, columns: list[str]):
+def _csv_reader(in_csv: Any, chunk_size: int, columns: list[str]):
     return pd.read_csv(
         in_csv,
         dtype=str,

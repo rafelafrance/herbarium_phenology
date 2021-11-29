@@ -15,7 +15,9 @@ def main(args: argparse.Namespace) -> None:
 
 def parse_args() -> argparse.Namespace:
     """Process command-line arguments."""
-    description = """Filter records."""
+    description = """Filter records to only include angiosperm records with
+        a single image and it must contain a notation on flowering, fruiting, or
+        leaf-out."""
 
     arg_parser = argparse.ArgumentParser(
         description=textwrap.dedent(description), fromfile_prefix_chars="@"
@@ -26,7 +28,7 @@ def parse_args() -> argparse.Namespace:
         metavar="PATH",
         type=Path,
         required=True,
-        help="""Path to the input SQLite3 database.""",
+        help="""Path to the input SQLite3 database (iDigBio data).""",
     )
 
     arg_parser.add_argument(
@@ -34,7 +36,7 @@ def parse_args() -> argparse.Namespace:
         metavar="PATH",
         type=Path,
         required=True,
-        help="""Path to the output SQLite3 database.""",
+        help="""Path to the output SQLite3 database (angiosperm data).""",
     )
 
     args = arg_parser.parse_args()
