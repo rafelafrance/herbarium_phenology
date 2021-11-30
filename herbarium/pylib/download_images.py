@@ -7,8 +7,12 @@ import warnings
 from urllib.request import urlretrieve
 
 import pandas as pd
+import torch
 from PIL import Image
 from PIL import UnidentifiedImageError
+from torchvision import transforms as xfm
+from torchvision.datasets import ImageFolder
+from torch.utils.data import DataLoader
 
 from herbarium.pylib import db
 from herbarium.pylib.idigbio_load import FLAGS
@@ -95,3 +99,21 @@ def validate_images(image_dir, database, error=None, glob="*.jpg"):
 
     db.create_image_table(database, drop=True)
     db.insert_images(database, images)
+
+
+def get_image_norm(image_dir, batch_size=16, size=None):
+    """Get the mean and standard deviation of the image channels."""
+    # TODO: has bad round-off error according to Numerical Recipes in C, 2d ed. p 613
+    size = size if size else (224, 224)
+    transforms = xfm.Compose([xfm.Resize(size), xfm.ToTensor()])
+    dataset = ImageFolder(str(image_dir), transform=transforms)
+    loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
+    sum_, sq_sum, count = 0.0, 0.0, 0
+    for images, _ in loader:
+        sum_ += torch.mean(images, dim=[0, 2, 3])
+        sq_sum += torch.mean(images**2, dim=[0, 2, 3])
+        count += 1
+
+    mean = sum_ / count
+    std = (sq_sum / count - mean**2)**0.5
+    return mean, std

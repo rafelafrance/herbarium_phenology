@@ -98,7 +98,8 @@ def build_select(renames):
             select coreid
               from multimedia
           group by coreid
-            having count(*) > 1),
+            having count(*) > 1
+          ),
           families as (select name as family from apg_ii_family_names
                  union select name           from apg_iv_family_names)
         select {fields}
