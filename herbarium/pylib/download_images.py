@@ -9,10 +9,12 @@ from urllib.request import urlretrieve
 import pandas as pd
 import torch
 from PIL import Image
-from PIL import UnidentifiedImageError
+from PIL.Image import DecompressionBombWarning
+from skimage import io
 from torchvision import transforms as xfm
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from herbarium.pylib import db
 from herbarium.pylib.idigbio_load import FLAGS
@@ -64,7 +66,7 @@ def download_images(csv_file, image_dir, error=None):
                     urlretrieve(row[COLUMN], path)
                     break
                 except Exception:  # pylint: disable=broad-except
-                    # And catching 8+ different exceptions isn't ideal either
+                    # Gets handled in the for loop's else clause
                     pass
             else:
                 print(f"Could not download: {row[COLUMN]}", file=err, flush=True)
@@ -74,14 +76,17 @@ def validate_images(image_dir, database, error=None, glob="*.jpg"):
     """Put valid image paths into a database."""
     error = error if error else sys.stderr
     images = []
-    with warnings.catch_warnings():  # Turn off EXIF warnings
-        warnings.filterwarnings("ignore", category=UserWarning)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning)   # No EXIF warnings
+        warnings.filterwarnings("error", category=DecompressionBombWarning)
         with open(error, "a") as err:
-            for path in image_dir.glob(glob):
+            for path in tqdm(image_dir.glob(glob)):
                 image = None
                 try:
                     image = Image.open(path)
+                    image.verify()
                     width, height = image.size
+                    _ = io.imread(path)
                     images.append(
                         {
                             "coreid": path.stem,
@@ -90,8 +95,9 @@ def validate_images(image_dir, database, error=None, glob="*.jpg"):
                             "height": height,
                         }
                     )
-                except UnidentifiedImageError:
-                    err.write(f"Could not open: {path}\n")
+                except Exception as e:  # pylint: disable=broad-except
+                    # Image doesn't get added to DB
+                    err.write(f"Bad image: {path} {e}\n")
                     err.flush()
                 finally:
                     if image:
@@ -109,11 +115,12 @@ def get_image_norm(image_dir, batch_size=16, size=None):
     dataset = ImageFolder(str(image_dir), transform=transforms)
     loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
     sum_, sq_sum, count = 0.0, 0.0, 0
-    for images, _ in loader:
-        sum_ += torch.mean(images, dim=[0, 2, 3])
-        sq_sum += torch.mean(images**2, dim=[0, 2, 3])
-        count += 1
-
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning)  # No EXIF warnings
+        for images, _ in tqdm(loader):
+            sum_ += torch.mean(images, dim=[0, 2, 3])
+            sq_sum += torch.mean(images**2, dim=[0, 2, 3])
+            count += 1
     mean = sum_ / count
     std = (sq_sum / count - mean**2)**0.5
     return mean, std
