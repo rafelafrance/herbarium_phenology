@@ -16,8 +16,8 @@ from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from herbarium.pylib import db
-from herbarium.pylib.idigbio_load import FLAGS
+from phenology.pylib import db
+from phenology.pylib.idigbio_load import FLAGS
 
 # Make a few attempts to download a page
 ATTEMPTS = 3

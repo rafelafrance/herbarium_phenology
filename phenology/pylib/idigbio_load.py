@@ -1,4 +1,4 @@
-"""Load iDigbBio data relevant to this project."""
+"""Load iDigBio data relevant to this project."""
 import logging
 import sqlite3
 import zipfile

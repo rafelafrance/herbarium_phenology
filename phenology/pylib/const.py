@@ -9,7 +9,7 @@ IS_SUBDIR = CURR_DIR.name in ("notebooks", "experiments")
 ROOT_DIR = Path(".." if IS_SUBDIR else ".")
 
 DATA_DIR = ROOT_DIR / "data"
-VOCAB_DIR = ROOT_DIR / "herbarium" / "vocabulary"
+VOCAB_DIR = ROOT_DIR / "phenology" / "vocabulary"
 
 # #########################################################################
 # Term related constants
