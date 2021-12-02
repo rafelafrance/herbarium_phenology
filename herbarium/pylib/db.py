@@ -61,13 +61,13 @@ def create_table(database: DbPath, sql: str, table: str, *, drop: bool = False) 
         cxn.executescript(sql)
 
 
-# ########### Image tables ##########################################################
+# ########### Image table ##########################################################
 
 
 def create_image_table(database: DbPath, drop: bool = False) -> None:
     """Create a table with paths to the valid herbarium sheet images."""
     sql = """
-        create table  if not exists images (
+        create table if not exists images (
             coreid    text primary key,
             path      text unique,
             width     integer,
@@ -84,8 +84,35 @@ def insert_images(database: DbPath, batch: list) -> None:
     insert_batch(database, sql, batch)
 
 
-def select_images(database: DbPath, *, limit: int = 0) -> list[dict]:
-    """Get herbarium sheet image data."""
-    sql = """select * from images"""
-    sql, params = build_select(sql, limit=limit)
-    return rows_as_dicts(database, sql, params)
+# ########### Split table ##########################################################
+
+
+def create_split_table(database: DbPath, drop: bool = False) -> None:
+    """Create train/validation/test splits of the data.
+
+    This is so I don't wind up training on my test data. Because an image can belong
+    to multiple classes I need to be careful that I don't add any core IDs in the
+    test dataset to the training/validation datasets.
+    """
+    sql = """
+        create table if not exists splits (
+            split_run     text,
+            dataset       text,
+            coreid        text,
+            flowering     integer,
+            fruiting      integer,
+            not_flowering integer,
+            not_fruiting  integer
+        );
+        """
+    create_table(database, sql, "splits", drop=drop)
+
+
+def insert_splits(database: DbPath, batch: list) -> None:
+    """Insert a batch of sheets records."""
+    sql = """insert into splits
+                ( split_run,  dataset,  coreid,
+                  flowering,  fruiting,  not_flowering,  not_fruiting)
+        values  (:split_run, :dataset, :coreid,
+                 :flowering, :fruiting, :not_flowering, :not_fruiting);"""
+    insert_batch(database, sql, batch)

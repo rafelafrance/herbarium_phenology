@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 
 
-class PhenologyDataset(Dataset):
+class HerbariumDataset(Dataset):
     """Generate augmented data."""
 
     all_classes = "flowering not_flowering fruiting not_fruiting".split()

@@ -4,7 +4,7 @@ from typing import List
 
 from traiter.util import shorten
 
-from phenology.pylib.pipeline import pipeline
+from herbarium.pylib.pipeline import pipeline
 
 NLP = pipeline()  # Singleton for testing
 
