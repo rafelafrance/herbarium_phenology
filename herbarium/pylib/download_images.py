@@ -17,6 +17,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from herbarium.pylib import db
+from herbarium.pylib.herbarium_dataset import HerbariumDataset
 from herbarium.pylib.idigbio_load import FLAGS
 
 # Make a few attempts to download a page
@@ -110,7 +111,7 @@ def validate_images(image_dir, database, error=None, glob="*.jpg"):
 def get_image_norm(image_dir, batch_size=16, size=None):
     """Get the mean and standard deviation of the image channels."""
     # TODO: has bad round-off error according to Numerical Recipes in C, 2d ed. p 613
-    size = size if size else (224, 224)
+    size = size if size else HerbariumDataset.default_size
     transforms = xfm.Compose([xfm.Resize(size), xfm.ToTensor()])
     dataset = ImageFolder(str(image_dir), transform=transforms)
     loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)

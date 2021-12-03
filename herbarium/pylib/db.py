@@ -98,11 +98,7 @@ def create_split_table(database: DbPath, drop: bool = False) -> None:
         create table if not exists splits (
             split_run     text,
             dataset       text,
-            coreid        text,
-            flowering     integer,
-            fruiting      integer,
-            not_flowering integer,
-            not_fruiting  integer
+            coreid        text
         );
         """
     create_table(database, sql, "splits", drop=drop)
@@ -110,9 +106,6 @@ def create_split_table(database: DbPath, drop: bool = False) -> None:
 
 def insert_splits(database: DbPath, batch: list) -> None:
     """Insert a batch of sheets records."""
-    sql = """insert into splits
-                ( split_run,  dataset,  coreid,
-                  flowering,  fruiting,  not_flowering,  not_fruiting)
-        values  (:split_run, :dataset, :coreid,
-                 :flowering, :fruiting, :not_flowering, :not_fruiting);"""
+    sql = """insert into splits ( split_run,  dataset,  coreid)
+                         values (:split_run, :dataset, :coreid);"""
     insert_batch(database, sql, batch)
