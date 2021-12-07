@@ -12,10 +12,15 @@ class HerbariumDataset(Dataset):
 
     all_classes = "flowering not_flowering fruiting not_fruiting".split()
 
-    default_size = (380, 380)
     default_mean = [0.7743, 0.7529, 0.7100]
-    # default_std_dev = [0.2250, 0.2326, 0.2449]  # 224 x 224
-    default_std_dev = [0.2286, 0.2365, 0.2492]  # 380 x 380
+
+    # B0
+    default_size = (224, 224)
+    default_std_dev = [0.2250, 0.2326, 0.2449]  # 224 x 224
+
+    # B4
+    # default_size = (380, 380)
+    # default_std_dev = [0.2286, 0.2365, 0.2492]  # 380 x 380
 
     def __init__(
         self,

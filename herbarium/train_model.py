@@ -6,7 +6,7 @@ from pathlib import Path
 
 import torch
 
-from pylib.classifier import EfficientNetB4
+from pylib.classifier import EfficientNetB0
 
 
 def parse_args():
@@ -55,10 +55,6 @@ def parse_args():
         help="""How many epochs to train. (default: %(default)s)""")
 
     arg_parser.add_argument(
-        '--start-epoch', type=int, default=1,
-        help="""How many epochs to train. (default: %(default)s)""")
-
-    arg_parser.add_argument(
         "--split-run",
         default="first_split",
         help="""Which data split to use. (default: %(default)s)""",
@@ -71,5 +67,5 @@ def parse_args():
 if __name__ == '__main__':
 
     ARGS = parse_args()
-    classifier = EfficientNetB4(ARGS)
+    classifier = EfficientNetB0(ARGS)
     classifier.train()

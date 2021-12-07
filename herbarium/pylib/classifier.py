@@ -18,8 +18,6 @@ class Classifier:
         torch.multiprocessing.set_sharing_strategy("file_system")
 
         self.save_model = args.save_model
-
-        self.start_epoch = args.start_epoch
         self.epochs = args.epochs
 
         self.model = self.get_model()
@@ -27,6 +25,9 @@ class Classifier:
         state = torch.load(args.prev_model) if args.prev_model else {}
         if state.get("model_state"):
             self.model.load_state_dict(state["model_state"])
+
+        self.best_loss = state.get("best_loss", np.Inf)
+
 
         self.device = torch.device("cuda" if torch.has_cuda else "cpu")
         self.model.to(self.device)
@@ -62,9 +63,7 @@ class Classifier:
 
     def train(self):
         """Train the model."""
-        best_loss = np.Inf
-
-        for epoch in range(self.start_epoch, self.epochs + 1):
+        for epoch in range(self.epochs):
             self.model.train()
             train_loss, train_acc = self.train_epoch()
 
@@ -72,13 +71,20 @@ class Classifier:
             val_loss, val_acc = self.val_epoch()
 
             flag = ""
-            if val_loss <= best_loss:
+            if val_loss <= self.best_loss:
                 flag = "*"
-                best_loss = val_loss
-                torch.save(self.model.state_dict(), self.save_model)
+                self.best_loss = val_loss
+                torch.save({
+                    "epoch": epoch,
+                    "model_state": self.model.state_dict(),
+                    "optimizer_state": self.optimizer.state_dict(),
+                    "best_accuracy": val_acc,
+                    "best_loss": self.best_loss,
+                    },
+                    self.save_model)
 
             print(f"{epoch:2}: Train: loss {train_loss:0.6f} acc {train_acc:0.6f}\t"
-                  f"Valid: loss {val_loss:0.6f} acc {val_acc:0.6f} {flag}")
+                  f"Valid: loss {val_loss:0.6f} acc {val_acc:0.6f} {flag}\n")
 
     def train_epoch(self):
         """Train an epoch."""
@@ -127,6 +133,29 @@ class Classifier:
         return torch.mean(equals)
 
 
+class EfficientNetB0(Classifier):
+    """A class for training efficient net models."""
+
+    @staticmethod
+    def get_model():
+        """Get the model to use."""
+        model = torchvision.models.efficientnet_b0(pretrained=True)
+        # for param in model.parameters():
+        #     param.requires_grad = False
+        model.classifier = nn.Sequential(
+            nn.BatchNorm1d(num_features=1280),
+            nn.Linear(in_features=1280, out_features=480),
+            nn.ReLU(),
+            nn.BatchNorm1d(num_features=480),
+            nn.Linear(in_features=480, out_features=256),
+            nn.ReLU(),
+            nn.BatchNorm1d(num_features=256),
+            nn.Dropout(0.4),
+            nn.Linear(in_features=256, out_features=len(HerbariumDataset.all_classes)),
+        )
+        return model
+
+
 class EfficientNetB4(Classifier):
     """A class for training efficient net models."""
 
@@ -134,8 +163,8 @@ class EfficientNetB4(Classifier):
     def get_model():
         """Get the model to use."""
         model = torchvision.models.efficientnet_b4(pretrained=True)
-        for param in model.parameters():
-            param.requires_grad = False
+        # for param in model.parameters():
+        #     param.requires_grad = False
         model.classifier = nn.Sequential(
             nn.BatchNorm1d(num_features=1792),
             nn.Linear(in_features=1792, out_features=625),
