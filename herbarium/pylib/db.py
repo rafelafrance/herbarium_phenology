@@ -36,7 +36,7 @@ def build_where(sql: str, **kwargs) -> tuple[str, list]:
     return sql, params
 
 
-def rows_as_dicts(database: DbPath, sql: str, params: list = None):
+def rows_as_dicts(database: DbPath, sql: str, params: list = None) -> list[dict]:
     """Convert the SQL execute cursor to a list of dicts."""
     params = params if params else []
     with sqlite3.connect(database) as cxn:
@@ -109,3 +109,14 @@ def insert_splits(database: DbPath, batch: list) -> None:
     sql = """insert into splits ( split_run,  dataset,  coreid)
                          values (:split_run, :dataset, :coreid);"""
     insert_batch(database, sql, batch)
+
+
+def select_split(database: DbPath, split_run: str, dataset: str) -> list[dict]:
+    """Select all records for a split_run/dataset combination."""
+    sql = """select *
+               from splits
+               join angiosperms using (coreid)
+               join images using (coreid)
+              where split_run = ?
+                and dataset = ?"""
+    return rows_as_dicts(database, sql, [split_run, dataset])

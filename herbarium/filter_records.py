@@ -2,6 +2,7 @@
 """Filter iDigBio records."""
 import argparse
 import textwrap
+from datetime import datetime
 from pathlib import Path
 
 from pylib import log
@@ -10,7 +11,7 @@ from pylib.filter_records import filter_records
 
 def main(args: argparse.Namespace) -> None:
     """Filter the records."""
-    filter_records(args.in_db, args.out_db)
+    filter_records(args.in_db, args.out_db, args.filter_run)
 
 
 def parse_args() -> argparse.Namespace:
@@ -37,6 +38,13 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         required=True,
         help="""Path to the output SQLite3 database (angiosperm data).""",
+    )
+
+    default = datetime.now().isoformat(sep="_", timespec="seconds")
+    arg_parser.add_argument(
+        "--filter-run",
+        default=default,
+        help="""Name the filter run to allow multiple extracts.""",
     )
 
     args = arg_parser.parse_args()

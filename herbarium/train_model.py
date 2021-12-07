@@ -1,57 +1,75 @@
+#!/usr/bin/env python3
 """Train a model to classify herbarium traits."""
-import sqlite3
+import argparse
+import textwrap
+from pathlib import Path
 
 import torch
-import torchvision
-from torch import nn
-from torch import optim
 
-from pylib import db
-from pylib import util
-from pylib.herbarium_dataset import HerbariumDataset
+from pylib.classifier import EfficientNetB4
 
 
-def train(args):
-    """Train the model."""
-    torch.multiprocessing.set_sharing_strategy("file_system")
+def parse_args():
+    """Process command-line arguments."""
+    description = """Train a herbarium phenology classifier."""
+    arg_parser = argparse.ArgumentParser(
+        description=textwrap.dedent(description),
+        fromfile_prefix_chars='@')
 
-    state = torch.load(args.prev_model) if args.prev_model else {}
-
-    model = get_model()
-    if state.get("model_state"):
-        model.load_state_dict(state["model_state"])
-
-    device = torch.device("cuda" if torch.has_cuda else "cpu")
-    model.to(device)
-
-    optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
-    criterion = nn.CrossEntropyLoss()
-
-    train_dataset, val_dataset = get_datasets(
-        args.database, args.size, args.mean, args.std_dev, args.split
+    arg_parser.add_argument(
+        "--database", "--db",
+        metavar="PATH",
+        type=Path,
+        required=True,
+        help="""Path to the SQLite3 database (angiosperm data).""",
     )
 
+    arg_parser.add_argument(
+        '--save-model', required=True, help="""Save best models to this path.""")
 
-def get_datasets(database, image_size, mean, std_dev, split):
-    """Get the training and validation datasets."""
-    records = {}
-    for cls in HerbariumDataset.all_classes:
-        sql = f"select * from angiosperms join images using (coreid) where {cls} = 1"
-        records[cls] = db.rows_as_dicts(database, sql)
-    # train_dataset, val_dataset = records[:split], records[split:]
-    # return train_dataset, val_dataset
-    return [], []
+    default = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+    arg_parser.add_argument(
+        '--device',
+        default=default,
+        help="""Which GPU or CPU to use. Options are 'cpu', 'cuda:0', 'cuda:1' etc.
+            We'll try to default to either 'cpu' or 'cuda:0' depending on the
+            availability of a GPU. (default: %(default)s)""")
 
+    arg_parser.add_argument(
+        '--learning-rate', '--lr', type=float, default=0.0005,
+        help="""Initial learning rate. (default: %(default)s)""")
 
-def get_model():
-    """Get the model to use."""
-    model = torchvision.models.efficientnet_b4(pretrained=True)
-    model.classifier = nn.Sequential(
-        nn.Linear(in_features=1792, out_features=625),
-        nn.ReLU(),
-        nn.Dropout(p=0.5, inplace=True),
-        nn.Linear(in_features=625, out_features=256),
-        nn.ReLU(),
-        nn.Linear(in_features=256, out_features=len(HerbariumDataset.all_classes)),
+    arg_parser.add_argument(
+        '--batch-size', type=int, default=16,
+        help="""Input batch size. (default: %(default)s)""")
+
+    arg_parser.add_argument(
+        '--workers', type=int, default=4,
+        help="""Number of workers for loading data. (default: %(default)s)""")
+
+    arg_parser.add_argument(
+        '--prev-model', help="""Use this model.""")
+
+    arg_parser.add_argument(
+        '--epochs', type=int, default=100,
+        help="""How many epochs to train. (default: %(default)s)""")
+
+    arg_parser.add_argument(
+        '--start-epoch', type=int, default=1,
+        help="""How many epochs to train. (default: %(default)s)""")
+
+    arg_parser.add_argument(
+        "--split-run",
+        default="first_split",
+        help="""Which data split to use. (default: %(default)s)""",
     )
-    return model
+
+    args = arg_parser.parse_args()
+    return args
+
+
+if __name__ == '__main__':
+
+    ARGS = parse_args()
+    classifier = EfficientNetB4(ARGS)
+    classifier.train()

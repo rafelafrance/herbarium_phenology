@@ -32,7 +32,7 @@ SEARCH_FIELDS = """
     reproductivecondition occurrenceremarks fieldnotes dynamicproperties """.split()
 
 
-def filter_records(in_db: Path, out_db: Path) -> None:
+def filter_records(in_db: Path, out_db: Path, filter_run: str) -> None:
     """Remove records that are not angiosperms, have no phenological data, etc."""
     renames = get_column_renames()
     in_sql = build_select(renames)
@@ -44,10 +44,12 @@ def filter_records(in_db: Path, out_db: Path) -> None:
     with sqlite3.connect(in_db) as in_cxn, sqlite3.connect(out_db) as out_cxn:
         in_cxn.row_factory = sqlite3.Row
 
-        create_angiosperms_table(out_cxn, list(renames.values()) + load.FLAGS)
+        all_columns = list(renames.values()) + ["filter_run"] + load.FLAGS
+        create_angiosperms_table(out_cxn, all_columns)
 
         for raw in tqdm(in_cxn.execute(in_sql)):
             row = dict(raw)
+            row["filter_run"] = filter_run
 
             # Add empty flags to the record
             for field in load.FLAGS:
@@ -120,7 +122,7 @@ def build_select(renames):
 
 def build_insert(renames):
     """Build an insert statement for the angiosperm records."""
-    columns = list(renames.values()) + load.FLAGS
+    columns = list(renames.values()) + ["filter_run"] + load.FLAGS
     fields = ", ".join(columns)
     values = [f":{f}" for f in columns]
     values = ", ".join(values)
