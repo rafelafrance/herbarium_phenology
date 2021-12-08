@@ -11,8 +11,6 @@ import torch
 from PIL import Image
 from PIL.Image import DecompressionBombWarning
 from skimage import io
-from torchvision import transforms as xfm
-from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -78,7 +76,7 @@ def validate_images(image_dir, database, error=None, glob="*.jpg"):
     error = error if error else sys.stderr
     images = []
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=UserWarning)   # No EXIF warnings
+        warnings.filterwarnings("ignore", category=UserWarning)  # No EXIF warnings
         warnings.filterwarnings("error", category=DecompressionBombWarning)
         with open(error, "a") as err:
             for path in tqdm(image_dir.glob(glob)):
@@ -108,20 +106,22 @@ def validate_images(image_dir, database, error=None, glob="*.jpg"):
     db.insert_images(database, images)
 
 
-def get_image_norm(image_dir, batch_size=16, size=None):
+def get_image_norm(database, classifier, split_run, batch_size=16, num_workers=4):
     """Get the mean and standard deviation of the image channels."""
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    data = db.select_split(database, split_run, "train")
+    dataset = HerbariumDataset(data, classifier, normalize=False)
+    loader = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers)
+
     # TODO: has bad round-off error according to Numerical Recipes in C, 2d ed. p 613
-    size = size if size else HerbariumDataset.default_size
-    transforms = xfm.Compose([xfm.Resize(size), xfm.ToTensor()])
-    dataset = ImageFolder(str(image_dir), transform=transforms)
-    loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
     sum_, sq_sum, count = 0.0, 0.0, 0
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=UserWarning)  # No EXIF warnings
-        for images, _ in tqdm(loader):
-            sum_ += torch.mean(images, dim=[0, 2, 3])
-            sq_sum += torch.mean(images**2, dim=[0, 2, 3])
-            count += 1
+
+    for images, _ in tqdm(loader):
+        images = images.to(device)
+        sum_ += torch.mean(images, dim=[0, 2, 3])
+        sq_sum += torch.mean(images ** 2, dim=[0, 2, 3])
+        count += 1
+
     mean = sum_ / count
-    std = (sq_sum / count - mean**2)**0.5
+    std = (sq_sum / count - mean ** 2) ** 0.5
     return mean, std

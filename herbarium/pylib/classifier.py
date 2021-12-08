@@ -2,7 +2,8 @@
 import numpy as np
 import torch
 import torchvision
-from torch import nn, optim
+from torch import nn
+from torch import optim
 from torch.nn import functional
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -58,7 +59,7 @@ class Classifier:
     @staticmethod
     def get_model():
         """Get the model to use."""
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def train(self):
         """Train the model."""
@@ -73,17 +74,21 @@ class Classifier:
             if val_loss <= self.best_loss:
                 flag = "*"
                 self.best_loss = val_loss
-                torch.save({
-                    "epoch": epoch,
-                    "model_state": self.model.state_dict(),
-                    "optimizer_state": self.optimizer.state_dict(),
-                    "best_loss": self.best_loss,
-                    "accuracy": val_acc,
+                torch.save(
+                    {
+                        "epoch": epoch,
+                        "model_state": self.model.state_dict(),
+                        "optimizer_state": self.optimizer.state_dict(),
+                        "best_loss": self.best_loss,
+                        "accuracy": val_acc,
                     },
-                    self.save_model)
+                    self.save_model,
+                )
 
-            print(f"{epoch+1:2}: Train: loss {train_loss:0.6f} acc {train_acc:0.6f}\t"
-                  f"Valid: loss {val_loss:0.6f} acc {val_acc:0.6f} {flag}\n")
+            print(
+                f"{epoch+1:2}: Train: loss {train_loss:0.6f} acc {train_acc:0.6f}\t"
+                f"Valid: loss {val_loss:0.6f} acc {val_acc:0.6f} {flag}\n"
+            )
 
     def train_epoch(self):
         """Train an epoch."""
@@ -134,9 +139,10 @@ class Classifier:
 
 class EfficientNetB0(Classifier):
     """A class for training efficient net models."""
+
     size = (224, 224)
-    default_mean = [0.7743, 0.7529, 0.7100]
-    default_std_dev = [0.2250, 0.2326, 0.2449]
+    mean = [0.7743, 0.7529, 0.7100]
+    std_dev = [0.2250, 0.2326, 0.2449]
 
     @staticmethod
     def get_model():
@@ -160,9 +166,10 @@ class EfficientNetB0(Classifier):
 
 class EfficientNetB4(Classifier):
     """A class for training efficient net models."""
+
     size = (380, 380)
-    default_mean = [0.7743, 0.7529, 0.7100]
-    default_std_dev = [0.2286, 0.2365, 0.2492]
+    mean = [0.7743, 0.7529, 0.7100]
+    std_dev = [0.2286, 0.2365, 0.2492]
 
     @staticmethod
     def get_model():
@@ -182,3 +189,9 @@ class EfficientNetB4(Classifier):
             nn.Linear(in_features=256, out_features=len(HerbariumDataset.all_classes)),
         )
         return model
+
+
+CLASSIFIERS = {
+    "b0": EfficientNetB0,
+    "b4": EfficientNetB4,
+}

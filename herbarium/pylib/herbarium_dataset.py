@@ -1,8 +1,8 @@
 """Generate training data."""
 import warnings
 
-from PIL import Image
 import torch
+from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
@@ -16,37 +16,32 @@ class HerbariumDataset(Dataset):
         self,
         sheets: list[dict],
         classifier,
-        mean=None,
-        std_dev=None,
+        *,
         augment=False,
+        normalize=True,
     ) -> None:
         super().__init__()
-
-        size = classifier.size
-
-        mean = mean if mean else classifier.default_mean
-        mean = torch.Tensor(mean)
-
-        std_dev = std_dev if std_dev else classifier.default_std_dev
-        std_dev = torch.Tensor(std_dev)
-
         self.sheets: list[tuple] = [(s["path"], self.to_classes(s)) for s in sheets]
+        self.transform = self.build_transforms(classifier, augment, normalize)
+
+    @staticmethod
+    def build_transforms(classifier, augment, normalize):
+        """Build a pipeline of image transforms specific to the dataset."""
+        xform = [transforms.Resize(classifier.size)]
 
         if augment:
-            self.transform = transforms.Compose([
-                transforms.Resize(size),
+            xform += [
                 transforms.AutoAugment(transforms.AutoAugmentPolicy.IMAGENET),
                 transforms.RandomHorizontalFlip(),
                 transforms.RandomVerticalFlip(),
-                transforms.ToTensor(),
-                transforms.Normalize(mean, std_dev),
-            ])
-        else:
-            self.transform = transforms.Compose([
-                transforms.Resize(size),
-                transforms.ToTensor(),
-                transforms.Normalize(mean, std_dev),
-            ])
+            ]
+
+        xform += [transforms.ToTensor()]
+
+        if normalize:
+            xform += [transforms.Normalize(classifier.mean, classifier.std_dev)]
+
+        return transforms.Compose(xform)
 
     def __len__(self):
         return len(self.sheets)
@@ -61,7 +56,7 @@ class HerbariumDataset(Dataset):
 
     def to_classes(self, sheet):
         """Convert sheet flags to classes."""
-        return torch.Tensor([1.0 if sheet[c] == '1' else 0.0 for c in self.all_classes])
+        return torch.Tensor([1.0 if sheet[c] == "1" else 0.0 for c in self.all_classes])
 
     def pos_weight(self):
         """Calculate the positive weight for classes in this dataset."""
