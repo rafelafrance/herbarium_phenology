@@ -6,7 +6,12 @@ from pathlib import Path
 
 import torch
 
-from pylib.classifier import EfficientNetB0
+from pylib.classifier import EfficientNetB0, EfficientNetB4
+
+CLASSIFIERS = {
+    "b0": EfficientNetB0,
+    "b4": EfficientNetB4,
+}
 
 
 def parse_args():
@@ -26,6 +31,13 @@ def parse_args():
 
     arg_parser.add_argument(
         '--save-model', required=True, help="""Save best models to this path.""")
+
+    arg_parser.add_argument(
+        "--classifier",
+        choices=list(CLASSIFIERS.keys()),
+        default=list(CLASSIFIERS.keys())[0],
+        help="""Which EfficientNet classifier model to use.""",
+    )
 
     default = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     arg_parser.add_argument(
@@ -65,7 +77,6 @@ def parse_args():
 
 
 if __name__ == '__main__':
-
     ARGS = parse_args()
-    classifier = EfficientNetB0(ARGS)
+    classifier = CLASSIFIERS[ARGS.classifier](ARGS)
     classifier.train()

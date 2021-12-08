@@ -12,7 +12,7 @@ from .herbarium_dataset import HerbariumDataset
 
 
 class Classifier:
-    """A class for training efficient net models."""
+    """A class for training models."""
 
     def __init__(self, args):
         torch.multiprocessing.set_sharing_strategy("file_system")
@@ -28,12 +28,11 @@ class Classifier:
 
         self.best_loss = state.get("best_loss", np.Inf)
 
-
         self.device = torch.device("cuda" if torch.has_cuda else "cpu")
         self.model.to(self.device)
 
         train_data = db.select_split(args.database, args.split_run, "train")
-        train_dataset = HerbariumDataset(train_data, augment=True)
+        train_dataset = HerbariumDataset(train_data, self, augment=True)
         self.train_loader = DataLoader(
             train_dataset,
             shuffle=True,
@@ -43,7 +42,7 @@ class Classifier:
         )
 
         val_data = db.select_split(args.database, args.split_run, "val")
-        val_dataset = HerbariumDataset(val_data)
+        val_dataset = HerbariumDataset(val_data, self)
         self.val_loader = DataLoader(
             val_dataset,
             batch_size=args.batch_size,
@@ -78,12 +77,12 @@ class Classifier:
                     "epoch": epoch,
                     "model_state": self.model.state_dict(),
                     "optimizer_state": self.optimizer.state_dict(),
-                    "best_accuracy": val_acc,
                     "best_loss": self.best_loss,
+                    "accuracy": val_acc,
                     },
                     self.save_model)
 
-            print(f"{epoch:2}: Train: loss {train_loss:0.6f} acc {train_acc:0.6f}\t"
+            print(f"{epoch+1:2}: Train: loss {train_loss:0.6f} acc {train_acc:0.6f}\t"
                   f"Valid: loss {val_loss:0.6f} acc {val_acc:0.6f} {flag}\n")
 
     def train_epoch(self):
@@ -135,13 +134,16 @@ class Classifier:
 
 class EfficientNetB0(Classifier):
     """A class for training efficient net models."""
+    size = (224, 224)
+    default_mean = [0.7743, 0.7529, 0.7100]
+    default_std_dev = [0.2250, 0.2326, 0.2449]
 
     @staticmethod
     def get_model():
         """Get the model to use."""
         model = torchvision.models.efficientnet_b0(pretrained=True)
-        # for param in model.parameters():
-        #     param.requires_grad = False
+        for param in model.parameters():
+            param.requires_grad = False
         model.classifier = nn.Sequential(
             nn.BatchNorm1d(num_features=1280),
             nn.Linear(in_features=1280, out_features=480),
@@ -158,13 +160,16 @@ class EfficientNetB0(Classifier):
 
 class EfficientNetB4(Classifier):
     """A class for training efficient net models."""
+    size = (380, 380)
+    default_mean = [0.7743, 0.7529, 0.7100]
+    default_std_dev = [0.2286, 0.2365, 0.2492]
 
     @staticmethod
     def get_model():
         """Get the model to use."""
         model = torchvision.models.efficientnet_b4(pretrained=True)
-        # for param in model.parameters():
-        #     param.requires_grad = False
+        for param in model.parameters():
+            param.requires_grad = False
         model.classifier = nn.Sequential(
             nn.BatchNorm1d(num_features=1792),
             nn.Linear(in_features=1792, out_features=625),

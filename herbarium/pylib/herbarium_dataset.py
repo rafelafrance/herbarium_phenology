@@ -12,32 +12,22 @@ class HerbariumDataset(Dataset):
 
     all_classes = "flowering not_flowering fruiting not_fruiting".split()
 
-    default_mean = [0.7743, 0.7529, 0.7100]
-
-    # B0
-    default_size = (224, 224)
-    default_std_dev = [0.2250, 0.2326, 0.2449]  # 224 x 224
-
-    # B4
-    # default_size = (380, 380)
-    # default_std_dev = [0.2286, 0.2365, 0.2492]  # 380 x 380
-
     def __init__(
         self,
         sheets: list[dict],
-        augment=False,
-        size=None,
+        classifier,
         mean=None,
         std_dev=None,
+        augment=False,
     ) -> None:
         super().__init__()
 
-        size = size if size else self.default_size
+        size = classifier.size
 
-        mean = mean if mean else self.default_mean
+        mean = mean if mean else classifier.default_mean
         mean = torch.Tensor(mean)
 
-        std_dev = std_dev if std_dev else self.default_std_dev
+        std_dev = std_dev if std_dev else classifier.default_std_dev
         std_dev = torch.Tensor(std_dev)
 
         self.sheets: list[tuple] = [(s["path"], self.to_classes(s)) for s in sheets]
