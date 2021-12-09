@@ -9,16 +9,12 @@ from tqdm import tqdm
 
 from . import db
 from .herbarium_dataset import HerbariumDataset
-from .model import unfreeze
 
 
-def train(args, model):
+def train(args, net):
     """Train a model."""
-    state = torch.load(args.prev_model) if args.prev_model else {}
-    if state.get("model_state"):
-        model.load_state_dict(state["model_state"])
-
-    best_loss = state.get("best_loss", np.Inf)
+    best_loss = net.state.get("best_loss", np.Inf)
+    model = net.model
 
     device = torch.device("cuda" if torch.has_cuda else "cpu")
     model.to(device)
@@ -54,9 +50,6 @@ def train(args, model):
     for epoch in range(1, args.epochs + 1):
         model.train()
 
-        if args.unfreeze_epoch == epoch:
-            unfreeze(model)
-
         train_loss, train_acc = train_epoch(
             model, train_loader, device, criterion, optimizer
         )
@@ -85,11 +78,9 @@ def train(args, model):
         )
 
 
-def test(args, model):
+def test(args, net):
     """Test the model on a hold-out dataset."""
-    state = torch.load(args.prev_model) if args.prev_model else {}
-    if state.get("model_state"):
-        model.load_state_dict(state["model_state"])
+    model = net.model
 
     device = torch.device("cuda" if torch.has_cuda else "cpu")
     model.to(device)

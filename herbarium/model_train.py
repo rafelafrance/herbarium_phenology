@@ -4,7 +4,7 @@ import argparse
 import textwrap
 from pathlib import Path
 
-from .pylib.model import MODELS
+from .pylib.net import NETS
 from .pylib.train_model import train
 
 
@@ -29,10 +29,10 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--model",
-        choices=list(MODELS.keys()),
-        default=list(MODELS.keys())[0],
-        help="""Which model to use.""",
+        "--net",
+        choices=list(NETS.keys()),
+        default=list(NETS.keys())[0],
+        help="""Which neural network to use.""",
     )
 
     arg_parser.add_argument(
@@ -67,8 +67,8 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--unfreeze",
-        type=int,
+        "--freeze",
+        action="store_true",
         help="""Unfreeze the model at this epoch.""",
     )
 
@@ -90,5 +90,5 @@ def parse_args():
 
 if __name__ == "__main__":
     ARGS = parse_args()
-    MODEL = MODELS[ARGS.model].get_model()
-    train(ARGS, MODEL)
+    NET = NETS[ARGS.net](ARGS)
+    train(ARGS, NET)
