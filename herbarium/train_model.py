@@ -4,7 +4,6 @@ import argparse
 import textwrap
 from pathlib import Path
 
-import torch
 from pylib.classifier import CLASSIFIERS
 
 
@@ -33,14 +32,6 @@ def parse_args():
         choices=list(CLASSIFIERS.keys()),
         default=list(CLASSIFIERS.keys())[0],
         help="""Which classifier model to use.""",
-    )
-
-    arg_parser.add_argument(
-        "--device",
-        default="cuda" if torch.cuda.is_available() else "cpu",
-        help="""Which GPU or CPU to use. Options are 'cpu', 'cuda:0', 'cuda:1' etc.
-            We'll try to default to either 'cpu' or 'cuda' depending on the
-            availability of a GPU. (default: %(default)s)""",
     )
 
     arg_parser.add_argument(
