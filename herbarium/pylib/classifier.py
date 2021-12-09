@@ -20,6 +20,7 @@ class Classifier:
 
         self.save_model = args.save_model
         self.epochs = args.epochs
+        self.unfreeze_epoch = args.unfreeze
 
         self.model = self.get_model()
 
@@ -32,8 +33,8 @@ class Classifier:
         self.device = torch.device("cuda" if torch.has_cuda else "cpu")
         self.model.to(self.device)
 
-        train_data = db.select_split(args.database, args.split_run, "train")
-        train_dataset = HerbariumDataset(train_data, self, augment=True)
+        data = db.select_split(args.database, args.split_run, "train", limit=args.limit)
+        train_dataset = HerbariumDataset(data, self, augment=True)
         self.train_loader = DataLoader(
             train_dataset,
             shuffle=True,
@@ -42,8 +43,8 @@ class Classifier:
             drop_last=True,
         )
 
-        val_data = db.select_split(args.database, args.split_run, "val")
-        val_dataset = HerbariumDataset(val_data, self)
+        data = db.select_split(args.database, args.split_run, "val", limit=args.limit)
+        val_dataset = HerbariumDataset(data, self)
         self.val_loader = DataLoader(
             val_dataset,
             batch_size=args.batch_size,
@@ -56,15 +57,14 @@ class Classifier:
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=args.learning_rate)
 
-    @staticmethod
-    def get_model():
-        """Get the model to use."""
-        raise NotImplementedError()
-
     def train(self):
         """Train the model."""
-        for epoch in range(self.epochs):
+        for epoch in range(1, self.epochs + 1):
             self.model.train()
+
+            if self.unfreeze_epoch == epoch:
+                self.unfreeze(self.model)
+
             train_loss, train_acc = self.train_epoch()
 
             self.model.eval()
@@ -86,9 +86,15 @@ class Classifier:
                 )
 
             print(
-                f"{epoch+1:2}: Train: loss {train_loss:0.6f} acc {train_acc:0.6f}\t"
+                f"{epoch:2}: Train: loss {train_loss:0.6f} acc {train_acc:0.6f}\t"
                 f"Valid: loss {val_loss:0.6f} acc {val_acc:0.6f} {flag}\n"
             )
+
+    def test(self):
+        """Test the model on a hold-out dataset."""
+        self.model.eval()
+        val_loss, val_acc = self.val_epoch()
+        print(f"Test: loss {val_loss:0.6f} acc {val_acc:0.6f}")
 
     def train_epoch(self):
         """Train an epoch."""
@@ -130,11 +136,28 @@ class Classifier:
         return total_loss / len(self.val_loader), accuracy / len(self.val_loader)
 
     @staticmethod
+    def get_model():
+        """Get the model to use."""
+        raise NotImplementedError()
+
+    @staticmethod
     def accuracy(y_pred, y_true):
         """Calculate the accuracy of the model."""
         pred = torch.round(functional.softmax(y_pred, dim=1))
         equals = (pred == y_true).type(torch.float)
         return torch.mean(equals)
+
+    @staticmethod
+    def freeze(model):
+        """Freeze the layers in the model."""
+        for param in model.parameters():
+            param.requires_grad = False
+
+    @staticmethod
+    def unfreeze(model):
+        """Freeze the layers in the model."""
+        for param in model.parameters():
+            param.requires_grad = True
 
 
 class EfficientNetB0(Classifier):
@@ -144,12 +167,10 @@ class EfficientNetB0(Classifier):
     mean = [0.7743, 0.7529, 0.7100]
     std_dev = [0.2250, 0.2326, 0.2449]
 
-    @staticmethod
-    def get_model():
+    def get_model(self):
         """Get the model to use."""
         model = torchvision.models.efficientnet_b0(pretrained=True)
-        for param in model.parameters():
-            param.requires_grad = False
+        self.freeze(model)
         model.classifier = nn.Sequential(
             nn.BatchNorm1d(num_features=1280),
             nn.Linear(in_features=1280, out_features=480),
@@ -171,12 +192,10 @@ class EfficientNetB4(Classifier):
     mean = [0.7743, 0.7529, 0.7100]
     std_dev = [0.2286, 0.2365, 0.2492]
 
-    @staticmethod
-    def get_model():
+    def get_model(self):
         """Get the model to use."""
         model = torchvision.models.efficientnet_b4(pretrained=True)
-        for param in model.parameters():
-            param.requires_grad = False
+        self.freeze(model)
         model.classifier = nn.Sequential(
             nn.BatchNorm1d(num_features=1792),
             nn.Linear(in_features=1792, out_features=625),

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Train a model to classify herbarium traits."""
+"""Test a model that classifies herbarium traits."""
 import argparse
 import textwrap
 from pathlib import Path
@@ -10,7 +10,7 @@ from pylib.classifier import CLASSIFIERS
 
 def parse_args():
     """Process command-line arguments."""
-    description = """Train a herbarium phenology classifier."""
+    description = """Test a herbarium phenology classifier."""
     arg_parser = argparse.ArgumentParser(
         description=textwrap.dedent(description), fromfile_prefix_chars="@"
     )
@@ -25,15 +25,13 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--save-model", required=True, help="""Save best models to this path."""
-    )
-
-    arg_parser.add_argument(
         "--classifier",
         choices=list(CLASSIFIERS.keys()),
         default=list(CLASSIFIERS.keys())[0],
         help="""Which classifier model to use.""",
     )
+
+    arg_parser.add_argument("--prev-model", required=True, help="""Use this model.""")
 
     arg_parser.add_argument(
         "--device",
@@ -41,14 +39,6 @@ def parse_args():
         help="""Which GPU or CPU to use. Options are 'cpu', 'cuda:0', 'cuda:1' etc.
             We'll try to default to either 'cpu' or 'cuda' depending on the
             availability of a GPU. (default: %(default)s)""",
-    )
-
-    arg_parser.add_argument(
-        "--learning-rate",
-        "--lr",
-        type=float,
-        default=0.0005,
-        help="""Initial learning rate. (default: %(default)s)""",
     )
 
     arg_parser.add_argument(
@@ -63,21 +53,6 @@ def parse_args():
         type=int,
         default=4,
         help="""Number of workers for loading data. (default: %(default)s)""",
-    )
-
-    arg_parser.add_argument("--prev-model", help="""Use this model.""")
-
-    arg_parser.add_argument(
-        "--epochs",
-        type=int,
-        default=100,
-        help="""How many epochs to train. (default: %(default)s)""",
-    )
-
-    arg_parser.add_argument(
-        "--unfreeze",
-        type=int,
-        help="""Unfreeze the model at this epoch.""",
     )
 
     arg_parser.add_argument(

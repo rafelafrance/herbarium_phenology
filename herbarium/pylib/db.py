@@ -29,7 +29,7 @@ def build_where(sql: str, **kwargs) -> tuple[str, list]:
             where.append(f"{key} in ({','.join(['?'] * len(value))})")
             params += value
         else:
-            where.append("{key} = ?")
+            where.append(f"{key} = ?")
             params.append(value)
 
     sql += (" where " + " and ".join(where)) if where else ""
@@ -111,12 +111,13 @@ def insert_splits(database: DbPath, batch: list) -> None:
     insert_batch(database, sql, batch)
 
 
-def select_split(database: DbPath, split_run: str, dataset: str) -> list[dict]:
+def select_split(
+    database: DbPath, split_run: str, dataset: str, limit: int = 0
+) -> list[dict]:
     """Select all records for a split_run/dataset combination."""
     sql = """select *
                from splits
                join angiosperms using (coreid)
-               join images using (coreid)
-              where split_run = ?
-                and dataset = ?"""
-    return rows_as_dicts(database, sql, [split_run, dataset])
+               join images using (coreid)"""
+    sql, params = build_select(sql, limit=limit, split_run=split_run, dataset=dataset)
+    return rows_as_dicts(database, sql, params)

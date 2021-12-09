@@ -95,7 +95,7 @@ def validate_images(image_dir, database, error=None, glob="*.jpg"):
                         }
                     )
                 except Exception as e:  # pylint: disable=broad-except
-                    # Image doesn't get added to DB
+                    # Image isn't added to DB
                     err.write(f"Bad image: {path} {e}\n")
                     err.flush()
                 finally:
