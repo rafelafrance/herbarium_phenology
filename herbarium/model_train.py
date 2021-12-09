@@ -4,8 +4,8 @@ import argparse
 import textwrap
 from pathlib import Path
 
-from .pylib.train_model import train
 from .pylib.model import MODELS
+from .pylib.train_model import train
 
 
 def parse_args():
@@ -92,4 +92,3 @@ if __name__ == "__main__":
     ARGS = parse_args()
     MODEL = MODELS[ARGS.model].get_model()
     train(ARGS, MODEL)
-

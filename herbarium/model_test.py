@@ -4,8 +4,8 @@ import argparse
 import textwrap
 from pathlib import Path
 
-from .pylib.train_model import test
 from .pylib.model import MODELS
+from .pylib.train_model import test
 
 
 def parse_args():
