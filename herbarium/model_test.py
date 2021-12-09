@@ -65,4 +65,4 @@ def parse_args():
 if __name__ == "__main__":
     ARGS = parse_args()
     classifier = CLASSIFIERS[ARGS.classifier](ARGS)
-    classifier.train()
+    classifier.test()
