@@ -4,12 +4,13 @@ import argparse
 import textwrap
 from pathlib import Path
 
-from pylib.classifier import CLASSIFIERS
+from .pylib.train_model import train
+from .pylib.model import MODELS
 
 
 def parse_args():
     """Process command-line arguments."""
-    description = """Train a herbarium phenology classifier."""
+    description = """Train a herbarium phenology classifier model."""
     arg_parser = argparse.ArgumentParser(
         description=textwrap.dedent(description), fromfile_prefix_chars="@"
     )
@@ -28,10 +29,10 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--classifier",
-        choices=list(CLASSIFIERS.keys()),
-        default=list(CLASSIFIERS.keys())[0],
-        help="""Which classifier model to use.""",
+        "--model",
+        choices=list(MODELS.keys()),
+        default=list(MODELS.keys())[0],
+        help="""Which model to use.""",
     )
 
     arg_parser.add_argument(
@@ -89,5 +90,6 @@ def parse_args():
 
 if __name__ == "__main__":
     ARGS = parse_args()
-    classifier = CLASSIFIERS[ARGS.classifier](ARGS)
-    classifier.train()
+    MODEL = MODELS[ARGS.model].get_model()
+    train(ARGS, MODEL)
+
