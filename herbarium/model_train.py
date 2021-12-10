@@ -35,7 +35,11 @@ def parse_args():
         help="""Which neural network to use.""",
     )
 
-    arg_parser.add_argument("--prev-model", help="""Use this model.""")
+    arg_parser.add_argument(
+        "--load-weights",
+        type=Path,
+        help="""Start training with weights from this model.""",
+    )
 
     arg_parser.add_argument(
         "--learning-rate",

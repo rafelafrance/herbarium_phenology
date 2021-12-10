@@ -19,10 +19,10 @@ def train(args, net):
     device = torch.device("cuda" if torch.has_cuda else "cpu")
     model.to(device)
 
-    train_data = db.select_split(
-        args.database, args.split_run, dataset="train", limit=args.limit
+    train_split = db.select_split(
+        args.database, args.split_run, split="train", limit=args.limit
     )
-    train_dataset = HerbariumDataset(train_data, net, augment=True)
+    train_dataset = HerbariumDataset(train_split, net, augment=True)
     train_loader = DataLoader(
         train_dataset,
         shuffle=True,
@@ -31,10 +31,10 @@ def train(args, net):
         drop_last=True,
     )
 
-    val_data = db.select_split(
-        args.database, args.split_run, dataset="val", limit=args.limit
+    val_split = db.select_split(
+        args.database, args.split_run, split="val", limit=args.limit
     )
-    val_dataset = HerbariumDataset(val_data, net)
+    val_dataset = HerbariumDataset(val_split, net)
     val_loader = DataLoader(
         val_dataset,
         batch_size=args.batch_size,
@@ -79,16 +79,16 @@ def train(args, net):
 
 
 def test(args, net):
-    """Test the model on a hold-out dataset."""
+    """Test the model on a hold-out data split."""
     model = net.model
 
     device = torch.device("cuda" if torch.has_cuda else "cpu")
     model.to(device)
 
-    test_data = db.select_split(
-        args.database, args.split_run, dataset="test", limit=args.limit
+    test_split = db.select_split(
+        args.database, args.split_run, split="test", limit=args.limit
     )
-    test_dataset = HerbariumDataset(test_data, net)
+    test_dataset = HerbariumDataset(test_split, net)
     test_loader = DataLoader(
         test_dataset,
         batch_size=args.batch_size,

@@ -92,13 +92,13 @@ def create_split_table(database: DbPath, drop: bool = False) -> None:
 
     This is so I don't wind up training on my test data. Because an image can belong
     to multiple classes I need to be careful that I don't add any core IDs in the
-    test dataset to the training/validation datasets.
+    test split to the training/validation splits.
     """
     sql = """
         create table if not exists splits (
-            split_run     text,
-            dataset       text,
-            coreid        text
+            split_run text,
+            split     text,
+            coreid    text
         );
         """
     create_table(database, sql, "splits", drop=drop)
@@ -106,18 +106,18 @@ def create_split_table(database: DbPath, drop: bool = False) -> None:
 
 def insert_splits(database: DbPath, batch: list) -> None:
     """Insert a batch of sheets records."""
-    sql = """insert into splits ( split_run,  dataset,  coreid)
-                         values (:split_run, :dataset, :coreid);"""
+    sql = """insert into splits ( split_run,  split,  coreid)
+                         values (:split_run, :split, :coreid);"""
     insert_batch(database, sql, batch)
 
 
 def select_split(
-    database: DbPath, split_run: str, dataset: str, limit: int = 0
+    database: DbPath, split_run: str, split: str, limit: int = 0
 ) -> list[dict]:
-    """Select all records for a split_run/dataset combination."""
+    """Select all records for a split_run/split combination."""
     sql = """select *
                from splits
                join angiosperms using (coreid)
                join images using (coreid)"""
-    sql, params = build_select(sql, limit=limit, split_run=split_run, dataset=dataset)
+    sql, params = build_select(sql, limit=limit, split_run=split_run, split=split)
     return rows_as_dicts(database, sql, params)

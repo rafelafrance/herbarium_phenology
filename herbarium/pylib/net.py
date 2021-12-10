@@ -15,7 +15,7 @@ class BaseNet:
     def __init__(self, args):
         self.model: Optional[EfficientNet] = None
         self.freeze = args.freeze
-        self.state = torch.load(args.prev_model) if args.prev_model else {}
+        self.state = torch.load(args.load_weights) if args.load_weights else {}
 
     def freeze_all(self):
         """Freeze the layers in the model."""

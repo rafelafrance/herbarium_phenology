@@ -31,7 +31,12 @@ def parse_args():
         help="""Which neural network to use.""",
     )
 
-    arg_parser.add_argument("--prev-model", required=True, help="""Use this model.""")
+    arg_parser.add_argument(
+        "--load-weights",
+        type=Path,
+        required=True,
+        help="""Use this model.""",
+    )
 
     arg_parser.add_argument(
         "--batch-size",
