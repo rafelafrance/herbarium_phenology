@@ -6,7 +6,7 @@ import torchvision
 from torch import nn
 from torchvision.models import EfficientNet
 
-from herbarium.pylib.herbarium_dataset import HerbariumDataset
+from .herbarium_dataset import HerbariumDataset
 
 
 class BaseNet:
@@ -40,9 +40,6 @@ class EfficientNetB0(BaseNet):
 
         self.model = torchvision.models.efficientnet_b0(pretrained=True)
 
-        if self.state.get("model_state"):
-            self.model.load_state_dict(self.state["model_state"])
-
         if self.freeze:
             self.freeze_all()
 
@@ -58,6 +55,9 @@ class EfficientNetB0(BaseNet):
             nn.Linear(in_features=256, out_features=len(HerbariumDataset.all_classes)),
         )
 
+        if self.state.get("model_state"):
+            self.model.load_state_dict(self.state["model_state"])
+
 
 class EfficientNetB4(BaseNet):
     """A class for training efficient net models."""
@@ -70,9 +70,6 @@ class EfficientNetB4(BaseNet):
         self.std_dev = [0.2286, 0.2365, 0.2492]
 
         self.model = torchvision.models.efficientnet_b4(pretrained=True)
-
-        if self.state.get("model_state"):
-            self.model.load_state_dict(self.state["model_state"])
 
         if self.freeze:
             self.freeze_all()
@@ -88,6 +85,9 @@ class EfficientNetB4(BaseNet):
             nn.Dropout(0.4),
             nn.Linear(in_features=256, out_features=len(HerbariumDataset.all_classes)),
         )
+
+        if self.state.get("model_state"):
+            self.model.load_state_dict(self.state["model_state"])
 
 
 NETS = {

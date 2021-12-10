@@ -15,19 +15,19 @@ class HerbariumDataset(Dataset):
     def __init__(
         self,
         sheets: list[dict],
-        classifier,
+        net,
         *,
         augment=False,
         normalize=True,
     ) -> None:
         super().__init__()
         self.sheets: list[tuple] = [(s["path"], self.to_classes(s)) for s in sheets]
-        self.transform = self.build_transforms(classifier, augment, normalize)
+        self.transform = self.build_transforms(net, augment, normalize)
 
     @staticmethod
-    def build_transforms(classifier, augment, normalize):
+    def build_transforms(net, augment, normalize):
         """Build a pipeline of image transforms specific to the dataset."""
-        xform = [transforms.Resize(classifier.size)]
+        xform = [transforms.Resize(net.size)]
 
         if augment:
             xform += [
@@ -39,7 +39,7 @@ class HerbariumDataset(Dataset):
         xform += [transforms.ToTensor()]
 
         if normalize:
-            xform += [transforms.Normalize(classifier.mean, classifier.std_dev)]
+            xform += [transforms.Normalize(net.mean, net.std_dev)]
 
         return transforms.Compose(xform)
 

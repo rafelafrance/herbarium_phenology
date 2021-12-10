@@ -4,8 +4,8 @@ import argparse
 import textwrap
 from pathlib import Path
 
-from .pylib.net import NETS
-from .pylib.train_model import train
+from pylib.net import NETS
+from pylib.train_model import train
 
 
 def parse_args():
@@ -35,6 +35,8 @@ def parse_args():
         help="""Which neural network to use.""",
     )
 
+    arg_parser.add_argument("--prev-model", help="""Use this model.""")
+
     arg_parser.add_argument(
         "--learning-rate",
         "--lr",
@@ -57,8 +59,6 @@ def parse_args():
         help="""Number of workers for loading data. (default: %(default)s)""",
     )
 
-    arg_parser.add_argument("--prev-model", help="""Use this model.""")
-
     arg_parser.add_argument(
         "--epochs",
         type=int,
@@ -67,9 +67,7 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--freeze",
-        action="store_true",
-        help="""Unfreeze the model at this epoch.""",
+        "--freeze", action="store_true", help="""Freeze the model top."""
     )
 
     arg_parser.add_argument(

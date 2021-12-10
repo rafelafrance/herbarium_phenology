@@ -22,7 +22,7 @@ def train(args, net):
     train_data = db.select_split(
         args.database, args.split_run, dataset="train", limit=args.limit
     )
-    train_dataset = HerbariumDataset(train_data, model, augment=True)
+    train_dataset = HerbariumDataset(train_data, net, augment=True)
     train_loader = DataLoader(
         train_dataset,
         shuffle=True,
@@ -34,7 +34,7 @@ def train(args, net):
     val_data = db.select_split(
         args.database, args.split_run, dataset="val", limit=args.limit
     )
-    val_dataset = HerbariumDataset(val_data, model)
+    val_dataset = HerbariumDataset(val_data, net)
     val_loader = DataLoader(
         val_dataset,
         batch_size=args.batch_size,
@@ -50,12 +50,12 @@ def train(args, net):
     for epoch in range(1, args.epochs + 1):
         model.train()
 
-        train_loss, train_acc = train_epoch(
+        train_loss, train_acc = one_epoch(
             model, train_loader, device, criterion, optimizer
         )
 
         model.eval()
-        val_loss, val_acc = val_epoch(model, val_loader, device, criterion)
+        val_loss, val_acc = one_epoch(model, val_loader, device, criterion)
 
         flag = ""
         if val_loss <= best_loss:
@@ -88,7 +88,7 @@ def test(args, net):
     test_data = db.select_split(
         args.database, args.split_run, dataset="test", limit=args.limit
     )
-    test_dataset = HerbariumDataset(test_data, model)
+    test_dataset = HerbariumDataset(test_data, net)
     test_loader = DataLoader(
         test_dataset,
         batch_size=args.batch_size,
@@ -99,50 +99,32 @@ def test(args, net):
     criterion = nn.BCEWithLogitsLoss()
 
     model.eval()
-    test_loss, test_acc = val_epoch(model, test_loader, device, criterion)
+    test_loss, test_acc = one_epoch(model, test_loader, device, criterion)
 
     print(f"Test: loss {test_loss:0.6f} acc {test_acc:0.6f}")
 
 
-def train_epoch(model, train_loader, device, criterion, optimizer):
+def one_epoch(model, loader, device, criterion, optimizer=None):
     """Train an epoch."""
     total_loss = 0.0
     acc = 0.0
 
-    for images, y_true in tqdm(train_loader):
-        images = images.to(device)
-        y_true = y_true.to(device)
-
-        y_pred = model(images)
-
-        loss = criterion(y_pred, y_true)
-        optimizer.zero_grad()
-        loss.backward()
-
-        optimizer.step()
-
-        total_loss += loss.item()
-        acc += accuracy(y_pred, y_true)
-
-    return total_loss / len(train_loader), acc / len(train_loader)
-
-
-def val_epoch(model, val_loader, device, criterion):
-    """Train an epoch."""
-    total_loss = 0.0
-    acc = 0.0
-
-    for images, y_true in tqdm(val_loader):
+    for images, y_true in tqdm(loader):
         images = images.to(device)
         y_true = y_true.to(device)
 
         y_pred = model(images)
         loss = criterion(y_pred, y_true)
 
+        if optimizer:
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
         total_loss += loss.item()
         acc += accuracy(y_pred, y_true)
 
-    return total_loss / len(val_loader), acc / len(val_loader)
+    return total_loss / len(loader), acc / len(loader)
 
 
 def accuracy(y_pred, y_true):
