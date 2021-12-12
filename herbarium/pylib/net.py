@@ -59,6 +59,37 @@ class EfficientNetB0(BaseNet):
             self.model.load_state_dict(self.state["model_state"])
 
 
+class EfficientNetB3(BaseNet):
+    """A class for training efficient net models."""
+
+    def __init__(self, args):
+        super().__init__(args)
+
+        self.size = (380, 380)
+        self.mean = [0.7743, 0.7529, 0.7100]
+        self.std_dev = [0.2286, 0.2365, 0.2492]  # TODO
+
+        self.model = torchvision.models.efficientnet_b3(pretrained=True)
+
+        if self.freeze:
+            self.freeze_all()
+
+        self.model.classifier = nn.Sequential(
+            nn.BatchNorm1d(num_features=1536),
+            nn.Linear(in_features=1536, out_features=625),
+            nn.ReLU(),
+            nn.BatchNorm1d(num_features=625),
+            nn.Linear(in_features=625, out_features=256),
+            nn.ReLU(),
+            nn.BatchNorm1d(num_features=256),
+            nn.Dropout(0.4),
+            nn.Linear(in_features=256, out_features=len(HerbariumDataset.all_classes)),
+        )
+
+        if self.state.get("model_state"):
+            self.model.load_state_dict(self.state["model_state"])
+
+
 class EfficientNetB4(BaseNet):
     """A class for training efficient net models."""
 
@@ -92,5 +123,6 @@ class EfficientNetB4(BaseNet):
 
 NETS = {
     "b0": EfficientNetB0,
+    "b3": EfficientNetB3,
     "b4": EfficientNetB4,
 }

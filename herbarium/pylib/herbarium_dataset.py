@@ -6,6 +6,8 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
+from .const import ROOT_DIR
+
 
 class HerbariumDataset(Dataset):
     """Generate augmented data."""
@@ -50,7 +52,7 @@ class HerbariumDataset(Dataset):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning)  # No EXIF warnings
             sheet = self.sheets[index]
-            image = Image.open(sheet[0]).convert("RGB")
+            image = Image.open(ROOT_DIR / sheet[0]).convert("RGB")
             image = self.transform(image)
         return image, sheet[1]
 
