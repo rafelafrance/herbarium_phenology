@@ -65,7 +65,7 @@ class EfficientNetB3(BaseNet):
     def __init__(self, args):
         super().__init__(args)
 
-        self.size = (380, 380)
+        self.size = (300, 300)
         self.mean = [0.7743, 0.7529, 0.7100]
         self.std_dev = [0.2286, 0.2365, 0.2492]  # TODO
 
