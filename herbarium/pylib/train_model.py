@@ -11,7 +11,7 @@ from . import db
 from .herbarium_dataset import HerbariumDataset
 
 
-def train(args, net):
+def train(args, net, orders):
     """Train a model."""
     best_loss = net.state.get("best_loss", np.Inf)
     model = net.model
@@ -22,7 +22,7 @@ def train(args, net):
     train_split = db.select_split(
         args.database, args.split_run, split="train", limit=args.limit
     )
-    train_dataset = HerbariumDataset(train_split, net, augment=True)
+    train_dataset = HerbariumDataset(train_split, net, orders=orders, augment=True)
     train_loader = DataLoader(
         train_dataset,
         shuffle=True,
@@ -32,9 +32,12 @@ def train(args, net):
     )
 
     val_split = db.select_split(
-        args.database, args.split_run, split="val", limit=args.limit
+        args.database,
+        args.split_run,
+        split="val",
+        limit=args.limit,
     )
-    val_dataset = HerbariumDataset(val_split, net)
+    val_dataset = HerbariumDataset(val_split, net, orders=orders)
     val_loader = DataLoader(
         val_dataset,
         batch_size=args.batch_size,
@@ -49,7 +52,6 @@ def train(args, net):
 
     for epoch in range(1, args.epochs + 1):
         model.train()
-
         train_loss, train_acc = one_epoch(
             model, train_loader, device, criterion, optimizer
         )
@@ -78,7 +80,7 @@ def train(args, net):
         )
 
 
-def test(args, net):
+def test(args, net, orders):
     """Test the model on a hold-out data split."""
     model = net.model
 
@@ -88,7 +90,7 @@ def test(args, net):
     test_split = db.select_split(
         args.database, args.split_run, split="test", limit=args.limit
     )
-    test_dataset = HerbariumDataset(test_split, net)
+    test_dataset = HerbariumDataset(test_split, net, orders=orders)
     test_loader = DataLoader(
         test_dataset,
         batch_size=args.batch_size,
@@ -115,6 +117,7 @@ def one_epoch(model, loader, device, criterion, optimizer=None):
         y_true = y_true.to(device)
 
         y_pred = model(images, orders)
+        print(y_pred)
         loss = criterion(y_pred, y_true)
 
         if optimizer:

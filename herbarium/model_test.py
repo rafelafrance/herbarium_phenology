@@ -4,9 +4,9 @@ import argparse
 import textwrap
 from pathlib import Path
 
-from .pylib import db
-from .pylib.net import NETS
-from .pylib.train_model import test
+from pylib import db
+from pylib.net import NETS
+from pylib.train_model import test
 
 
 def parse_args():
@@ -73,4 +73,4 @@ if __name__ == "__main__":
     ARGS = parse_args()
     ORDERS = db.select_orders(ARGS.database, ARGS.split_run)
     NET = NETS[ARGS.net](ARGS, ORDERS)
-    test(ARGS, NET)
+    test(ARGS, NET, ORDERS)
