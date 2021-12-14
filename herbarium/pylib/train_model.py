@@ -117,7 +117,6 @@ def one_epoch(model, loader, device, criterion, optimizer=None):
         y_true = y_true.to(device)
 
         y_pred = model(images, orders)
-        print(y_pred)
         loss = criterion(y_pred, y_true)
 
         if optimizer:
