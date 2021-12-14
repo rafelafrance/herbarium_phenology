@@ -121,3 +121,15 @@ def select_split(
                join images using (coreid)"""
     sql, params = build_select(sql, limit=limit, split_run=split_run, split=split)
     return rows_as_dicts(database, sql, params)
+
+
+def select_orders(database: DbPath, split_run: str) -> list[str]:
+    """Get all of the phylogenetic orders for a split run."""
+    sql = """select distinct order_
+               from splits
+               join angiosperms using (coreid)
+              where split_run = ?
+           order by order_"""
+    with sqlite3.connect(database) as cxn:
+        orders = [r[0] for r in cxn.execute(sql, (split_run,))]
+    return orders

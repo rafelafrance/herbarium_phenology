@@ -19,12 +19,24 @@ class HerbariumDataset(Dataset):
         sheets: list[dict],
         net,
         *,
-        augment=False,
-        normalize=True,
+        orders: list[str] = None,
+        augment: bool = False,
+        normalize: bool = True,
     ) -> None:
         super().__init__()
-        self.sheets: list[tuple] = [(s["path"], self.to_classes(s)) for s in sheets]
+
+        self.orders: list[str] = orders
         self.transform = self.build_transforms(net, augment, normalize)
+
+        self.sheets: list[tuple] = []
+        for sheet in sheets:
+            self.sheets.append(
+                (
+                    sheet["path"],
+                    self.to_order(sheet),
+                    self.to_classes(sheet),
+                )
+            )
 
     @staticmethod
     def build_transforms(net, augment, normalize):
@@ -54,11 +66,15 @@ class HerbariumDataset(Dataset):
             sheet = self.sheets[index]
             image = Image.open(ROOT_DIR / sheet[0]).convert("RGB")
             image = self.transform(image)
-        return image, sheet[1]
+        return image, sheet[1], sheet[2]
 
     def to_classes(self, sheet):
         """Convert sheet flags to classes."""
         return torch.Tensor([1.0 if sheet[c] == "1" else 0.0 for c in self.all_classes])
+
+    def to_order(self, sheet):
+        """Convert sheet order to a one-hot encoding for the order."""
+        return torch.Tensor([1.0 if sheet["order_"] == x else 0.0 for x in self.orders])
 
     def pos_weight(self):
         """Calculate the positive weight for classes in this dataset."""

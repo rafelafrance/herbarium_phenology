@@ -109,11 +109,12 @@ def one_epoch(model, loader, device, criterion, optimizer=None):
     total_loss = 0.0
     acc = 0.0
 
-    for images, y_true in tqdm(loader):
+    for images, orders, y_true in tqdm(loader):
         images = images.to(device)
+        orders = orders.to(device)
         y_true = y_true.to(device)
 
-        y_pred = model(images)
+        y_pred = model(images, orders)
         loss = criterion(y_pred, y_true)
 
         if optimizer:
@@ -129,6 +130,7 @@ def one_epoch(model, loader, device, criterion, optimizer=None):
 
 def accuracy(y_pred, y_true):
     """Calculate the accuracy of the model."""
+    # pred = torch.round(y_pred)
     pred = torch.round(functional.softmax(y_pred, dim=1))
     equals = (pred == y_true).type(torch.float)
     return torch.mean(equals)
