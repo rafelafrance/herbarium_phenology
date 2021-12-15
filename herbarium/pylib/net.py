@@ -17,39 +17,32 @@ class Classifier(nn.Module):
         mix_feat = net.feat[0] + len(orders)
         out_feat = len(HerbariumDataset.all_classes)
 
-        self.ln1 = nn.Linear(in_features=net.in_feat, out_features=net.feat[0])
-        self.bn1 = nn.BatchNorm1d(num_features=net.feat[0])
-        self.act1 = nn.SiLU(inplace=True)
+        self.classifier1 = nn.Sequential(
+            nn.Linear(in_features=net.in_feat, out_features=net.feat[0]),
+            nn.BatchNorm1d(num_features=net.feat[0]),
+            nn.SiLU(inplace=True),
+        )
 
-        self.ln2 = nn.Linear(in_features=mix_feat, out_features=net.feat[1])
-        self.bn2 = nn.BatchNorm1d(num_features=net.feat[1])
-        self.act2 = nn.SiLU(inplace=True)
-
-        self.ln3 = nn.Linear(in_features=net.feat[1], out_features=net.feat[2])
-        self.bn3 = nn.BatchNorm1d(num_features=net.feat[2])
-        self.act3 = nn.SiLU(inplace=True)
-
-        self.drop4 = nn.Dropout(p=net.dropout, inplace=True)
-        self.ln4 = nn.Linear(in_features=net.feat[2], out_features=out_feat)
-        # self.soft4 = nn.Softmax(dim=1)
+        self.classifier2 = nn.Sequential(
+            nn.Linear(in_features=mix_feat, out_features=net.feat[1]),
+            nn.BatchNorm1d(num_features=net.feat[1]),
+            nn.SiLU(inplace=True),
+            #
+            nn.Linear(in_features=net.feat[1], out_features=net.feat[2]),
+            nn.BatchNorm1d(num_features=net.feat[2]),
+            nn.SiLU(inplace=True),
+            #
+            nn.Dropout(p=net.dropout, inplace=True),
+            nn.Linear(in_features=net.feat[2], out_features=out_feat),
+            # nn.Softmax(dim=1),
+        )
 
     def forward(self, x0: Tensor, x1: Tensor) -> Tensor:
-        """Run the classifier."""
-        x0 = self.ln1(x0)
-        x0 = self.bn1(x0)
-        x0 = self.act1(x0)
+        """Run the classifier forwards."""
+        x0 = self.classifier1(x0)
 
         x = torch.cat((x0, x1), dim=1)
-        x = self.ln2(x)
-        x = self.bn2(x)
-        x = self.act2(x)
-
-        x = self.ln3(x)
-        x = self.bn3(x)
-        x = self.act3(x)
-
-        x = self.drop4(x)
-        x = self.ln4(x)
+        x = self.classifier2(x)
 
         return x
 

@@ -108,8 +108,9 @@ def test(args, net, orders):
 
 def one_epoch(model, loader, device, criterion, optimizer=None):
     """Train an epoch."""
-    total_loss = 0.0
-    acc = 0.0
+    avg_loss = 0.0
+    avg_acc = 0.0
+    # torch.autograd.set_detect_anomaly(True)
 
     for images, orders, y_true in tqdm(loader):
         images = images.to(device)
@@ -124,10 +125,10 @@ def one_epoch(model, loader, device, criterion, optimizer=None):
             loss.backward()
             optimizer.step()
 
-        total_loss += loss.item()
-        acc += accuracy(y_pred, y_true)
+        avg_loss += loss.item()
+        avg_acc += accuracy(y_pred, y_true)
 
-    return total_loss / len(loader), acc / len(loader)
+    return avg_loss / len(loader), avg_acc / len(loader)
 
 
 def accuracy(y_pred, y_true):

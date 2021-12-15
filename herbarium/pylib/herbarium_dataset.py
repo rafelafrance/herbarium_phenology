@@ -1,5 +1,6 @@
 """Generate training data."""
 import warnings
+from collections import namedtuple
 
 import torch
 from PIL import Image
@@ -7,6 +8,8 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 
 from .const import ROOT_DIR
+
+Sheet = namedtuple("Sheet", "path order classes")
 
 
 class HerbariumDataset(Dataset):
@@ -21,17 +24,16 @@ class HerbariumDataset(Dataset):
         *,
         orders: list[str] = None,
         augment: bool = False,
-        normalize: bool = True,
     ) -> None:
         super().__init__()
 
         self.orders: list[str] = orders
-        self.transform = self.build_transforms(net, augment, normalize)
+        self.transform = self.build_transforms(net, augment)
 
-        self.sheets: list[tuple] = []
+        self.sheets: list[Sheet] = []
         for sheet in sheets:
             self.sheets.append(
-                (
+                Sheet(
                     sheet["path"],
                     self.to_order(sheet),
                     self.to_classes(sheet),
@@ -39,7 +41,7 @@ class HerbariumDataset(Dataset):
             )
 
     @staticmethod
-    def build_transforms(net, augment, normalize):
+    def build_transforms(net, augment):
         """Build a pipeline of image transforms specific to the dataset."""
         xform = [transforms.Resize(net.size)]
 
@@ -50,10 +52,10 @@ class HerbariumDataset(Dataset):
                 transforms.RandomVerticalFlip(),
             ]
 
-        xform += [transforms.ToTensor()]
-
-        if normalize:
-            xform += [transforms.Normalize(net.mean, net.std_dev)]
+        xform += [
+            transforms.ToTensor(),
+            transforms.Normalize(net.mean, net.std_dev),
+        ]
 
         return transforms.Compose(xform)
 
@@ -64,9 +66,9 @@ class HerbariumDataset(Dataset):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning)  # No EXIF warnings
             sheet = self.sheets[index]
-            image = Image.open(ROOT_DIR / sheet[0]).convert("RGB")
+            image = Image.open(ROOT_DIR / sheet.path).convert("RGB")
             image = self.transform(image)
-        return image, sheet[1], sheet[2]
+        return image, sheet.order, sheet.classes
 
     def to_classes(self, sheet):
         """Convert sheet flags to classes."""
@@ -78,9 +80,11 @@ class HerbariumDataset(Dataset):
 
     def pos_weight(self):
         """Calculate the positive weight for classes in this dataset."""
-        weights = []
-        for i in range(len(self.all_classes)):
-            weights.append(sum(s[1][i] for s in self.sheets))
+        weights = [0.0] * len(self.all_classes)
 
-        pos_wt = [(len(self) - w) / w for w in weights]
+        for sheet in self.sheets:
+            for i in range(len(self.all_classes)):
+                weights[i] += sheet.classes[i]
+
+        pos_wt = [(len(self) - w) / w if w else torch.Tensor([0.0]) for w in weights]
         return torch.Tensor(pos_wt)
