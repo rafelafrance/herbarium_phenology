@@ -8,16 +8,25 @@ from torch import Tensor
 from .herbarium_dataset import HerbariumDataset
 
 
-class Classifier(nn.Module):
-    """The mixed-input classifier for an EfficientNet."""
+class MultiEfficientNet(nn.Module):
+    """Override EfficientNet so that it uses multiple inputs on the forward pass."""
 
-    def __init__(self, orders_len, mid_feat):
+    def __init__(self, efficient_net, in_feat, orders_len, load_weights, freeze):
         super().__init__()
-        self.dropout = 0.2
+        mid_feat = [in_feat // (2 ** i) for i in range(1, 4)]
+        dropout = 0.2
         mix_feat = mid_feat[0] + orders_len
         out_feat = len(HerbariumDataset.all_classes)
 
-        self.classifier2 = nn.Sequential(
+        self.efficient_net = efficient_net
+
+        self.efficient_net.classifier = nn.Sequential(
+            nn.Linear(in_features=in_feat, out_features=mid_feat[0]),
+            nn.BatchNorm1d(num_features=mid_feat[0]),
+            nn.SiLU(inplace=True),
+        )
+
+        self.classifier = nn.Sequential(
             nn.Linear(in_features=mix_feat, out_features=mid_feat[1]),
             nn.BatchNorm1d(num_features=mid_feat[1]),
             nn.SiLU(inplace=True),
@@ -26,33 +35,10 @@ class Classifier(nn.Module):
             nn.BatchNorm1d(num_features=mid_feat[2]),
             nn.SiLU(inplace=True),
             #
-            nn.Dropout(p=self.dropout, inplace=True),
+            nn.Dropout(p=dropout, inplace=True),
             nn.Linear(in_features=mid_feat[2], out_features=out_feat),
             # nn.Softmax(dim=1),
         )
-
-    def forward(self, x0: Tensor, x1: Tensor) -> Tensor:
-        """Run the classifier forwards."""
-        x = torch.cat((x0, x1), dim=1)
-        x = self.classifier2(x)
-        return x
-
-
-class MultiEfficientNet(nn.Module):
-    """Override EfficientNet so that it uses multiple inputs on the forward pass."""
-
-    def __init__(self, efficient_net, in_feat, orders_len, load_weights, freeze):
-        super().__init__()
-        mid_feat = [in_feat // (2 ** i) for i in range(1, 4)]
-
-        self.efficient_net = efficient_net
-        self.efficient_net.classifier = nn.Sequential(
-            nn.Linear(in_features=in_feat, out_features=mid_feat[0]),
-            nn.BatchNorm1d(num_features=mid_feat[0]),
-            nn.SiLU(inplace=True),
-        )
-
-        self.classifier = Classifier(orders_len, mid_feat)
 
         self.state = torch.load(load_weights) if load_weights else {}
         if self.state.get("model_state"):
