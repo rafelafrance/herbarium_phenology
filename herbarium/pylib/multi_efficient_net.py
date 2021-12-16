@@ -19,7 +19,6 @@ class MultiEfficientNet(nn.Module):
         out_feat = len(HerbariumDataset.all_classes)
 
         self.efficient_net = efficient_net
-
         self.efficient_net.classifier = nn.Sequential(
             nn.Linear(in_features=in_feat, out_features=mid_feat[0]),
             nn.BatchNorm1d(num_features=mid_feat[0]),
@@ -51,7 +50,8 @@ class MultiEfficientNet(nn.Module):
     def forward(self, x0: Tensor, x1: Tensor) -> Tensor:
         """Run the classifier forwards."""
         x0 = self.efficient_net(x0)
-        x = self.classifier(x0, x1)
+        x = torch.cat((x0, x1), dim=1)
+        x = self.classifier(x)
         return x
 
 
