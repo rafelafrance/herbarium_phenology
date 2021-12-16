@@ -11,10 +11,9 @@ from . import db
 from .herbarium_dataset import HerbariumDataset
 
 
-def train(args, net, orders):
+def train(args, model, orders):
     """Train a model."""
-    best_loss = net.state.get("best_loss", np.Inf)
-    model = net.model
+    best_loss = model.state.get("best_loss", np.Inf)
 
     device = torch.device("cuda" if torch.has_cuda else "cpu")
     model.to(device)
@@ -22,7 +21,7 @@ def train(args, net, orders):
     train_split = db.select_split(
         args.database, args.split_run, split="train", limit=args.limit
     )
-    train_dataset = HerbariumDataset(train_split, net, orders=orders, augment=True)
+    train_dataset = HerbariumDataset(train_split, model, orders=orders, augment=True)
     train_loader = DataLoader(
         train_dataset,
         shuffle=True,
@@ -37,7 +36,7 @@ def train(args, net, orders):
         split="val",
         limit=args.limit,
     )
-    val_dataset = HerbariumDataset(val_split, net, orders=orders)
+    val_dataset = HerbariumDataset(val_split, model, orders=orders)
     val_loader = DataLoader(
         val_dataset,
         batch_size=args.batch_size,
@@ -80,17 +79,15 @@ def train(args, net, orders):
         )
 
 
-def test(args, net, orders):
+def test(args, model, orders):
     """Test the model on a hold-out data split."""
-    model = net.model
-
     device = torch.device("cuda" if torch.has_cuda else "cpu")
     model.to(device)
 
     test_split = db.select_split(
         args.database, args.split_run, split="test", limit=args.limit
     )
-    test_dataset = HerbariumDataset(test_split, net, orders=orders)
+    test_dataset = HerbariumDataset(test_split, model, orders=orders)
     test_loader = DataLoader(
         test_dataset,
         batch_size=args.batch_size,
