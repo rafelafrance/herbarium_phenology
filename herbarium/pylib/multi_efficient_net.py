@@ -7,25 +7,34 @@ from torch import Tensor
 
 from .herbarium_dataset import HerbariumDataset
 
+# b0 224, b1 240, b2 260, b3 300, b4 380, b5 456, b6 528, b7 600
+
 
 class MultiEfficientNet(nn.Module):
     """Override EfficientNet so that it uses multiple inputs on the forward pass."""
 
     def __init__(self, efficient_net, in_feat, orders_len, load_weights, freeze):
         super().__init__()
-        mid_feat = [in_feat // (2 ** i) for i in range(1, 4)]
+
         dropout = 0.2
+
+        mid_feat = [in_feat // (2 ** i) for i in range(1, 4)]
         mix_feat = mid_feat[0] + orders_len
         out_feat = len(HerbariumDataset.all_classes)
 
         self.efficient_net = efficient_net
+
+        if freeze:
+            for param in self.efficient_net.parameters():
+                param.requires_grad = False
+
         self.efficient_net.classifier = nn.Sequential(
             nn.Linear(in_features=in_feat, out_features=mid_feat[0]),
             nn.BatchNorm1d(num_features=mid_feat[0]),
             nn.SiLU(inplace=True),
         )
 
-        self.classifier = nn.Sequential(
+        self.multi_classifier = nn.Sequential(
             nn.Linear(in_features=mix_feat, out_features=mid_feat[1]),
             nn.BatchNorm1d(num_features=mid_feat[1]),
             nn.SiLU(inplace=True),
@@ -43,15 +52,11 @@ class MultiEfficientNet(nn.Module):
         if self.state.get("model_state"):
             self.load_state_dict(self.state["model_state"])
 
-        if freeze:
-            for param in self.efficient_net.parameters():
-                param.requires_grad = False
-
     def forward(self, x0: Tensor, x1: Tensor) -> Tensor:
         """Run the classifier forwards."""
         x0 = self.efficient_net(x0)
         x = torch.cat((x0, x1), dim=1)
-        x = self.classifier(x)
+        x = self.multi_classifier(x)
         return x
 
 
