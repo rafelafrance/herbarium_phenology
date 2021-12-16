@@ -41,7 +41,7 @@ class MultiEfficientNet(nn.Module):
 
         self.state = torch.load(load_weights) if load_weights else {}
         if self.state.get("model_state"):
-            self.model.load_state_dict(self.state["model_state"])
+            self.load_state_dict(self.state["model_state"])
 
         if freeze:
             for param in self.efficient_net.parameters():
