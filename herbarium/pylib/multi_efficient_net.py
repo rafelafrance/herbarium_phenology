@@ -23,11 +23,6 @@ class MultiEfficientNet(nn.Module):
         out_feat = len(HerbariumDataset.all_classes)
 
         self.efficient_net = efficient_net
-
-        if freeze:
-            for param in self.efficient_net.parameters():
-                param.requires_grad = False
-
         self.efficient_net.classifier = nn.Sequential(
             nn.Linear(in_features=in_feat, out_features=mid_feat[0]),
             nn.BatchNorm1d(num_features=mid_feat[0]),
@@ -51,6 +46,12 @@ class MultiEfficientNet(nn.Module):
         self.state = torch.load(load_weights) if load_weights else {}
         if self.state.get("model_state"):
             self.load_state_dict(self.state["model_state"])
+
+        if freeze:
+            for param in self.efficient_net.parameters():
+                param.requires_grad = False
+            for param in self.efficient_net.classifier.parameters():
+                param.requires_grad = True
 
     def forward(self, x0: Tensor, x1: Tensor) -> Tensor:
         """Run the classifier forwards."""
