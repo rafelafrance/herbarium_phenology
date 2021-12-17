@@ -76,7 +76,9 @@ class HerbariumDataset(Dataset):
 
     def to_order(self, sheet):
         """Convert sheet order to a one-hot encoding for the order."""
-        return torch.Tensor([1.0 if sheet["order_"] == x else 0.0 for x in self.orders])
+        order = torch.zeros(self.orders_len, dtype=torch.float)
+        order[sheet["order_"]] = 1.0
+        return order
 
     def pos_weight(self):
         """Calculate the positive weight for classes in this dataset."""
