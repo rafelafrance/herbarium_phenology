@@ -15,7 +15,7 @@ class MultiEfficientNet(nn.Module):
     def __init__(self, efficient_net, in_feat, orders_len, load_weights, freeze):
         super().__init__()
 
-        dropout = 0.2
+        dropout = 0.4
 
         mid_feat = [in_feat // (2 ** i) for i in range(1, 4)]
         mix_feat = mid_feat[0] + orders_len
@@ -29,16 +29,19 @@ class MultiEfficientNet(nn.Module):
                 param.requires_grad = False
 
         self.efficient_net.classifier = nn.Sequential(
+            nn.Dropout(p=dropout, inplace=True),
             nn.Linear(in_features=in_feat, out_features=mid_feat[0]),
             nn.BatchNorm1d(num_features=mid_feat[0]),
             nn.SiLU(inplace=True),
         )
 
         self.multi_classifier = nn.Sequential(
+            nn.Dropout(p=dropout, inplace=True),
             nn.Linear(in_features=mix_feat, out_features=mid_feat[1]),
             nn.BatchNorm1d(num_features=mid_feat[1]),
             nn.SiLU(inplace=True),
             #
+            nn.Dropout(p=dropout, inplace=True),
             nn.Linear(in_features=mid_feat[1], out_features=mid_feat[2]),
             nn.BatchNorm1d(num_features=mid_feat[2]),
             nn.SiLU(inplace=True),
