@@ -27,7 +27,7 @@ def train(args, model, orders):
         shuffle=True,
         batch_size=args.batch_size,
         num_workers=args.workers,
-        drop_last=True,
+        drop_last=len(train_split) % args.batch_size == 1,
     )
 
     val_split = db.select_split(
@@ -41,7 +41,7 @@ def train(args, model, orders):
         val_dataset,
         batch_size=args.batch_size,
         num_workers=args.workers,
-        drop_last=True,
+        drop_last=len(val_split) % args.batch_size == 1,
     )
 
     pos_weight = train_dataset.pos_weight().to(device)
@@ -92,7 +92,7 @@ def test(args, model, orders):
         test_dataset,
         batch_size=args.batch_size,
         num_workers=args.workers,
-        drop_last=True,
+        drop_last=len(test_split) % args.batch_size == 1,
     )
 
     criterion = nn.BCEWithLogitsLoss()
