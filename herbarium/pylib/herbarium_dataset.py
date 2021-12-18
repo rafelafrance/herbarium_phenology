@@ -27,7 +27,8 @@ class HerbariumDataset(Dataset):
     ) -> None:
         super().__init__()
 
-        self.orders: list[str] = orders
+        self.orders: dict[str, int] = {o: i for i, o in enumerate(orders)}
+        self.orders_len = len(orders)
         self.transform = self.build_transforms(net, augment)
 
         self.sheets: list[Sheet] = []
@@ -77,7 +78,7 @@ class HerbariumDataset(Dataset):
     def to_order(self, sheet):
         """Convert sheet order to a one-hot encoding for the order."""
         order = torch.zeros(self.orders_len, dtype=torch.float)
-        order[sheet["order_"]] = 1.0
+        order[self.orders[sheet["order_"]]] = 1.0
         return order
 
     def pos_weight(self):
