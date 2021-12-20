@@ -9,7 +9,7 @@ from torchvision import transforms
 
 from .const import ROOT_DIR
 
-Sheet = namedtuple("Sheet", "path order classes")
+Sheet = namedtuple("Sheet", "path order trait")
 
 
 class HerbariumDataset(Dataset):
@@ -24,11 +24,18 @@ class HerbariumDataset(Dataset):
         *,
         orders: list[str] = None,
         augment: bool = False,
+        trait: str = "flowering",
     ) -> None:
         super().__init__()
 
-        self.orders: dict[str, int] = {o: i for i, o in enumerate(orders)}
-        self.orders_len = len(orders)
+        self.trait_name = trait
+
+        self.orders: dict[str, int] = {}
+        self.orders_len = 0
+        if orders:
+            self.orders: dict[str, int] = {o: i for i, o in enumerate(orders)}
+            self.orders_len = len(orders)
+
         self.transform = self.build_transforms(net, augment)
 
         self.sheets: list[Sheet] = []
@@ -37,7 +44,7 @@ class HerbariumDataset(Dataset):
                 Sheet(
                     sheet["path"],
                     self.to_order(sheet),
-                    self.to_classes(sheet),
+                    self.to_trait(sheet),
                 )
             )
 
@@ -69,11 +76,12 @@ class HerbariumDataset(Dataset):
             sheet = self.sheets[index]
             image = Image.open(ROOT_DIR / sheet.path).convert("RGB")
             image = self.transform(image)
-        return image, sheet.order, sheet.classes
+        return image, sheet.order, sheet.trait
 
-    def to_classes(self, sheet):
-        """Convert sheet flags to classes."""
-        return torch.Tensor([1.0 if sheet[c] == "1" else 0.0 for c in self.all_classes])
+    def to_trait(self, sheet) -> torch.Tensor:
+        """Convert sheet flags to trait classes."""
+        trait = 1.0 if sheet[self.trait_name] == "1" else 0.0
+        return torch.Tensor([trait])
 
     def to_order(self, sheet):
         """Convert sheet order to a one-hot encoding for the order."""
@@ -81,13 +89,8 @@ class HerbariumDataset(Dataset):
         order[self.orders[sheet["order_"]]] = 1.0
         return order
 
-    def pos_weight(self):
-        """Calculate the positive weight for classes in this dataset."""
-        weights = [0.0] * len(self.all_classes)
-
-        for sheet in self.sheets:
-            for i in range(len(self.all_classes)):
-                weights[i] += sheet.classes[i]
-
-        pos_wt = [(len(self) - w) / w if w else torch.Tensor([0.0]) for w in weights]
+    def pos_weight(self) -> torch.Tensor:
+        """Calculate the positive weight for trait in this dataset."""
+        weight = sum(s.trait for s in self.sheets)
+        pos_wt = (len(self) - weight) / weight if weight else 0.0
         return torch.Tensor(pos_wt)

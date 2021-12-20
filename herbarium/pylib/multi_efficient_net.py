@@ -4,8 +4,7 @@ import torchvision
 from torch import nn
 from torch import Tensor
 
-from .herbarium_dataset import HerbariumDataset
-
+# from .herbarium_dataset import HerbariumDataset
 # b0 224, b1 240, b2 260, b3 300, b4 380, b5 456, b6 528, b7 600
 
 
@@ -17,7 +16,7 @@ class MultiEfficientNet(nn.Module):
 
         mid_feat = [self.in_feat // (2 ** i) for i in range(1, 4)]
         mix_feat = mid_feat[0] + orders_len
-        out_feat = len(HerbariumDataset.all_classes)
+        out_feat = 1  # len(HerbariumDataset.all_classes // 2)
 
         self.efficient_net = efficient_net
 
@@ -46,7 +45,6 @@ class MultiEfficientNet(nn.Module):
             #
             nn.Dropout(p=self.dropout, inplace=True),
             nn.Linear(in_features=mid_feat[2], out_features=out_feat),
-            # nn.Softmax(dim=1),
         )
 
         self.state = torch.load(load_weights) if load_weights else {}

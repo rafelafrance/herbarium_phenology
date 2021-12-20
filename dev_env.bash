@@ -36,7 +36,7 @@ pip install -U jupyter_nbextensions_configurator jupyterlab_code_formatter
 # Setup pytorch (Uncomment the one that works for your computer. GPU is better.)
 # You will absolutely need one of these.
 
-pip3 install torch==1.10.0+cu113 torchvision==0.11.1+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+pip3 install -U torch==1.10.1+cu113 torchvision==0.11.2+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
 
 # ##############################################################################
 # Setup project structure not handled by git. You will want these directories.
