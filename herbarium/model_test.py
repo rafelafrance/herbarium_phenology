@@ -5,6 +5,7 @@ import textwrap
 from pathlib import Path
 
 from pylib import db
+from pylib.herbarium_dataset import HerbariumDataset
 from pylib.multi_efficient_net import NETS
 from pylib.train_model import test
 
@@ -60,6 +61,13 @@ def parse_args():
     )
 
     arg_parser.add_argument(
+        "--trait",
+        choices=HerbariumDataset.all_traits,
+        default=HerbariumDataset.all_traits[0],
+        help="""Which trait to classify. (default: %(default)s)""",
+    )
+
+    arg_parser.add_argument(
         "--limit",
         type=int,
         help="""Limit the input to this many records.""",
@@ -72,5 +80,5 @@ def parse_args():
 if __name__ == "__main__":
     ARGS = parse_args()
     ORDERS = db.select_orders(ARGS.database, ARGS.split_run)
-    NET = NETS[ARGS.net](len(ORDERS), ARGS.load_weights, ARGS.freeze)
+    NET = NETS[ARGS.net](len(ORDERS), ARGS.load_weights, freeze=True)
     test(ARGS, NET, ORDERS)

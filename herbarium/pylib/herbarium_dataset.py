@@ -15,7 +15,7 @@ Sheet = namedtuple("Sheet", "path order trait")
 class HerbariumDataset(Dataset):
     """Generate augmented data."""
 
-    all_classes = "flowering not_flowering fruiting not_fruiting".split()
+    all_traits = " flowering fruiting leaf_out".split()
 
     def __init__(
         self,

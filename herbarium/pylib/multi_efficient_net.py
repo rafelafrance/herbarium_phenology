@@ -14,9 +14,9 @@ class MultiEfficientNet(nn.Module):
     def __init__(self, efficient_net, orders_len, load_weights, freeze):
         super().__init__()
 
-        mid_feat = [self.in_feat // (2 ** i) for i in range(1, 4)]
+        mid_feat = [self.in_feat // (4 * i) for i in range(1, 3)]
         mix_feat = mid_feat[0] + orders_len
-        out_feat = 1  # len(HerbariumDataset.all_classes // 2)
+        out_feat = 1  # len(HerbariumDataset.all_traits)
 
         self.efficient_net = efficient_net
 
@@ -28,22 +28,22 @@ class MultiEfficientNet(nn.Module):
         self.efficient_net.classifier = nn.Sequential(
             nn.Dropout(p=self.dropout, inplace=True),
             nn.Linear(in_features=self.in_feat, out_features=mid_feat[0]),
-            nn.BatchNorm1d(num_features=mid_feat[0]),
             nn.SiLU(inplace=True),
+            nn.BatchNorm1d(num_features=mid_feat[0]),
         )
 
         self.multi_classifier = nn.Sequential(
             nn.Dropout(p=self.dropout, inplace=True),
             nn.Linear(in_features=mix_feat, out_features=mid_feat[1]),
-            nn.BatchNorm1d(num_features=mid_feat[1]),
             nn.SiLU(inplace=True),
+            nn.BatchNorm1d(num_features=mid_feat[1]),
             #
             nn.Dropout(p=self.dropout, inplace=True),
             nn.Linear(in_features=mid_feat[1], out_features=mid_feat[2]),
-            nn.BatchNorm1d(num_features=mid_feat[2]),
             nn.SiLU(inplace=True),
+            nn.BatchNorm1d(num_features=mid_feat[2]),
             #
-            nn.Dropout(p=self.dropout, inplace=True),
+            # nn.Dropout(p=self.dropout, inplace=True),
             nn.Linear(in_features=mid_feat[2], out_features=out_feat),
         )
 

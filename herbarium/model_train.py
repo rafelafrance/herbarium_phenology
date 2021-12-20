@@ -5,6 +5,7 @@ import textwrap
 from pathlib import Path
 
 from pylib import db
+from pylib.herbarium_dataset import HerbariumDataset
 from pylib.multi_efficient_net import NETS
 from pylib.train_model import train
 
@@ -46,7 +47,7 @@ def parse_args():
         "--learning-rate",
         "--lr",
         type=float,
-        default=0.0005,
+        default=0.001,
         help="""Initial learning rate. (default: %(default)s)""",
     )
 
@@ -79,6 +80,13 @@ def parse_args():
         "--split-run",
         default="first_split",
         help="""Which data split to use. (default: %(default)s)""",
+    )
+
+    arg_parser.add_argument(
+        "--trait",
+        choices=HerbariumDataset.all_traits,
+        default=HerbariumDataset.all_traits[0],
+        help="""Which trait to classify. (default: %(default)s)""",
     )
 
     arg_parser.add_argument(

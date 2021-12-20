@@ -3,7 +3,6 @@ import numpy as np
 import torch
 from torch import nn
 from torch import optim
-from torch.nn import functional
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -21,7 +20,9 @@ def train(args, model, orders):
     train_split = db.select_split(
         args.database, args.split_run, split="train", limit=args.limit
     )
-    train_dataset = HerbariumDataset(train_split, model, orders=orders, augment=True)
+    train_dataset = HerbariumDataset(
+        train_split, model, orders=orders, trait=args.trait, augment=True
+    )
     train_loader = DataLoader(
         train_dataset,
         shuffle=True,
@@ -36,7 +37,7 @@ def train(args, model, orders):
         split="val",
         limit=args.limit,
     )
-    val_dataset = HerbariumDataset(val_split, model, orders=orders)
+    val_dataset = HerbariumDataset(val_split, model, orders=orders, trait=args.trait)
     val_loader = DataLoader(
         val_dataset,
         batch_size=args.batch_size,
@@ -87,7 +88,7 @@ def test(args, model, orders):
     test_split = db.select_split(
         args.database, args.split_run, split="test", limit=args.limit
     )
-    test_dataset = HerbariumDataset(test_split, model, orders=orders)
+    test_dataset = HerbariumDataset(test_split, model, orders=orders, trait=args.trait)
     test_loader = DataLoader(
         test_dataset,
         batch_size=args.batch_size,
@@ -130,7 +131,6 @@ def one_epoch(model, loader, device, criterion, optimizer=None):
 
 def accuracy(y_pred, y_true):
     """Calculate the accuracy of the model."""
-    # pred = torch.round(y_pred)
-    pred = torch.round(functional.softmax(y_pred, dim=1))
+    pred = torch.round(torch.sigmoid(y_pred))
     equals = (pred == y_true).type(torch.float)
     return torch.mean(equals)
