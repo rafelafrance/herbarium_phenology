@@ -73,7 +73,7 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--freeze", action="store_true", help="""Freeze the model top."""
+        "--freeze", choices=["top", "all"], help="""Freeze model layers."""
     )
 
     arg_parser.add_argument(

@@ -20,8 +20,8 @@ class MultiEfficientNet(nn.Module):
 
         self.efficient_net = efficient_net
 
-        # I don't want to freeze the new (randomized) portions of the net, below.
-        if freeze:
+        # Freeze the top of a pre-trained model
+        if freeze == "top":
             for param in self.efficient_net.parameters():
                 param.requires_grad = False
 
@@ -50,6 +50,13 @@ class MultiEfficientNet(nn.Module):
         self.state = torch.load(load_weights) if load_weights else {}
         if self.state.get("model_state"):
             self.load_state_dict(self.state["model_state"])
+
+        # For testing or inference, freeze the entire model
+        if freeze == "all":
+            for param in self.efficient_net.parameters():
+                param.requires_grad = False
+            for param in self.multi_classifier.parameters():
+                param.requires_grad = False
 
     def forward(self, x0: Tensor, x1: Tensor) -> Tensor:
         """Run the classifier forwards."""

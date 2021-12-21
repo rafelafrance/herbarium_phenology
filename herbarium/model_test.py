@@ -80,5 +80,5 @@ def parse_args():
 if __name__ == "__main__":
     ARGS = parse_args()
     ORDERS = db.select_orders(ARGS.database, ARGS.split_run)
-    NET = NETS[ARGS.net](len(ORDERS), ARGS.load_weights, freeze=True)
+    NET = NETS[ARGS.net](len(ORDERS), ARGS.load_weights, freeze="all")
     test(ARGS, NET, ORDERS)
