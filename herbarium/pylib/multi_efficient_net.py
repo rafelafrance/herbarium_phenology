@@ -14,7 +14,7 @@ class MultiEfficientNet(nn.Module):
     def __init__(self, efficient_net, orders_len, load_weights, freeze):
         super().__init__()
 
-        mid_feat = [self.in_feat // (4 * i) for i in range(1, 3)]
+        mid_feat = [self.in_feat // (2 ** i) for i in range(2, 5)]
         mix_feat = mid_feat[0] + orders_len
         out_feat = 1  # len(HerbariumDataset.all_traits)
 

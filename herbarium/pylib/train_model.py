@@ -1,18 +1,22 @@
 """A model to classify herbarium traits."""
+import logging
+
 import numpy as np
 import torch
 from torch import nn
 from torch import optim
 from torch.utils.data import DataLoader
-from tqdm import tqdm
 
 from . import db
+from . import log
 from .herbarium_dataset import HerbariumDataset
 
 
 def train(args, model, orders):
     """Train a model."""
+    log.started()
     best_loss = model.state.get("best_loss", np.Inf)
+    best_acc = model.state.get("accuracy", 0.0)
 
     device = torch.device("cuda" if torch.has_cuda else "cpu")
     model.to(device)
@@ -61,27 +65,28 @@ def train(args, model, orders):
 
         flag = ""
         if val_loss <= best_loss:
-            flag = "*"
             best_loss = val_loss
-            torch.save(
-                {
-                    "epoch": epoch,
-                    "model_state": model.state_dict(),
-                    "optimizer_state": optimizer.state_dict(),
-                    "best_loss": best_loss,
-                    "accuracy": val_acc,
-                },
-                args.save_model,
-            )
+            file_name = args.save_model
+            flag += " --"
+            save_model(model, optimizer, epoch, best_loss, val_acc, file_name)
 
-        print(
+        if val_acc >= best_acc:
+            best_acc = val_acc
+            file_name = args.save_model.with_stem(args.save_model.stem + "_acc")
+            flag += " ++"
+            save_model(model, optimizer, epoch, best_loss, best_acc, file_name)
+
+        logging.info(
             f"{epoch:2}: Train: loss {train_loss:0.6f} acc {train_acc:0.6f}\t"
-            f"Valid: loss {val_loss:0.6f} acc {val_acc:0.6f} {flag}\n"
+            f"Valid: loss {val_loss:0.6f} acc {val_acc:0.6f}{flag}"
         )
+    log.finished()
 
 
 def test(args, model, orders):
     """Test the model on a hold-out data split."""
+    log.started()
+
     device = torch.device("cuda" if torch.has_cuda else "cpu")
     model.to(device)
 
@@ -101,7 +106,8 @@ def test(args, model, orders):
     model.eval()
     test_loss, test_acc = one_epoch(model, test_loader, device, criterion)
 
-    print(f"Test: loss {test_loss:0.6f} acc {test_acc:0.6f}")
+    logging.info(f"Test: loss {test_loss:0.6f} acc {test_acc:0.6f}")
+    log.finished()
 
 
 def one_epoch(model, loader, device, criterion, optimizer=None):
@@ -110,7 +116,7 @@ def one_epoch(model, loader, device, criterion, optimizer=None):
     avg_acc = 0.0
     # torch.autograd.set_detect_anomaly(True)
 
-    for images, orders, y_true in tqdm(loader):
+    for images, orders, y_true in loader:
         images = images.to(device)
         orders = orders.to(device)
         y_true = y_true.to(device)
@@ -127,6 +133,20 @@ def one_epoch(model, loader, device, criterion, optimizer=None):
         avg_acc += accuracy(y_pred, y_true)
 
     return avg_loss / len(loader), avg_acc / len(loader)
+
+
+def save_model(model, optimizer, epoch, best_loss, best_acc, file_name):
+    """Save the model to disk."""
+    torch.save(
+        {
+            "epoch": epoch,
+            "model_state": model.state_dict(),
+            "optimizer_state": optimizer.state_dict(),
+            "best_loss": best_loss,
+            "accuracy": best_acc,
+        },
+        file_name,
+    )
 
 
 def accuracy(y_pred, y_true):
