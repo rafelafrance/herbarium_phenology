@@ -41,6 +41,12 @@ def parse_args():
     )
 
     arg_parser.add_argument(
+        "--split-run",
+        required=True,
+        help="""Which data split to use.""",
+    )
+
+    arg_parser.add_argument(
         "--batch-size",
         type=int,
         default=16,
@@ -55,13 +61,8 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--split-run",
-        default="first_split",
-        help="""Which data split to use. (default: %(default)s)""",
-    )
-
-    arg_parser.add_argument(
         "--trait",
+        nargs="*",
         choices=HerbariumDataset.all_traits,
         default=HerbariumDataset.all_traits[0],
         help="""Which trait to classify. (default: %(default)s)""",

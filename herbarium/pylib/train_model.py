@@ -25,7 +25,7 @@ def train(args, model, orders):
         args.database, args.split_run, split="train", limit=args.limit
     )
     train_dataset = HerbariumDataset(
-        train_split, model, orders=orders, trait=args.trait, augment=True
+        train_split, model, orders=orders, traits=args.trait, augment=True
     )
     train_loader = DataLoader(
         train_dataset,
@@ -41,7 +41,7 @@ def train(args, model, orders):
         split="val",
         limit=args.limit,
     )
-    val_dataset = HerbariumDataset(val_split, model, orders=orders, trait=args.trait)
+    val_dataset = HerbariumDataset(val_split, model, orders=orders, traits=args.trait)
     val_loader = DataLoader(
         val_dataset,
         batch_size=args.batch_size,
@@ -93,7 +93,7 @@ def test(args, model, orders):
     test_split = db.select_split(
         args.database, args.split_run, split="test", limit=args.limit
     )
-    test_dataset = HerbariumDataset(test_split, model, orders=orders, trait=args.trait)
+    test_dataset = HerbariumDataset(test_split, model, orders=orders, traits=args.trait)
     test_loader = DataLoader(
         test_dataset,
         batch_size=args.batch_size,

@@ -23,18 +23,15 @@ class HerbariumDataset(Dataset):
         net,
         *,
         orders: list[str] = None,
+        traits: list[str] = None,
         augment: bool = False,
-        trait: str = "flowering",
     ) -> None:
         super().__init__()
 
-        self.trait_name = trait
+        self.traits: list[str] = traits if traits else [self.all_traits[0]]
 
-        self.orders: dict[str, int] = {}
-        self.orders_len = 0
-        if orders:
-            self.orders: dict[str, int] = {o: i for i, o in enumerate(orders)}
-            self.orders_len = len(orders)
+        orders = orders if orders else []
+        self.orders: dict[str, int] = {o: i for i, o in enumerate(orders)}
 
         self.transform = self.build_transforms(net, augment)
 
@@ -80,17 +77,17 @@ class HerbariumDataset(Dataset):
 
     def to_trait(self, sheet) -> torch.Tensor:
         """Convert sheet flags to trait classes."""
-        trait = 1.0 if sheet[self.trait_name] == "1" else 0.0
-        return torch.Tensor([trait])
+        traits = [1.0 if sheet[t] == "1" else 0.0 for t in self.traits]
+        return torch.Tensor(traits)
 
     def to_order(self, sheet):
-        """Convert sheet order to a one-hot encoding for the order."""
-        order = torch.zeros(self.orders_len, dtype=torch.float)
+        """Convert the phylogenetic order to a one-hot encoding for the order."""
+        order = torch.zeros(len(self.orders), dtype=torch.float)
         order[self.orders[sheet["order_"]]] = 1.0
         return order
 
     def pos_weight(self) -> torch.Tensor:
-        """Calculate the positive weight for trait in this dataset."""
+        """Calculate the positive weight for traits in this dataset."""
         weight = sum(s.trait for s in self.sheets)
         pos_wt = (len(self) - weight) / weight if weight else 0.0
         return torch.Tensor(pos_wt)
