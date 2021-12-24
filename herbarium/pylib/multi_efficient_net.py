@@ -17,14 +17,14 @@ class MultiEfficientNet(nn.Module):
         mid_feat = [self.in_feat // (2 ** i) for i in range(2, 5)]
         mix_feat = mid_feat[0] + orders_len
 
-        self.efficient_net = efficient_net
+        self.backbone = efficient_net
 
         # Freeze the top of a pre-trained model
         if freeze == "top":
-            for param in self.efficient_net.parameters():
+            for param in self.backbone.parameters():
                 param.requires_grad = False
 
-        self.efficient_net.classifier = nn.Sequential(
+        self.backbone.classifier = nn.Sequential(
             nn.Dropout(p=self.dropout, inplace=True),
             nn.Linear(in_features=self.in_feat, out_features=mid_feat[0]),
             nn.SiLU(inplace=True),
@@ -53,14 +53,14 @@ class MultiEfficientNet(nn.Module):
 
         # Freeze the entire model, for testing or inference
         if freeze == "all":
-            for param in self.efficient_net.parameters():
+            for param in self.backbone.parameters():
                 param.requires_grad = False
             for param in self.multi_classifier.parameters():
                 param.requires_grad = False
 
     def forward(self, x0: Tensor, x1: Tensor) -> Tensor:
         """Run the classifier forwards."""
-        x0 = self.efficient_net(x0)
+        x0 = self.backbone(x0)
         x = torch.cat((x0, x1), dim=1)
         x = self.multi_classifier(x)
         return x

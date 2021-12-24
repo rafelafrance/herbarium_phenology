@@ -52,7 +52,7 @@ def train(args, model, orders):
     pos_weight = train_dataset.pos_weight().to(device)
     criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
-    optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
+    optimizer = optim.AdamW(model.parameters(), lr=args.learning_rate)
 
     for epoch in range(1, args.epochs + 1):
         model.train()
