@@ -15,8 +15,6 @@ from .herbarium_dataset import HerbariumDataset
 def train(args, model, orders):
     """Train a model."""
     log.started()
-    best_loss = model.state.get("best_loss", np.Inf)
-    best_acc = model.state.get("accuracy", 0.0)
 
     device = torch.device("cuda" if torch.has_cuda else "cpu")
     model.to(device)
@@ -52,9 +50,15 @@ def train(args, model, orders):
     pos_weight = train_dataset.pos_weight().to(device)
     criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
-    optimizer = optim.AdamW(model.parameters(), lr=args.learning_rate)
+    optimizer = load_optimizer(model, args.learning_rate, device)
 
-    for epoch in range(1, args.epochs + 1):
+    best_loss = model.state.get("best_loss", np.Inf)
+    best_acc = model.state.get("accuracy", 0.0)
+
+    start_epoch = model.state.get("epoch", 0) + 1
+    end_epoch = start_epoch + args.epochs
+
+    for epoch in range(start_epoch, end_epoch):
         model.train()
         train_loss, train_acc = one_epoch(
             model, train_loader, device, criterion, optimizer
@@ -66,7 +70,7 @@ def train(args, model, orders):
         flag = ""
         if val_loss <= best_loss:
             best_loss = val_loss
-            file_name = args.save_model
+            file_name = args.save_model.with_stem(args.save_model.stem + "_loss")
             flag += " --"
             save_model(model, optimizer, epoch, best_loss, val_acc, file_name)
 
@@ -76,10 +80,15 @@ def train(args, model, orders):
             flag += " ++"
             save_model(model, optimizer, epoch, best_loss, best_acc, file_name)
 
+        if epoch % 10 == 0:
+            save_model(model, optimizer, epoch, best_loss, best_acc, args.save_model)
+
         logging.info(
             f"{epoch:2}: Train: loss {train_loss:0.6f} acc {train_acc:0.6f}\t"
             f"Valid: loss {val_loss:0.6f} acc {val_acc:0.6f}{flag}"
         )
+
+    save_model(model, optimizer, end_epoch - 1, best_loss, best_acc, args.save_model)
     log.finished()
 
 
@@ -133,6 +142,18 @@ def one_epoch(model, loader, device, criterion, optimizer=None):
         avg_acc += accuracy(y_pred, y_true)
 
     return avg_loss / len(loader), avg_acc / len(loader)
+
+
+def load_optimizer(model, learning_rate, device):
+    """Create an optimizer."""
+    optimizer = optim.AdamW(model.parameters(), lr=learning_rate)
+    if model.state.get("optimizer_state"):
+        optimizer.load_state_dict(model.state["optimizer_state"])
+        for state in optimizer.state.values():
+            for key, value in state.items():
+                if torch.is_tensor(value):
+                    state[key] = value.to(device)
+    return optimizer
 
 
 def save_model(model, optimizer, epoch, best_loss, best_acc, file_name):
