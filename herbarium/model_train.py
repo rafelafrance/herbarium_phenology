@@ -31,9 +31,7 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--split-run",
-        required=True,
-        help="""Which data split to use.""",
+        "--split-run", required=True, help="""Which data split to use."""
     )
 
     arg_parser.add_argument(

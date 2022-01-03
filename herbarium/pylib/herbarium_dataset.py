@@ -9,7 +9,7 @@ from torchvision import transforms
 
 from .const import ROOT_DIR
 
-Sheet = namedtuple("Sheet", "path order trait")
+Sheet = namedtuple("Sheet", "path coreid order trait")
 
 
 class HerbariumDataset(Dataset):
@@ -40,6 +40,7 @@ class HerbariumDataset(Dataset):
             self.sheets.append(
                 Sheet(
                     sheet["path"],
+                    sheet["coreid"],
                     self.to_order(sheet),
                     self.to_trait(sheet),
                 )
@@ -73,7 +74,7 @@ class HerbariumDataset(Dataset):
             sheet = self.sheets[index]
             image = Image.open(ROOT_DIR / sheet.path).convert("RGB")
             image = self.transform(image)
-        return image, sheet.order, sheet.trait
+        return image, sheet.order, sheet.trait, sheet.coreid
 
     def to_trait(self, sheet) -> torch.Tensor:
         """Convert sheet flags to trait classes."""

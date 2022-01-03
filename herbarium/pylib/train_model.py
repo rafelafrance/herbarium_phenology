@@ -1,7 +1,9 @@
 """A model to classify herbarium traits."""
 import logging
+import sqlite3
 
 import numpy as np
+import pandas as pd
 import torch
 from torch import nn
 from torch import optim
@@ -41,16 +43,13 @@ def train(args, model, orders):
     )
     val_dataset = HerbariumDataset(val_split, model, orders=orders, traits=args.trait)
     val_loader = DataLoader(
-        val_dataset,
-        batch_size=args.batch_size,
-        num_workers=args.workers,
-        drop_last=len(val_split) % args.batch_size == 1,
+        val_dataset, batch_size=args.batch_size, num_workers=args.workers
     )
 
     pos_weight = train_dataset.pos_weight().to(device)
     criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
-    optimizer = load_optimizer(model, args.learning_rate, device)
+    optimizer = load_optimizer(model, args.learning_rate)
 
     best_loss = model.state.get("best_loss", np.Inf)
     best_acc = model.state.get("accuracy", 0.0)
@@ -68,13 +67,13 @@ def train(args, model, orders):
         val_loss, val_acc = one_epoch(model, val_loader, device, criterion)
 
         flag = ""
-        if val_loss <= best_loss:
+        if (val_loss, -val_acc) <= (best_loss, -best_acc):
             best_loss = val_loss
             file_name = args.save_model.with_stem(args.save_model.stem + "_loss")
             flag += " --"
             save_model(model, optimizer, epoch, best_loss, val_acc, file_name)
 
-        if val_acc >= best_acc:
+        if (val_acc, -val_loss) >= (best_acc, -best_loss):
             best_acc = val_acc
             file_name = args.save_model.with_stem(args.save_model.stem + "_acc")
             flag += " ++"
@@ -107,25 +106,69 @@ def test(args, model, orders):
         test_dataset,
         batch_size=args.batch_size,
         num_workers=args.workers,
-        drop_last=len(test_split) % args.batch_size == 1,
     )
 
     criterion = nn.BCEWithLogitsLoss()
 
     model.eval()
-    test_loss, test_acc = one_epoch(model, test_loader, device, criterion)
+
+    test_loss = 0.0
+    test_acc = 0.0
+
+    batch = []
+
+    for images, orders, y_true, coreids in test_loader:
+        images = images.to(device)
+        orders = orders.to(device)
+        y_true = y_true.to(device)
+
+        y_pred = model(images, orders)
+        loss = criterion(y_pred, y_true)
+
+        test_loss += loss.item()
+        test_acc += accuracy(y_pred, y_true)
+
+        y_pred = torch.sigmoid(y_pred)
+
+        y_pred = y_pred.detach().cpu()
+        y_true = y_true.detach().cpu()
+
+        for trues, preds, coreid in zip(y_true, y_pred, coreids):
+            rec = {
+                "coreid": coreid,
+                "test_run": args.test_run,
+                "split_run": args.split_run,
+            }
+
+            true_value, pred_value = {}, {}
+
+            for trait, true, pred in zip(args.traits, trues, preds):
+                true_value[trait] = true
+                pred_value[trait] = pred
+
+            for trait in HerbariumDataset.all_traits:
+                rec[f"{trait}_true"] = true_value.get(trait, "")
+                rec[f"{trait}_pred"] = pred_value.get(trait, "")
+
+            batch.append(rec)
+
+    df = pd.DataFrame(batch)
+    with sqlite3.connect(args.database) as cxn:
+        df.to_sql("test_runs", cxn, if_exists="append", index=False)
+
+    test_loss /= len(test_loader)
+    test_acc /= len(test_loader)
 
     logging.info(f"Test: loss {test_loss:0.6f} acc {test_acc:0.6f}")
     log.finished()
 
 
 def one_epoch(model, loader, device, criterion, optimizer=None):
-    """Train an epoch."""
+    """Train or validate an epoch."""
     avg_loss = 0.0
     avg_acc = 0.0
-    # torch.autograd.set_detect_anomaly(True)
 
-    for images, orders, y_true in loader:
+    for images, orders, y_true, _ in loader:
         images = images.to(device)
         orders = orders.to(device)
         y_true = y_true.to(device)
@@ -144,15 +187,11 @@ def one_epoch(model, loader, device, criterion, optimizer=None):
     return avg_loss / len(loader), avg_acc / len(loader)
 
 
-def load_optimizer(model, learning_rate, device):
+def load_optimizer(model, learning_rate):
     """Create an optimizer."""
     optimizer = optim.AdamW(model.parameters(), lr=learning_rate)
     if model.state.get("optimizer_state"):
         optimizer.load_state_dict(model.state["optimizer_state"])
-        for state in optimizer.state.values():
-            for key, value in state.items():
-                if torch.is_tensor(value):
-                    state[key] = value.to(device)
     return optimizer
 
 
