@@ -92,7 +92,7 @@ def train(args, model, orders):
 
 
 def test(args, model, orders):
-    """Test the model on a hold-out data split."""
+    """Test the model on a hold-out/test data split."""
     log.started()
 
     device = torch.device("cuda" if torch.has_cuda else "cpu")
@@ -142,9 +142,9 @@ def test(args, model, orders):
 
             true_value, pred_value = {}, {}
 
-            for trait, true, pred in zip(args.traits, trues, preds):
-                true_value[trait] = true
-                pred_value[trait] = pred
+            for trait, true, pred in zip(args.trait, trues, preds):
+                true_value[trait] = true.item()
+                pred_value[trait] = pred.item()
 
             for trait in HerbariumDataset.all_traits:
                 rec[f"{trait}_true"] = true_value.get(trait, "")

@@ -4,6 +4,9 @@ import socket
 import sqlite3
 import sys
 import warnings
+from pathlib import Path
+from typing import TextIO
+from typing import Union
 from urllib.request import urlretrieve
 
 import pandas as pd
@@ -28,6 +31,9 @@ socket.setdefaulttimeout(TIMEOUT)
 # The column that holds the image URL
 COLUMN = "accessuri"
 
+ErrorArg = Union[Path, TextIO, None]
+ErrorFile = Union[Path, TextIO]
+
 
 def sample_records(database, csv_dir, limit=1000):
     """Get a broad sample of herbarium specimens."""
@@ -46,21 +52,21 @@ def sample_records(database, csv_dir, limit=1000):
             df.to_csv(csv_dir / file_name, index=False)
 
 
-def download_images(csv_file, image_dir, error=None):
+def download_images(csv_file, image_dir, error: ErrorArg = None):
     """Download iDigBio images out of a CSV file."""
     os.makedirs(image_dir, exist_ok=True)
 
-    error = error if error else sys.stderr
+    error_: ErrorFile = error if error else sys.stderr
 
     df = pd.read_csv(csv_file, index_col="coreid", dtype=str)
 
-    with open(error, "a") as err:
+    with open(error_, "a") as err:
         for coreid, row in df.iterrows():
             path = image_dir / f"{coreid}.jpg"
             if path.exists():
                 continue
 
-            for attempt in range(ATTEMPTS):
+            for _ in range(ATTEMPTS):
                 try:
                     urlretrieve(row[COLUMN], path)
                     break
@@ -71,14 +77,14 @@ def download_images(csv_file, image_dir, error=None):
                 print(f"Could not download: {row[COLUMN]}", file=err, flush=True)
 
 
-def validate_images(image_dir, database, error=None, glob="*.jpg"):
+def validate_images(image_dir, database, error: ErrorArg, glob="*.jpg"):
     """Put valid image paths into a database."""
-    error = error if error else sys.stderr
+    error_: ErrorFile = error if error else sys.stderr
     images = []
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)  # No EXIF warnings
         warnings.filterwarnings("error", category=DecompressionBombWarning)
-        with open(error, "a") as err:
+        with open(error_, "a") as err:
             for path in tqdm(image_dir.glob(glob)):
                 image = None
                 try:

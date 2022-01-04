@@ -41,6 +41,12 @@ def parse_args():
     )
 
     arg_parser.add_argument(
+        "--test-run",
+        required=True,
+        help="""Name this test run.""",
+    )
+
+    arg_parser.add_argument(
         "--split-run",
         required=True,
         help="""Which data split to use.""",
