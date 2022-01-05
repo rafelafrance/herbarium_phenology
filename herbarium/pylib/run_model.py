@@ -1,9 +1,7 @@
 """A model to classify herbarium traits."""
 import logging
-import sqlite3
 
 import numpy as np
-import pandas as pd
 import torch
 from torch import nn
 from torch import optim
@@ -95,6 +93,8 @@ def test(args, model, orders):
     """Test the model on a hold-out/test data split."""
     log.started()
 
+    db.create_test_runs_table(args.database)
+
     device = torch.device("cuda" if torch.has_cuda else "cpu")
     model.to(device)
 
@@ -134,32 +134,71 @@ def test(args, model, orders):
         y_true = y_true.detach().cpu()
 
         for trues, preds, coreid in zip(y_true, y_pred, coreids):
-            rec = {
-                "coreid": coreid,
-                "test_run": args.test_run,
-                "split_run": args.split_run,
-            }
-
-            true_value, pred_value = {}, {}
-
             for trait, true, pred in zip(args.trait, trues, preds):
-                true_value[trait] = true.item()
-                pred_value[trait] = pred.item()
+                batch.append(
+                    {
+                        "coreid": coreid,
+                        "test_run": args.test_run,
+                        "split_run": args.split_run,
+                        "trait": trait,
+                        "true": true.item(),
+                        "pred": pred.item(),
+                    }
+                )
 
-            for trait in HerbariumDataset.all_traits:
-                rec[f"{trait}_true"] = true_value.get(trait, "")
-                rec[f"{trait}_pred"] = pred_value.get(trait, "")
-
-            batch.append(rec)
-
-    df = pd.DataFrame(batch)
-    with sqlite3.connect(args.database) as cxn:
-        df.to_sql("test_runs", cxn, if_exists="append", index=False)
+    db.insert_test_runs(args.database, batch, args.test_run, args.split_run)
 
     test_loss /= len(test_loader)
     test_acc /= len(test_loader)
 
     logging.info(f"Test: loss {test_loss:0.6f} acc {test_acc:0.6f}")
+    log.finished()
+
+
+def infer(args, model, orders):
+    """Test the model on a hold-out/test data split."""
+    log.started()
+
+    db.create_inferences_table(args.database)
+
+    device = torch.device("cuda" if torch.has_cuda else "cpu")
+    model.to(device)
+
+    infer_split = db.select_images(args.database, limit=args.limit)
+    infer_dataset = HerbariumDataset(
+        infer_split, model, orders=orders, traits=args.trait
+    )
+    infer_loader = DataLoader(
+        infer_dataset,
+        batch_size=args.batch_size,
+        num_workers=args.workers,
+    )
+
+    model.eval()
+
+    batch = []
+
+    for images, orders, _, coreids in infer_loader:
+        images = images.to(device)
+        orders = orders.to(device)
+
+        y_pred = model(images, orders)
+        y_pred = torch.sigmoid(y_pred)
+        y_pred = y_pred.detach().cpu()
+
+        for preds, coreid in zip(y_pred, coreids):
+            for trait, pred in zip(args.trait, preds):
+                batch.append(
+                    {
+                        "coreid": coreid,
+                        "inference_run": args.inference_run,
+                        "trait": trait,
+                        "pred": pred.item(),
+                    }
+                )
+
+    db.insert_inferences(args.database, batch, args.inference_run)
+
     log.finished()
 
 

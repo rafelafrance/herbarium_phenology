@@ -108,7 +108,7 @@ def validate_images(image_dir, database, error: ErrorArg, glob="*.jpg"):
                     if image:
                         image.close()
 
-    db.create_image_table(database, drop=True)
+    db.create_images_table(database, drop=True)
     db.insert_images(database, images)
 
 

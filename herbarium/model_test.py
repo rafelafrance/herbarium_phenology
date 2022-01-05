@@ -7,7 +7,7 @@ from pathlib import Path
 from pylib import db
 from pylib.herbarium_dataset import HerbariumDataset
 from pylib.multi_efficient_net import NETS
-from pylib.train_model import test
+from pylib.run_model import test
 
 
 def parse_args():

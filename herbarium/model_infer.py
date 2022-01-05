@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Train a model to classify herbarium traits."""
+"""Test a model that classifies herbarium traits."""
 import argparse
 import textwrap
 from pathlib import Path
@@ -7,12 +7,12 @@ from pathlib import Path
 from pylib import db
 from pylib.herbarium_dataset import HerbariumDataset
 from pylib.multi_efficient_net import NETS
-from pylib.run_model import train
+from pylib.run_model import infer
 
 
 def parse_args():
     """Process command-line arguments."""
-    description = """Train a herbarium phenology classifier model."""
+    description = """Test a herbarium phenology classifier model."""
     arg_parser = argparse.ArgumentParser(
         description=textwrap.dedent(description), fromfile_prefix_chars="@"
     )
@@ -27,14 +27,6 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--save-model", required=True, help="""Save best models to this path."""
-    )
-
-    arg_parser.add_argument(
-        "--split-run", required=True, help="""Which data split to use."""
-    )
-
-    arg_parser.add_argument(
         "--net",
         choices=list(NETS.keys()),
         default=list(NETS.keys())[0],
@@ -44,15 +36,14 @@ def parse_args():
     arg_parser.add_argument(
         "--load-weights",
         type=Path,
-        help="""Start training with weights from this model.""",
+        required=True,
+        help="""Use this model.""",
     )
 
     arg_parser.add_argument(
-        "--learning-rate",
-        "--lr",
-        type=float,
-        default=0.001,
-        help="""Initial learning rate. (default: %(default)s)""",
+        "--inference-run",
+        required=True,
+        help="""Name this inference run.""",
     )
 
     arg_parser.add_argument(
@@ -67,17 +58,6 @@ def parse_args():
         type=int,
         default=4,
         help="""Number of workers for loading data. (default: %(default)s)""",
-    )
-
-    arg_parser.add_argument(
-        "--epochs",
-        type=int,
-        default=100,
-        help="""How many epochs to train. (default: %(default)s)""",
-    )
-
-    arg_parser.add_argument(
-        "--freeze", choices=["top", "all"], help="""Freeze model layers."""
     )
 
     arg_parser.add_argument(
@@ -101,5 +81,5 @@ def parse_args():
 if __name__ == "__main__":
     ARGS = parse_args()
     ORDERS = db.select_orders(ARGS.database, ARGS.split_run)
-    NET = NETS[ARGS.net](len(ORDERS), ARGS.load_weights, ARGS.freeze)
-    train(ARGS, NET, ORDERS)
+    NET = NETS[ARGS.net](len(ORDERS), ARGS.load_weights, freeze="all")
+    infer(ARGS, NET, ORDERS)
