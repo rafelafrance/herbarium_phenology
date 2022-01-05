@@ -99,6 +99,50 @@ class MultiEfficientNetB0(MultiEfficientNet):
         )
 
 
+class MultiEfficientNetB1(MultiEfficientNet):
+    """A class for training efficient net models."""
+
+    def __init__(self, orders_len, load_weights, freeze):
+        self.size = (240, 240)
+        self.mean = (0.7743, 0.7529, 0.7100)
+        self.std_dev = (0.2250, 0.2326, 0.2449)  # TODO
+
+        dropout = 0.2
+        in_feat = 1280
+        efficient_net = torchvision.models.efficientnet_b1(pretrained=True)
+
+        super().__init__(
+            efficient_net,
+            orders_len=orders_len,
+            load_weights=load_weights,
+            freeze=freeze,
+            dropout=dropout,
+            in_feat=in_feat,
+        )
+
+
+class MultiEfficientNetB2(MultiEfficientNet):
+    """A class for training efficient net models."""
+
+    def __init__(self, orders_len, load_weights, freeze):
+        self.size = (260, 260)
+        self.mean = (0.7743, 0.7529, 0.7100)
+        self.std_dev = (0.2250, 0.2326, 0.2449)  # TODO
+
+        dropout = 0.3
+        in_feat = 1408
+        efficient_net = torchvision.models.efficientnet_b2(pretrained=True)
+
+        super().__init__(
+            efficient_net,
+            orders_len=orders_len,
+            load_weights=load_weights,
+            freeze=freeze,
+            dropout=dropout,
+            in_feat=in_feat,
+        )
+
+
 class MultiEfficientNetB3(MultiEfficientNet):
     """A class for training efficient net models."""
 
@@ -167,6 +211,8 @@ class MultiEfficientNetB7(MultiEfficientNet):
 
 NETS = {
     "b0": MultiEfficientNetB0,
+    "b1": MultiEfficientNetB1,
+    "b2": MultiEfficientNetB2,
     "b3": MultiEfficientNetB3,
     "b4": MultiEfficientNetB4,
     "b7": MultiEfficientNetB7,
