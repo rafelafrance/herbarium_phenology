@@ -1,4 +1,4 @@
-"""A model to classify herbarium traits."""
+"""Run a model for classification in training, testing, & inference modes."""
 import logging
 
 import numpy as np
@@ -65,11 +65,11 @@ def train(args, model, orders):
         val_loss, val_acc = one_epoch(model, val_loader, device, criterion)
 
         flag = ""
-        if (val_loss, -val_acc) <= (best_loss, -best_acc):
-            best_loss = val_loss
-            file_name = args.save_model.with_stem(args.save_model.stem + "_loss")
-            flag += " --"
-            save_model(model, optimizer, epoch, best_loss, val_acc, file_name)
+        # if (val_loss, -val_acc) <= (best_loss, -best_acc):
+        #     best_loss = val_loss
+        #     file_name = args.save_model.with_stem(args.save_model.stem + "_loss")
+        #     flag += " --"
+        #     save_model(model, optimizer, epoch, best_loss, val_acc, file_name)
 
         if (val_acc, -val_loss) >= (best_acc, -best_loss):
             best_acc = val_acc
@@ -77,15 +77,15 @@ def train(args, model, orders):
             flag += " ++"
             save_model(model, optimizer, epoch, best_loss, best_acc, file_name)
 
-        if epoch % 10 == 0:
-            save_model(model, optimizer, epoch, best_loss, best_acc, args.save_model)
+        # if epoch % 10 == 0:
+        #     save_model(model, optimizer, epoch, best_loss, best_acc, args.save_model)
 
         logging.info(
             f"{epoch:2}: Train: loss {train_loss:0.6f} acc {train_acc:0.6f}\t"
             f"Valid: loss {val_loss:0.6f} acc {val_acc:0.6f}{flag}"
         )
 
-    save_model(model, optimizer, end_epoch - 1, best_loss, best_acc, args.save_model)
+    # save_model(model, optimizer, end_epoch - 1, best_loss, best_acc, args.save_model)
     log.finished()
 
 

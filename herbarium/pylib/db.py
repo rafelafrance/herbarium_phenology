@@ -132,6 +132,14 @@ def select_split(
     return rows_as_dicts(database, sql, params)
 
 
+def select_all_orders(database: DbPath) -> list[str]:
+    """Get all orders with images."""
+    sql = """select distinct order_ from angiosperms order by order_"""
+    with sqlite3.connect(database) as cxn:
+        orders = [r[0] for r in cxn.execute(sql)]
+    return orders
+
+
 def select_orders(database: DbPath, split_run: str) -> list[str]:
     """Get all of the phylogenetic orders for a split run."""
     sql = """select distinct order_

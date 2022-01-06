@@ -1,14 +1,11 @@
-"""Given a CSV file of iDigBio records, download the images."""
+"""Given download the images in the iDigBio database."""
 import os
 import socket
-import sqlite3
 import sys
 import warnings
-from pathlib import Path
-from typing import TextIO
-from typing import Union
 from urllib.request import urlretrieve
 
+import numpy as np
 import pandas as pd
 import torch
 from PIL import Image
@@ -19,7 +16,7 @@ from tqdm import tqdm
 
 from herbarium.pylib import db
 from herbarium.pylib.herbarium_dataset import HerbariumDataset
-from herbarium.pylib.idigbio_load import FLAGS
+from herbarium.pylib.idigbio_load import TRAITS
 
 # Make a few attempts to download a page
 ATTEMPTS = 3
@@ -31,36 +28,38 @@ socket.setdefaulttimeout(TIMEOUT)
 # The column that holds the image URL
 COLUMN = "accessuri"
 
-ErrorArg = Union[Path, TextIO, None]
-ErrorFile = Union[Path, TextIO]
 
-
-def sample_records(database, csv_dir, limit=1000):
+def sample_records(database, csv_dir, splits=8, limit=100):
     """Get a broad sample of herbarium specimens."""
-    sql_template = """
-        select coreid, accessuri
-          from angiosperms
-         where {} = 1
-      order by random()
-         limit {};
-        """
-    queries = {f"uris_{f}.csv": sql_template.format(f, limit) for f in FLAGS}
+    orders = db.select_all_orders(database)
+    rows = []
+    for order in tqdm(orders):
+        for trait in TRAITS:
+            sql = f"""
+                select coreid, accessuri
+                  from angiosperms
+                where {trait} = 1
+                  and order_ = ?
+                  and coreid not in (select coreid from images)
+                  and accessuri not like '%harvard%'
+                  and accessuri not like '%uconn%'
+             order by random()
+            """
+            sql, _ = db.build_select(sql, limit=limit)
+            rows += db.rows_as_dicts(database, sql, [order, limit])
 
-    with sqlite3.connect(database) as cxn:
-        for file_name, query in queries.items():
-            df = pd.read_sql(query, cxn)
-            df.to_csv(csv_dir / file_name, index=False)
+    for i, array in enumerate(np.array_split(rows, splits)):
+        df = pd.DataFrame(array)
+        df.to_csv(csv_dir / f"uris_{i}.csv", index=False)
 
 
-def download_images(csv_file, image_dir, error: ErrorArg = None):
+def download_images(csv_file, image_dir, error=None):
     """Download iDigBio images out of a CSV file."""
     os.makedirs(image_dir, exist_ok=True)
 
-    error_: ErrorFile = error if error else sys.stderr
-
     df = pd.read_csv(csv_file, index_col="coreid", dtype=str)
 
-    with open(error_, "a") as err:
+    with open(error, "a") if error else sys.stderr as err:
         for coreid, row in df.iterrows():
             path = image_dir / f"{coreid}.jpg"
             if path.exists():
@@ -77,14 +76,13 @@ def download_images(csv_file, image_dir, error: ErrorArg = None):
                 print(f"Could not download: {row[COLUMN]}", file=err, flush=True)
 
 
-def validate_images(image_dir, database, error: ErrorArg, glob="*.jpg"):
+def validate_images(image_dir, database, error, glob="*.jpg"):
     """Put valid image paths into a database."""
-    error_: ErrorFile = error if error else sys.stderr
     images = []
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)  # No EXIF warnings
         warnings.filterwarnings("error", category=DecompressionBombWarning)
-        with open(error_, "a") as err:
+        with open(error, "a") if error else sys.stderr as err:
             for path in tqdm(image_dir.glob(glob)):
                 image = None
                 try:

@@ -24,7 +24,7 @@ OCCURRENCE_RAW = """ coreid dwc:reproductiveCondition dwc:occurrenceRemarks
 MULTIMEDIA = """ coreid accessURI """.split()
 
 # Extra flags
-FLAGS = """
+TRAITS = """
         flowering      fruiting     leaf_out
     not_flowering  not_fruiting not_leaf_out """.split()
 
