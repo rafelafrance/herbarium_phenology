@@ -49,7 +49,7 @@ def sample_records(database, csv_dir, splits=8, limit=100):
             rows += db.rows_as_dicts(database, sql, [order, limit])
 
     for i, array in enumerate(np.array_split(rows, splits)):
-        df = pd.DataFrame(array)
+        df = pd.DataFrame(array.tolist())
         df.to_csv(csv_dir / f"uris_{i}.csv", index=False)
 
 
@@ -77,7 +77,7 @@ def download_images(csv_file, image_dir, error=None):
 
 
 def validate_images(image_dir, database, error, glob="*.jpg"):
-    """Put valid image paths into a database."""
+    """Put valid image paths into the database."""
     images = []
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)  # No EXIF warnings
