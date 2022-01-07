@@ -80,10 +80,10 @@ class MultiEfficientNetB0(MultiEfficientNet):
 
     def __init__(self, orders_len, load_weights, freeze):
         self.size = (224, 224)
-        self.mean = (0.7743, 0.7529, 0.7100)
-        self.std_dev = (0.2250, 0.2326, 0.2449)
-        # self.mean = (0.485, 0.456, 0.406)  # ImageNet
-        # self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
+        # self.mean = (0.7743, 0.7529, 0.7100)
+        # self.std_dev = (0.2250, 0.2326, 0.2449)
+        self.mean = (0.485, 0.456, 0.406)  # ImageNet
+        self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
 
         dropout = 0.2
         in_feat = 1280
@@ -104,8 +104,10 @@ class MultiEfficientNetB1(MultiEfficientNet):
 
     def __init__(self, orders_len, load_weights, freeze):
         self.size = (240, 240)
-        self.mean = (0.7743, 0.7529, 0.7100)
-        self.std_dev = (0.2250, 0.2326, 0.2449)  # TODO
+        # self.mean = (0.7743, 0.7529, 0.7100)
+        # self.std_dev = (0.2250, 0.2326, 0.2449)  # TODO
+        self.mean = (0.485, 0.456, 0.406)  # ImageNet
+        self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
 
         dropout = 0.2
         in_feat = 1280
@@ -126,8 +128,10 @@ class MultiEfficientNetB2(MultiEfficientNet):
 
     def __init__(self, orders_len, load_weights, freeze):
         self.size = (260, 260)
-        self.mean = (0.7743, 0.7529, 0.7100)
-        self.std_dev = (0.2250, 0.2326, 0.2449)  # TODO
+        # self.mean = (0.7743, 0.7529, 0.7100)
+        # self.std_dev = (0.2250, 0.2326, 0.2449)  # TODO
+        self.mean = (0.485, 0.456, 0.406)  # ImageNet
+        self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
 
         dropout = 0.3
         in_feat = 1408
@@ -148,8 +152,10 @@ class MultiEfficientNetB3(MultiEfficientNet):
 
     def __init__(self, orders_len, load_weights, freeze):
         self.size = (300, 300)
-        self.mean = (0.7743, 0.7529, 0.7100)
-        self.std_dev = (0.2286, 0.2365, 0.2492)  # TODO
+        # self.mean = (0.7743, 0.7529, 0.7100)
+        # self.std_dev = (0.2286, 0.2365, 0.2492)  # TODO
+        self.mean = (0.485, 0.456, 0.406)  # ImageNet
+        self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
 
         dropout = 0.3
         in_feat = 1536
@@ -170,8 +176,10 @@ class MultiEfficientNetB4(MultiEfficientNet):
 
     def __init__(self, orders_len, load_weights, freeze):
         self.size = (380, 380)
-        self.mean = (0.7743, 0.7529, 0.7100)
-        self.std_dev = (0.2286, 0.2365, 0.2492)
+        # self.mean = (0.7743, 0.7529, 0.7100)
+        # self.std_dev = (0.2286, 0.2365, 0.2492)
+        self.mean = (0.485, 0.456, 0.406)  # ImageNet
+        self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
 
         dropout = 0.4
         in_feat = 1792
@@ -192,8 +200,10 @@ class MultiEfficientNetB7(MultiEfficientNet):
 
     def __init__(self, orders_len, load_weights, freeze):
         self.size = (600, 600)
-        self.mean = (0.7743, 0.7529, 0.7100)
-        self.std_dev = (0.2286, 0.2365, 0.2492)  # TODO
+        # self.mean = (0.7743, 0.7529, 0.7100)
+        # self.std_dev = (0.2286, 0.2365, 0.2492)  # TODO
+        self.mean = (0.485, 0.456, 0.406)  # ImageNet
+        self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
 
         dropout = 0.5
         in_feat = 2560

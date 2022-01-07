@@ -28,6 +28,19 @@ socket.setdefaulttimeout(TIMEOUT)
 # The column that holds the image URL
 COLUMN = "accessuri"
 
+# Catch these errors during downloads and image validation
+ERRORS = (
+    AttributeError,
+    BufferError,
+    EOFError,
+    IndexError,
+    IOError,
+    OSError,
+    RuntimeError,
+    SyntaxError,
+    TypeError,
+)
+
 
 def sample_records(database, csv_dir, splits=8, limit=100):
     """Get a broad sample of herbarium specimens."""
@@ -69,9 +82,8 @@ def download_images(csv_file, image_dir, error=None):
                 try:
                     urlretrieve(row[COLUMN], path)
                     break
-                except Exception:  # pylint: disable=broad-except
-                    # Gets handled in the for loop's else clause
-                    pass
+                except ERRORS:
+                    pass  # Gets handled in the for loop's else clause
             else:
                 print(f"Could not download: {row[COLUMN]}", file=err, flush=True)
 
@@ -98,8 +110,7 @@ def validate_images(image_dir, database, error, glob="*.jpg"):
                             "height": height,
                         }
                     )
-                except Exception as e:  # pylint: disable=broad-except
-                    # Image isn't added to DB
+                except ERRORS as e:  # Image isn't added to DB
                     err.write(f"Bad image: {path} {e}\n")
                     err.flush()
                 finally:
