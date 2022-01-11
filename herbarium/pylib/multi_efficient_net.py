@@ -37,8 +37,8 @@ MODELS = {
         "dropout": 0.4,
         "in_feat": 1792,
     },
-    # b5: {"size": (456, 456), }
-    # b6: {"size": (528, 528), }
+    # b5: {"size": (456, 456),}
+    # b6: {"size": (528, 528),}
     "b7": {
         "model": torchvision.models.efficientnet_b7,
         "size": (600, 600),
@@ -57,7 +57,7 @@ class MultiEfficientNet(nn.Module):
         orders: list[str],
         load_weights: Path,
         freeze: str,
-        out_features: int = 1,
+        traits: list[str],
     ):
         super().__init__()
 
@@ -97,7 +97,7 @@ class MultiEfficientNet(nn.Module):
             nn.BatchNorm1d(num_features=fc_feat3),
             #
             # nn.Dropout(p=self.dropout, inplace=True),
-            nn.Linear(in_features=fc_feat3, out_features=out_features),
+            nn.Linear(in_features=fc_feat3, out_features=len(traits)),
             # nn.Sigmoid(),
         )
 

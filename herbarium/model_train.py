@@ -89,7 +89,8 @@ def parse_args():
         nargs="*",
         choices=HerbariumDataset.all_traits,
         default=HerbariumDataset.all_traits[0],
-        help="""Which trait to classify. (default: %(default)s)""",
+        help="""Which trait to classify. You may add multiple traits.
+            (default: %(default)s)""",
     )
 
     arg_parser.add_argument(
@@ -123,7 +124,9 @@ def main():
     """Train a model using just pytorch."""
     args = parse_args()
     orders = db.select_orders(args.database, args.split_run)
-    net = MultiEfficientNet(args.net, orders, args.load_weights, args.freeze)
+    net = MultiEfficientNet(
+        args.net, orders, args.load_weights, args.freeze, args.trait
+    )
     train(args, net, orders)
 
 
