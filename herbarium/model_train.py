@@ -7,9 +7,11 @@ from pathlib import Path
 
 import pytorch_lightning as pl
 from pylib import db
-from pylib.efficient_net_orders import EfficientNetOrders
-from pylib.efficient_net_orders import MODELS
 from pylib.herbarium_dataset import HerbariumDataset
+from pylib.multi_efficient_net import MODELS
+from pylib.multi_efficient_net import MultiEfficientNet
+from pylib.multi_efficient_net_pl import MultiEfficientNetPL
+from pylib.run_model import train
 
 
 def parse_args():
@@ -108,16 +110,23 @@ def parse_args():
     return args
 
 
-def main():
-    """Train the model."""
+def main_pl():
+    """Train the model using pytorch-lightning."""
     args = parse_args()
     orders = db.select_orders(args.database, args.split_run)
-    effnet = EfficientNetOrders(orders=orders, args=vars(args))
-    trainer = pl.Trainer(gpus=0, fast_dev_run=True)
+    effnet = MultiEfficientNetPL(orders=orders, args=vars(args))
+    trainer = pl.Trainer(gpus=1)  # , fast_dev_run=True)
     trainer.fit(effnet)
-    # NET = NETS[ARGS.net](len(ORDERS), ARGS.load_weights, ARGS.freeze)
-    # train(ARGS, NET, ORDERS)
+
+
+def main():
+    """Train a model using just pytorch."""
+    args = parse_args()
+    orders = db.select_orders(args.database, args.split_run)
+    net = MultiEfficientNet(args.net, orders, args.load_weights, args.freeze)
+    train(args, net, orders)
 
 
 if __name__ == "__main__":
+    # main_pl()
     main()

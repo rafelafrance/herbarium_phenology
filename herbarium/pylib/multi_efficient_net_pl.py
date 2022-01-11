@@ -3,6 +3,7 @@ from typing import Any
 
 import pytorch_lightning as pl
 import torch
+import torch.nn.functional as F
 import torchvision
 from torch import nn
 from torch.utils.data import DataLoader
@@ -52,7 +53,7 @@ MODELS = {
 }
 
 
-class EfficientNetOrders(pl.LightningModule):
+class MultiEfficientNetPL(pl.LightningModule):
     """An EfficientNet that uses phylogenetic orders as sidecar data."""
 
     def __init__(self, orders: list[str], args: dict[Any]):
@@ -75,9 +76,6 @@ class EfficientNetOrders(pl.LightningModule):
         self.size = params["size"]
         self.mean = (0.485, 0.456, 0.406)  # ImageNet
         self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
-
-        # pos_weight = train_dataset.pos_weight()
-        self.criterion = nn.BCEWithLogitsLoss()
 
         fc_feat1 = params["in_feat"] // 4
         fc_feat2 = params["in_feat"] // 8
@@ -114,6 +112,12 @@ class EfficientNetOrders(pl.LightningModule):
         if self.state.get("model_state"):
             self.load_state_dict(self.state["model_state"])
 
+        self.val_dataset = self.get_dataset("val")
+        self.train_dataset = self.get_dataset("train", augment=True)
+
+        self._pos_weight = self.train_dataset.pos_weight()
+        self.pos_weight = None
+
     def forward(self, x0, x1):
         """Run the classifier forwards."""
         x0 = self.backbone(x0)
@@ -121,57 +125,70 @@ class EfficientNetOrders(pl.LightningModule):
         x = self.multi_classifier(x)
         return x
 
+    def loss_function(self, y_true, y_pred):
+        """Calculate the loss."""
+        return F.binary_cross_entropy_with_logits(
+            y_pred, y_true, pos_weight=self.pos_weight
+        )
+
     def configure_optimizers(self):
         """Configure the optimizer."""
+        self.pos_weight = torch.tensor(self._pos_weight, device=self.device)
         return torch.optim.AdamW(self.parameters(), lr=self.lr)
+
+    def get_dataset(self, split, augment=False):
+        """Get a dataset for training, validation, testing, or inference."""
+        raw_data = db.select_split(
+            self.database, self.split_run, split=split, limit=self.limit
+        )
+        return HerbariumDataset(raw_data, self, orders=self.orders, augment=augment)
 
     def train_dataloader(self):
         """Load the training split for the data."""
-        split = db.select_split(
-            self.database, self.split_run, split="train", limit=self.limit
-        )
-        dataset = HerbariumDataset(split, self, orders=self.orders, augment=True)
-        loader = DataLoader(
-            dataset,
+        # dataset = self.get_dataset("train", augment=True)
+        return DataLoader(
+            self.train_dataset,
             shuffle=True,
             batch_size=self.batch_size,
             num_workers=self.workers,
-            drop_last=len(split) % self.batch_size == 1,
+            drop_last=len(self.train_dataset) % self.batch_size == 1,
         )
-        return loader
 
     def val_dataloader(self):
         """Load the validation split for the data."""
-        split = db.select_split(
-            self.database,
-            self.split_run,
-            split="val",
-            limit=self.limit,
+        # dataset = self.get_dataset("val")
+        return DataLoader(
+            self.val_dataset, batch_size=self.batch_size, num_workers=self.workers
         )
-        dataset = HerbariumDataset(split, self, orders=self.orders)
-        loader = DataLoader(
-            dataset, batch_size=self.batch_size, num_workers=self.workers
-        )
-        return loader
 
     def training_step(self, batch, _):
         """Train a model batch with images and orders."""
-        print(_)
         images, orders, y_true, _ = batch
         y_pred = self(images, orders)
-        loss = self.criterion(y_pred, y_true)
-        # self.log(
-        #     "train_loss", loss, on_step=True, on_epoch=True, prog_bar=True,
-        #     logger=True
-        # )
+        loss = self.loss_function(y_pred, y_true)
+        self.log(
+            "train_loss",
+            loss,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True,
+            batch_size=len(batch),
+        )
         return loss
 
     def validation_step(self, batch, _):
         """Validate a model batch with images and orders."""
         images, orders, y_true, _ = batch
         y_pred = self(images, orders)
-        loss = self.criterion(y_pred, y_true)
-        # self.log(
-        #     "val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True
-        # )
+        loss = self.loss_function(y_pred, y_true)
+        self.log(
+            "val_loss",
+            loss,
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+            logger=True,
+            batch_size=len(batch),
+        )
         return loss

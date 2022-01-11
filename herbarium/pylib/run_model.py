@@ -42,7 +42,7 @@ def train(args, model, orders):
         val_dataset, batch_size=args.batch_size, num_workers=args.workers
     )
 
-    pos_weight = train_dataset.pos_weight().to(device)
+    pos_weight = torch.tensor(train_dataset.pos_weight()).to(device)
     criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
     optimizer = load_optimizer(model, args.learning_rate)

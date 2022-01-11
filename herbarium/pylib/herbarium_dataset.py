@@ -23,9 +23,12 @@ class HerbariumDataset(Dataset):
         net,
         *,
         orders: list[str] = None,
+        traits: list[str] = None,
         augment: bool = False,
     ) -> None:
         super().__init__()
+
+        self.traits: list[str] = traits if traits else [self.all_traits[0]]
 
         orders = orders if orders else []
         self.orders: dict[str, int] = {o: i for i, o in enumerate(orders)}
@@ -75,7 +78,7 @@ class HerbariumDataset(Dataset):
 
     def to_trait(self, sheet) -> torch.Tensor:
         """Convert sheet flags to trait classes."""
-        traits = [1.0 if sheet[t] == "1" else 0.0 for t in self.all_traits]
+        traits = [1.0 if sheet[t] == "1" else 0.0 for t in self.traits]
         return torch.Tensor(traits)
 
     def to_order(self, sheet):
@@ -84,8 +87,8 @@ class HerbariumDataset(Dataset):
         order[self.orders[sheet["order_"]]] = 1.0
         return order
 
-    def pos_weight(self) -> torch.Tensor:
+    def pos_weight(self) -> list:
         """Calculate the positive weight for traits in this dataset."""
         weight = sum(s.trait for s in self.sheets)
-        pos_wt = (len(self) - weight) / weight if weight else 0.0
-        return torch.Tensor(pos_wt)
+        pos_wt = [(len(self) - wt) / wt if wt else 0.0 for wt in weight]
+        return pos_wt

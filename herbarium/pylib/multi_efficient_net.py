@@ -1,11 +1,51 @@
 """Override EfficientNet so that it uses multiple inputs on the forward pass."""
+from pathlib import Path
+
 import torch
 import torchvision
 from torch import nn
 from torch import Tensor
 
-# from .herbarium_dataset import HerbariumDataset
-# b0 224, b1 240, b2 260, b3 300, b4 380, b5 456, b6 528, b7 600
+MODELS = {
+    "b0": {
+        "model": torchvision.models.efficientnet_b0,
+        "size": (224, 224),
+        "dropout": 0.2,
+        "in_feat": 1280,
+    },
+    "b1": {
+        "model": torchvision.models.efficientnet_b1,
+        "size": (240, 240),
+        "dropout": 0.2,
+        "in_feat": 1280,
+    },
+    "b2": {
+        "model": torchvision.models.efficientnet_b2,
+        "size": (260, 260),
+        "dropout": 0.3,
+        "in_feat": 1408,
+    },
+    "b3": {
+        "model": torchvision.models.efficientnet_b3,
+        "size": (300, 300),
+        "dropout": 0.3,
+        "in_feat": 1536,
+    },
+    "b4": {
+        "model": torchvision.models.efficientnet_b4,
+        "size": (380, 380),
+        "dropout": 0.4,
+        "in_feat": 1792,
+    },
+    # b5: {"size": (456, 456), }
+    # b6: {"size": (528, 528), }
+    "b7": {
+        "model": torchvision.models.efficientnet_b7,
+        "size": (600, 600),
+        "dropout": 0.5,
+        "in_feat": 2560,
+    },
+}
 
 
 class MultiEfficientNet(nn.Module):
@@ -13,20 +53,25 @@ class MultiEfficientNet(nn.Module):
 
     def __init__(
         self,
-        efficient_net,
-        orders_len,
-        load_weights,
-        freeze,
-        dropout,
-        in_feat,
-        out_features=1,
+        net: str,
+        orders: list[str],
+        load_weights: Path,
+        freeze: str,
+        out_features: int = 1,
     ):
         super().__init__()
 
-        mid_feat = [in_feat // (2 ** i) for i in range(2, 5)]
-        mix_feat = mid_feat[0] + orders_len
+        params = MODELS[net]
+        self.size = params["size"]
+        self.mean = (0.485, 0.456, 0.406)  # ImageNet
+        self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
 
-        self.backbone = efficient_net
+        fc_feat1 = params["in_feat"] // 4
+        fc_feat2 = params["in_feat"] // 8
+        fc_feat3 = params["in_feat"] // 16
+        mix_feat = fc_feat1 + len(orders)
+
+        self.backbone = params["model"](pretrained=True)
 
         # Freeze the top of a pre-trained model
         if freeze == "top":
@@ -34,25 +79,25 @@ class MultiEfficientNet(nn.Module):
                 param.requires_grad = False
 
         self.backbone.classifier = nn.Sequential(
-            nn.Dropout(p=dropout, inplace=True),
-            nn.Linear(in_features=in_feat, out_features=mid_feat[0]),
+            nn.Dropout(p=params["dropout"], inplace=True),
+            nn.Linear(in_features=params["in_feat"], out_features=fc_feat1),
             nn.SiLU(inplace=True),
-            nn.BatchNorm1d(num_features=mid_feat[0]),
+            nn.BatchNorm1d(num_features=fc_feat1),
         )
 
         self.multi_classifier = nn.Sequential(
-            nn.Dropout(p=dropout, inplace=True),
-            nn.Linear(in_features=mix_feat, out_features=mid_feat[1]),
+            nn.Dropout(p=params["dropout"], inplace=True),
+            nn.Linear(in_features=mix_feat, out_features=fc_feat2),
             nn.SiLU(inplace=True),
-            nn.BatchNorm1d(num_features=mid_feat[1]),
+            nn.BatchNorm1d(num_features=fc_feat2),
             #
-            nn.Dropout(p=dropout, inplace=True),
-            nn.Linear(in_features=mid_feat[1], out_features=mid_feat[2]),
+            nn.Dropout(p=params["dropout"], inplace=True),
+            nn.Linear(in_features=fc_feat2, out_features=fc_feat3),
             nn.SiLU(inplace=True),
-            nn.BatchNorm1d(num_features=mid_feat[2]),
+            nn.BatchNorm1d(num_features=fc_feat3),
             #
             # nn.Dropout(p=self.dropout, inplace=True),
-            nn.Linear(in_features=mid_feat[2], out_features=out_features),
+            nn.Linear(in_features=fc_feat3, out_features=out_features),
             # nn.Sigmoid(),
         )
 
@@ -73,157 +118,3 @@ class MultiEfficientNet(nn.Module):
         x = torch.cat((x0, x1), dim=1)
         x = self.multi_classifier(x)
         return x
-
-
-class MultiEfficientNetB0(MultiEfficientNet):
-    """A class for training efficient net models."""
-
-    def __init__(self, orders_len, load_weights, freeze):
-        self.size = (224, 224)
-        # self.mean = (0.7743, 0.7529, 0.7100)
-        # self.std_dev = (0.2250, 0.2326, 0.2449)
-        self.mean = (0.485, 0.456, 0.406)  # ImageNet
-        self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
-
-        dropout = 0.2
-        in_feat = 1280
-        efficient_net = torchvision.models.efficientnet_b0(pretrained=True)
-
-        super().__init__(
-            efficient_net,
-            orders_len=orders_len,
-            load_weights=load_weights,
-            freeze=freeze,
-            dropout=dropout,
-            in_feat=in_feat,
-        )
-
-
-class MultiEfficientNetB1(MultiEfficientNet):
-    """A class for training efficient net models."""
-
-    def __init__(self, orders_len, load_weights, freeze):
-        self.size = (240, 240)
-        # self.mean = (0.7743, 0.7529, 0.7100)
-        # self.std_dev = (0.2250, 0.2326, 0.2449)  # TODO
-        self.mean = (0.485, 0.456, 0.406)  # ImageNet
-        self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
-
-        dropout = 0.2
-        in_feat = 1280
-        efficient_net = torchvision.models.efficientnet_b1(pretrained=True)
-
-        super().__init__(
-            efficient_net,
-            orders_len=orders_len,
-            load_weights=load_weights,
-            freeze=freeze,
-            dropout=dropout,
-            in_feat=in_feat,
-        )
-
-
-class MultiEfficientNetB2(MultiEfficientNet):
-    """A class for training efficient net models."""
-
-    def __init__(self, orders_len, load_weights, freeze):
-        self.size = (260, 260)
-        # self.mean = (0.7743, 0.7529, 0.7100)
-        # self.std_dev = (0.2250, 0.2326, 0.2449)  # TODO
-        self.mean = (0.485, 0.456, 0.406)  # ImageNet
-        self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
-
-        dropout = 0.3
-        in_feat = 1408
-        efficient_net = torchvision.models.efficientnet_b2(pretrained=True)
-
-        super().__init__(
-            efficient_net,
-            orders_len=orders_len,
-            load_weights=load_weights,
-            freeze=freeze,
-            dropout=dropout,
-            in_feat=in_feat,
-        )
-
-
-class MultiEfficientNetB3(MultiEfficientNet):
-    """A class for training efficient net models."""
-
-    def __init__(self, orders_len, load_weights, freeze):
-        self.size = (300, 300)
-        # self.mean = (0.7743, 0.7529, 0.7100)
-        # self.std_dev = (0.2286, 0.2365, 0.2492)  # TODO
-        self.mean = (0.485, 0.456, 0.406)  # ImageNet
-        self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
-
-        dropout = 0.3
-        in_feat = 1536
-        efficient_net = torchvision.models.efficientnet_b3(pretrained=True)
-
-        super().__init__(
-            efficient_net,
-            orders_len=orders_len,
-            load_weights=load_weights,
-            freeze=freeze,
-            dropout=dropout,
-            in_feat=in_feat,
-        )
-
-
-class MultiEfficientNetB4(MultiEfficientNet):
-    """A class for training efficient net models."""
-
-    def __init__(self, orders_len, load_weights, freeze):
-        self.size = (380, 380)
-        # self.mean = (0.7743, 0.7529, 0.7100)
-        # self.std_dev = (0.2286, 0.2365, 0.2492)
-        self.mean = (0.485, 0.456, 0.406)  # ImageNet
-        self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
-
-        dropout = 0.4
-        in_feat = 1792
-        efficient_net = torchvision.models.efficientnet_b4(pretrained=True)
-
-        super().__init__(
-            efficient_net,
-            orders_len=orders_len,
-            load_weights=load_weights,
-            freeze=freeze,
-            dropout=dropout,
-            in_feat=in_feat,
-        )
-
-
-class MultiEfficientNetB7(MultiEfficientNet):
-    """A class for training efficient net models."""
-
-    def __init__(self, orders_len, load_weights, freeze):
-        self.size = (600, 600)
-        # self.mean = (0.7743, 0.7529, 0.7100)
-        # self.std_dev = (0.2286, 0.2365, 0.2492)  # TODO
-        self.mean = (0.485, 0.456, 0.406)  # ImageNet
-        self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
-
-        dropout = 0.5
-        in_feat = 2560
-        efficient_net = torchvision.models.efficientnet_b7(pretrained=True)
-
-        super().__init__(
-            efficient_net,
-            orders_len=orders_len,
-            load_weights=load_weights,
-            freeze=freeze,
-            dropout=dropout,
-            in_feat=in_feat,
-        )
-
-
-NETS = {
-    "b0": MultiEfficientNetB0,
-    "b1": MultiEfficientNetB1,
-    "b2": MultiEfficientNetB2,
-    "b3": MultiEfficientNetB3,
-    "b4": MultiEfficientNetB4,
-    "b7": MultiEfficientNetB7,
-}
