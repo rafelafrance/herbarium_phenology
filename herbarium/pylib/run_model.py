@@ -22,9 +22,7 @@ def train(args, model, orders):
     train_split = db.select_split(
         args.database, args.split_run, split="train", limit=args.limit
     )
-    train_dataset = HerbariumDataset(
-        train_split, model, orders=orders, traits=args.trait, augment=True
-    )
+    train_dataset = HerbariumDataset(train_split, model, orders=orders, augment=True)
     train_loader = DataLoader(
         train_dataset,
         shuffle=True,
@@ -39,7 +37,7 @@ def train(args, model, orders):
         split="val",
         limit=args.limit,
     )
-    val_dataset = HerbariumDataset(val_split, model, orders=orders, traits=args.trait)
+    val_dataset = HerbariumDataset(val_split, model, orders=orders)
     val_loader = DataLoader(
         val_dataset, batch_size=args.batch_size, num_workers=args.workers
     )
@@ -101,7 +99,7 @@ def test(args, model, orders):
     test_split = db.select_split(
         args.database, args.split_run, split="test", limit=args.limit
     )
-    test_dataset = HerbariumDataset(test_split, model, orders=orders, traits=args.trait)
+    test_dataset = HerbariumDataset(test_split, model, orders=orders)
     test_loader = DataLoader(
         test_dataset,
         batch_size=args.batch_size,
@@ -165,9 +163,7 @@ def infer(args, model, orders):
     model.to(device)
 
     infer_split = db.select_images(args.database, limit=args.limit)
-    infer_dataset = HerbariumDataset(
-        infer_split, model, orders=orders, traits=args.trait
-    )
+    infer_dataset = HerbariumDataset(infer_split, model, orders=orders)
     infer_loader = DataLoader(
         infer_dataset,
         batch_size=args.batch_size,

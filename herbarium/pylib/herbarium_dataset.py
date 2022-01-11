@@ -15,7 +15,7 @@ Sheet = namedtuple("Sheet", "path coreid order trait")
 class HerbariumDataset(Dataset):
     """Generate augmented data."""
 
-    all_traits = " flowering fruiting leaf_out".split()
+    all_traits: list[str] = " flowering fruiting leaf_out ".split()
 
     def __init__(
         self,
@@ -23,12 +23,9 @@ class HerbariumDataset(Dataset):
         net,
         *,
         orders: list[str] = None,
-        traits: list[str] = None,
         augment: bool = False,
     ) -> None:
         super().__init__()
-
-        self.traits: list[str] = traits if traits else [self.all_traits[0]]
 
         orders = orders if orders else []
         self.orders: dict[str, int] = {o: i for i, o in enumerate(orders)}
@@ -78,7 +75,7 @@ class HerbariumDataset(Dataset):
 
     def to_trait(self, sheet) -> torch.Tensor:
         """Convert sheet flags to trait classes."""
-        traits = [1.0 if sheet[t] == "1" else 0.0 for t in self.traits]
+        traits = [1.0 if sheet[t] == "1" else 0.0 for t in self.all_traits]
         return torch.Tensor(traits)
 
     def to_order(self, sheet):

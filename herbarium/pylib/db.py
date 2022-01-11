@@ -152,6 +152,14 @@ def select_orders(database: DbPath, split_run: str) -> list[str]:
     return orders
 
 
+def select_all_split_runs(database: DbPath) -> list[str]:
+    """Get all split runs in the database."""
+    sql = """select distinct split_run from splits order by split_run"""
+    with sqlite3.connect(database) as cxn:
+        runs = [r[0] for r in cxn.execute(sql)]
+    return runs
+
+
 # ########### Test runs table ##########################################################
 
 

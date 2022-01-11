@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Train a model to classify herbarium traits."""
 import argparse
+import sys
 import textwrap
 from pathlib import Path
 
+import pytorch_lightning as pl
 from pylib import db
+from pylib.efficient_net_orders import EfficientNetOrders
+from pylib.efficient_net_orders import MODELS
 from pylib.herbarium_dataset import HerbariumDataset
-from pylib.multi_efficient_net import NETS
-from pylib.run_model import train
 
 
 def parse_args():
@@ -36,8 +38,8 @@ def parse_args():
 
     arg_parser.add_argument(
         "--net",
-        choices=list(NETS.keys()),
-        default=list(NETS.keys())[0],
+        choices=list(MODELS.keys()),
+        default=list(MODELS.keys())[0],
         help="""Which neural network to use.""",
     )
 
@@ -95,11 +97,27 @@ def parse_args():
     )
 
     args = arg_parser.parse_args()
+
+    split_runs = db.select_all_split_runs(args.database)
+    if args.split_run not in split_runs:
+        print(f"{args.split_run} is not in split_runs. Valid split_runs:")
+        for run in split_runs:
+            print(run)
+        sys.exit(1)
+
     return args
 
 
+def main():
+    """Train the model."""
+    args = parse_args()
+    orders = db.select_orders(args.database, args.split_run)
+    effnet = EfficientNetOrders(orders=orders, args=vars(args))
+    trainer = pl.Trainer(gpus=0, fast_dev_run=True)
+    trainer.fit(effnet)
+    # NET = NETS[ARGS.net](len(ORDERS), ARGS.load_weights, ARGS.freeze)
+    # train(ARGS, NET, ORDERS)
+
+
 if __name__ == "__main__":
-    ARGS = parse_args()
-    ORDERS = db.select_orders(ARGS.database, ARGS.split_run)
-    NET = NETS[ARGS.net](len(ORDERS), ARGS.load_weights, ARGS.freeze)
-    train(ARGS, NET, ORDERS)
+    main()

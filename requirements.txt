@@ -2,6 +2,7 @@ Pillow
 jupyter
 matplotlib
 pandas
+pytorch-lightning
 regex
 scikit-image
 scikit-learn
