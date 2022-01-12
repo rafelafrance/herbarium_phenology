@@ -1,4 +1,5 @@
 """Create EfficientNets that uses plant orders as well as images for input."""
+from abc import ABC
 from typing import Any
 
 import pytorch_lightning as pl
@@ -11,33 +12,33 @@ from torch.utils.data import DataLoader
 from . import db
 from .herbarium_dataset import HerbariumDataset
 
-MODELS = {
+BACKBONES = {
     "b0": {
-        "model": torchvision.models.efficientnet_b0,
+        "backbone": torchvision.models.efficientnet_b0,
         "size": (224, 224),
         "dropout": 0.2,
         "in_feat": 1280,
     },
     "b1": {
-        "model": torchvision.models.efficientnet_b1,
+        "backbone": torchvision.models.efficientnet_b1,
         "size": (240, 240),
         "dropout": 0.2,
         "in_feat": 1280,
     },
     "b2": {
-        "model": torchvision.models.efficientnet_b2,
+        "backbone": torchvision.models.efficientnet_b2,
         "size": (260, 260),
         "dropout": 0.3,
         "in_feat": 1408,
     },
     "b3": {
-        "model": torchvision.models.efficientnet_b3,
+        "backbone": torchvision.models.efficientnet_b3,
         "size": (300, 300),
         "dropout": 0.3,
         "in_feat": 1536,
     },
     "b4": {
-        "model": torchvision.models.efficientnet_b4,
+        "backbone": torchvision.models.efficientnet_b4,
         "size": (380, 380),
         "dropout": 0.4,
         "in_feat": 1792,
@@ -45,7 +46,7 @@ MODELS = {
     # b5: {"size": (456, 456), }
     # b6: {"size": (528, 528), }
     "b7": {
-        "model": torchvision.models.efficientnet_b7,
+        "backbone": torchvision.models.efficientnet_b7,
         "size": (600, 600),
         "dropout": 0.5,
         "in_feat": 2560,
@@ -53,26 +54,20 @@ MODELS = {
 }
 
 
-class MultiEfficientNetPL(pl.LightningModule):
+class EfficientNetPL(pl.LightningModule, ABC):
     """An EfficientNet that uses phylogenetic orders as sidecar data."""
 
     def __init__(self, orders: list[str], args: dict[Any]):
         super().__init__()
 
         self.orders = orders
-        self.net = args["net"]
         self.workers = args["workers"]
         self.database = args["database"]
         self.split_run = args["split_run"]
         self.batch_size = args["batch_size"]
         self.lr = args["learning_rate"]
-        self.limit = args["limit"]
 
-        # TODO Do I still need these?
-        self.epochs = args["epochs"]
-        self.save_model = args["save_model"]
-
-        params = MODELS[args["net"]]
+        params = BACKBONES[args["backbone"]]
         self.size = params["size"]
         self.mean = (0.485, 0.456, 0.406)  # ImageNet
         self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
@@ -81,9 +76,8 @@ class MultiEfficientNetPL(pl.LightningModule):
         fc_feat2 = params["in_feat"] // 8
         fc_feat3 = params["in_feat"] // 16
         mix_feat = fc_feat1 + len(orders)
-        out_feat = len(HerbariumDataset.all_traits)
 
-        self.backbone = params["model"](pretrained=True)
+        self.backbone = params["backbone"](pretrained=True)
 
         self.backbone.classifier = nn.Sequential(
             nn.Dropout(p=params["dropout"], inplace=True),
@@ -104,7 +98,7 @@ class MultiEfficientNetPL(pl.LightningModule):
             nn.BatchNorm1d(num_features=fc_feat3),
             #
             # nn.Dropout(p=self.dropout, inplace=True),
-            nn.Linear(in_features=fc_feat3, out_features=out_feat),
+            nn.Linear(in_features=fc_feat3, out_features=1),
             # nn.Sigmoid(),
         )
 
@@ -125,7 +119,7 @@ class MultiEfficientNetPL(pl.LightningModule):
         x = self.multi_classifier(x)
         return x
 
-    def loss_function(self, y_true, y_pred):
+    def loss_function(self, y_pred, y_true):
         """Calculate the loss."""
         return F.binary_cross_entropy_with_logits(
             y_pred, y_true, pos_weight=self.pos_weight
@@ -138,9 +132,7 @@ class MultiEfficientNetPL(pl.LightningModule):
 
     def get_dataset(self, split, augment=False):
         """Get a dataset for training, validation, testing, or inference."""
-        raw_data = db.select_split(
-            self.database, self.split_run, split=split, limit=self.limit
-        )
+        raw_data = db.select_split(self.database, self.split_run, split=split)
         return HerbariumDataset(raw_data, self, orders=self.orders, augment=augment)
 
     def train_dataloader(self):
@@ -169,13 +161,20 @@ class MultiEfficientNetPL(pl.LightningModule):
         self.log(
             "train_loss",
             loss,
-            on_step=True,
             on_epoch=True,
             prog_bar=True,
             logger=True,
             batch_size=len(batch),
         )
-        return loss
+        return {"loss": loss}
+
+    def training_epoch_end(self, outputs) -> None:
+        print("\ntraining_epoch_end", flush=True)
+        return super().training_epoch_end(outputs)
+
+    def validation_epoch_end(self, outputs) -> None:
+        print("\nvalidation_epoch_end", flush=True)
+        return super().validation_epoch_end(outputs)
 
     def validation_step(self, batch, _):
         """Validate a model batch with images and orders."""
@@ -185,10 +184,16 @@ class MultiEfficientNetPL(pl.LightningModule):
         self.log(
             "val_loss",
             loss,
-            on_step=True,
             on_epoch=True,
             prog_bar=True,
             logger=True,
             batch_size=len(batch),
         )
-        return loss
+        return {"loss": loss}
+
+
+def accuracy(y_pred, y_true):
+    """Calculate the accuracy of the model."""
+    pred = torch.round(torch.sigmoid(y_pred))
+    equals = (pred == y_true).type(torch.float)
+    return torch.mean(equals)

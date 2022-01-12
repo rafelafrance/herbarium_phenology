@@ -5,12 +5,10 @@ import sys
 import textwrap
 from pathlib import Path
 
-import pytorch_lightning as pl
 from pylib import db
+from pylib.efficient_net import BACKBONES
+from pylib.efficient_net import EfficientNet
 from pylib.herbarium_dataset import HerbariumDataset
-from pylib.multi_efficient_net import MODELS
-from pylib.multi_efficient_net import MultiEfficientNet
-from pylib.multi_efficient_net_pl import MultiEfficientNetPL
 from pylib.run_model import train
 
 
@@ -39,10 +37,10 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--net",
-        choices=list(MODELS.keys()),
-        default=list(MODELS.keys())[0],
-        help="""Which neural network to use.""",
+        "--backbone",
+        choices=list(BACKBONES.keys()),
+        default=list(BACKBONES.keys())[0],
+        help="""Which neural network backbone to use.""",
     )
 
     arg_parser.add_argument(
@@ -81,7 +79,10 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--freeze", choices=["top", "all"], help="""Freeze model layers."""
+        "--freeze",
+        choices=["top", "all"],
+        default="top",
+        help="""Freeze model layers.""",
     )
 
     arg_parser.add_argument(
@@ -111,25 +112,15 @@ def parse_args():
     return args
 
 
-def main_pl():
-    """Train the model using pytorch-lightning."""
-    args = parse_args()
-    orders = db.select_orders(args.database, args.split_run)
-    effnet = MultiEfficientNetPL(orders=orders, args=vars(args))
-    trainer = pl.Trainer(gpus=1)  # , fast_dev_run=True)
-    trainer.fit(effnet)
-
-
 def main():
     """Train a model using just pytorch."""
     args = parse_args()
     orders = db.select_orders(args.database, args.split_run)
-    net = MultiEfficientNet(
-        args.net, orders, args.load_weights, args.freeze, args.trait
+    net = EfficientNet(
+        args.backbone, orders, args.load_weights, args.freeze, args.trait
     )
     train(args, net, orders)
 
 
 if __name__ == "__main__":
-    # main_pl()
     main()

@@ -6,33 +6,33 @@ import torchvision
 from torch import nn
 from torch import Tensor
 
-MODELS = {
+BACKBONES = {
     "b0": {
-        "model": torchvision.models.efficientnet_b0,
+        "backbone": torchvision.models.efficientnet_b0,
         "size": (224, 224),
         "dropout": 0.2,
         "in_feat": 1280,
     },
     "b1": {
-        "model": torchvision.models.efficientnet_b1,
+        "backbone": torchvision.models.efficientnet_b1,
         "size": (240, 240),
         "dropout": 0.2,
         "in_feat": 1280,
     },
     "b2": {
-        "model": torchvision.models.efficientnet_b2,
+        "backbone": torchvision.models.efficientnet_b2,
         "size": (260, 260),
         "dropout": 0.3,
         "in_feat": 1408,
     },
     "b3": {
-        "model": torchvision.models.efficientnet_b3,
+        "backbone": torchvision.models.efficientnet_b3,
         "size": (300, 300),
         "dropout": 0.3,
         "in_feat": 1536,
     },
     "b4": {
-        "model": torchvision.models.efficientnet_b4,
+        "backbone": torchvision.models.efficientnet_b4,
         "size": (380, 380),
         "dropout": 0.4,
         "in_feat": 1792,
@@ -40,7 +40,7 @@ MODELS = {
     # b5: {"size": (456, 456),}
     # b6: {"size": (528, 528),}
     "b7": {
-        "model": torchvision.models.efficientnet_b7,
+        "backbone": torchvision.models.efficientnet_b7,
         "size": (600, 600),
         "dropout": 0.5,
         "in_feat": 2560,
@@ -48,12 +48,12 @@ MODELS = {
 }
 
 
-class MultiEfficientNet(nn.Module):
+class EfficientNet(nn.Module):
     """Override EfficientNet so that it uses multiple inputs on the forward pass."""
 
     def __init__(
         self,
-        net: str,
+        backbone: str,
         orders: list[str],
         load_weights: Path,
         freeze: str,
@@ -61,7 +61,7 @@ class MultiEfficientNet(nn.Module):
     ):
         super().__init__()
 
-        params = MODELS[net]
+        params = BACKBONES[backbone]
         self.size = params["size"]
         self.mean = (0.485, 0.456, 0.406)  # ImageNet
         self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
@@ -71,7 +71,7 @@ class MultiEfficientNet(nn.Module):
         fc_feat3 = params["in_feat"] // 16
         mix_feat = fc_feat1 + len(orders)
 
-        self.backbone = params["model"](pretrained=True)
+        self.backbone = params["backbone"](pretrained=True)
 
         # Freeze the top of a pre-trained model
         if freeze == "top":
@@ -104,13 +104,6 @@ class MultiEfficientNet(nn.Module):
         self.state = torch.load(load_weights) if load_weights else {}
         if self.state.get("model_state"):
             self.load_state_dict(self.state["model_state"])
-
-        # Freeze the entire model, for testing or inference
-        if freeze == "all":
-            for param in self.backbone.parameters():
-                param.requires_grad = False
-            for param in self.multi_classifier.parameters():
-                param.requires_grad = False
 
     def forward(self, x0: Tensor, x1: Tensor) -> Tensor:
         """Run the classifier forwards."""

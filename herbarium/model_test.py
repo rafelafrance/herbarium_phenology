@@ -5,8 +5,9 @@ import textwrap
 from pathlib import Path
 
 from pylib import db
+from pylib.efficient_net import BACKBONES
+from pylib.efficient_net import EfficientNet
 from pylib.herbarium_dataset import HerbariumDataset
-from pylib.multi_efficient_net import NETS
 from pylib.run_model import test
 
 
@@ -27,9 +28,9 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--net",
-        choices=list(NETS.keys()),
-        default=list(NETS.keys())[0],
+        "--backbone",
+        choices=list(BACKBONES.keys()),
+        default=list(BACKBONES.keys())[0],
         help="""Which neural network to use.""",
     )
 
@@ -84,8 +85,15 @@ def parse_args():
     return args
 
 
+def main():
+    """Train a model using just pytorch."""
+    args = parse_args()
+    orders = db.select_orders(args.database, args.split_run)
+    net = EfficientNet(
+        args.backbone, orders, args.load_weights, args.freeze, args.trait
+    )
+    test(args, net, orders)
+
+
 if __name__ == "__main__":
-    ARGS = parse_args()
-    ORDERS = db.select_orders(ARGS.database, ARGS.split_run)
-    NET = NETS[ARGS.net](len(ORDERS), ARGS.load_weights, freeze="all")
-    test(ARGS, NET, ORDERS)
+    main()
