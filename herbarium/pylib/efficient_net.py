@@ -56,8 +56,6 @@ class EfficientNet(nn.Module):
         backbone: str,
         orders: list[str],
         load_weights: Path,
-        freeze: str,
-        traits: list[str],
     ):
         super().__init__()
 
@@ -66,28 +64,26 @@ class EfficientNet(nn.Module):
         self.mean = (0.485, 0.456, 0.406)  # ImageNet
         self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
 
+        in_feat = params["in_feat"] + len(orders)
         fc_feat1 = params["in_feat"] // 4
         fc_feat2 = params["in_feat"] // 8
         fc_feat3 = params["in_feat"] // 16
-        mix_feat = fc_feat1 + len(orders)
 
         self.backbone = params["backbone"](pretrained=True)
+        self.backbone.classifier = nn.Sequential(nn.Identity())
 
         # Freeze the top of a pre-trained model
-        if freeze == "top":
-            for param in self.backbone.parameters():
-                param.requires_grad = False
-
-        self.backbone.classifier = nn.Sequential(
-            nn.Dropout(p=params["dropout"], inplace=True),
-            nn.Linear(in_features=params["in_feat"], out_features=fc_feat1),
-            nn.SiLU(inplace=True),
-            nn.BatchNorm1d(num_features=fc_feat1),
-        )
+        for param in self.backbone.parameters():
+            param.requires_grad = False
 
         self.multi_classifier = nn.Sequential(
             nn.Dropout(p=params["dropout"], inplace=True),
-            nn.Linear(in_features=mix_feat, out_features=fc_feat2),
+            nn.Linear(in_features=in_feat, out_features=fc_feat1),
+            nn.SiLU(inplace=True),
+            nn.BatchNorm1d(num_features=fc_feat1),
+            #
+            nn.Dropout(p=params["dropout"], inplace=True),
+            nn.Linear(in_features=fc_feat1, out_features=fc_feat2),
             nn.SiLU(inplace=True),
             nn.BatchNorm1d(num_features=fc_feat2),
             #
@@ -97,7 +93,7 @@ class EfficientNet(nn.Module):
             nn.BatchNorm1d(num_features=fc_feat3),
             #
             # nn.Dropout(p=self.dropout, inplace=True),
-            nn.Linear(in_features=fc_feat3, out_features=len(traits)),
+            nn.Linear(in_features=fc_feat3, out_features=1),
             # nn.Sigmoid(),
         )
 
