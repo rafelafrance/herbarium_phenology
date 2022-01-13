@@ -65,27 +65,17 @@ def train(args, model, orders):
         val_loss, val_acc = one_epoch(model, val_loader, device, criterion)
 
         flag = ""
-        # if (val_loss, -val_acc) <= (best_loss, -best_acc):
-        #     best_loss = val_loss
-        #     file_name = args.save_model.with_stem(args.save_model.stem + "_loss")
-        #     flag += " --"
-        #     save_model(model, optimizer, epoch, best_loss, val_acc, file_name)
-
         if (val_acc, -val_loss) >= (best_acc, -best_loss):
             best_acc = val_acc
             file_name = args.save_model.with_stem(args.save_model.stem + "_acc")
             flag += " ++"
             save_model(model, optimizer, epoch, best_loss, best_acc, file_name)
 
-        # if epoch % 10 == 0:
-        #     save_model(model, optimizer, epoch, best_loss, best_acc, args.save_model)
-
         logging.info(
             f"{epoch:2}: Train: loss {train_loss:0.6f} acc {train_acc:0.6f}\t"
             f"Valid: loss {val_loss:0.6f} acc {val_acc:0.6f}{flag}"
         )
 
-    # save_model(model, optimizer, end_epoch - 1, best_loss, best_acc, args.save_model)
     log.finished()
 
 
@@ -156,7 +146,7 @@ def test(args, model, orders):
 
 
 def infer(args, model, orders):
-    """Test the model on a hold-out/test data split."""
+    """Run inference on unlabeled data."""
     log.started()
 
     db.create_inferences_table(args.database)

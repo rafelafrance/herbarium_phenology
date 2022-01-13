@@ -39,6 +39,7 @@ ERRORS = (
     RuntimeError,
     SyntaxError,
     TypeError,
+    DecompressionBombWarning,
 )
 
 
@@ -90,13 +91,16 @@ def download_images(csv_file, image_dir, error=None):
 
 def validate_images(image_dir, database, error, glob="*.jpg"):
     """Put valid image paths into the database."""
+    sql = """select * from images"""
+    existing = {r["coreid"] for r in db.rows_as_dicts(database, sql)}
     images = []
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)  # No EXIF warnings
         warnings.filterwarnings("error", category=DecompressionBombWarning)
         with open(error, "a") if error else sys.stderr as err:
             for path in tqdm(image_dir.glob(glob)):
-                image = None
+                if path in existing:
+                    continue
                 try:
                     image = Image.open(path)
                     image.verify()
@@ -117,7 +121,7 @@ def validate_images(image_dir, database, error, glob="*.jpg"):
                     if image:
                         image.close()
 
-    db.create_images_table(database, drop=True)
+    db.create_images_table(database)
     db.insert_images(database, images)
 
 

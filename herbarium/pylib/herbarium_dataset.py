@@ -1,21 +1,24 @@
 """Generate training data."""
 import warnings
 from collections import namedtuple
+from pathlib import Path
 
 import torch
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
+from . import db
 from .const import ROOT_DIR
 
 Sheet = namedtuple("Sheet", "path coreid order trait")
+InferenceSheet = namedtuple("Sheet", "path coreid order")
 
 
 class HerbariumDataset(Dataset):
     """Generate augmented data."""
 
-    all_traits = " flowering fruiting leaf_out".split()
+    all_traits = " flowering fruiting leaf_out ".split()
 
     def __init__(
         self,
@@ -92,3 +95,68 @@ class HerbariumDataset(Dataset):
         weight = sum(s.trait for s in self.sheets)
         pos_wt = (len(self) - weight) / weight if weight else 0.0
         return torch.Tensor(pos_wt)
+
+
+class InferenceDataset(Dataset):
+    """Create a dataset from images in a directory."""
+
+    all_traits = " flowering fruiting leaf_out ".split()
+
+    def __init__(
+        self,
+        database: Path,
+        paths: list[Path],
+        net,
+        *,
+        orders: list[str] = None,
+        traits: list[str] = None,
+    ) -> None:
+        super().__init__()
+
+        self.traits: list[str] = traits if traits else [self.all_traits[0]]
+
+        orders = orders if orders else []
+        self.orders: dict[str, int] = {o: i for i, o in enumerate(orders)}
+
+        self.transform = self.build_transforms(net)
+
+        rows = {r["coreid"]: r for r in db.select_images(database)}
+
+        self.sheets: list[InferenceSheet] = []
+        for path in paths:
+            coreid = path.stem
+            sheet = rows[coreid]
+            self.sheets.append(
+                InferenceSheet(
+                    str(path),
+                    coreid,
+                    self.to_order(sheet),
+                )
+            )
+
+    @staticmethod
+    def build_transforms(net):
+        """Build a pipeline of image transforms specific to the dataset."""
+        xform = [
+            transforms.Resize(net.size),
+            transforms.ToTensor(),
+            transforms.Normalize(net.mean, net.std_dev),
+        ]
+        return transforms.Compose(xform)
+
+    def __len__(self):
+        return len(self.sheets)
+
+    def __getitem__(self, index):
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=UserWarning)  # No EXIF warnings
+            sheet = self.sheets[index]
+            image = Image.open(ROOT_DIR / sheet.path).convert("RGB")
+            image = self.transform(image)
+        return image, sheet.order, sheet.coreid
+
+    def to_order(self, sheet):
+        """Convert the phylogenetic order to a one-hot encoding for the order."""
+        order = torch.zeros(len(self.orders), dtype=torch.float)
+        order[self.orders[sheet["order_"]]] = 1.0
+        return order
