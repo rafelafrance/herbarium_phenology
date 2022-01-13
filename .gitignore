@@ -32,3 +32,6 @@ models/
 temp/
 junk*
 old/
+
+# Logs
+runs/
