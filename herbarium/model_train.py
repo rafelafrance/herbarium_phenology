@@ -9,10 +9,10 @@ from pylib import db
 from pylib.efficient_net_hydra import BACKBONES
 from pylib.efficient_net_hydra import EfficientNetHydra
 from pylib.efficient_net_old import EfficientNetOld
-from pylib.herbarium_dataset import HerbariumDataset
 from pylib.herbarium_hydra_dataset import HerbariumHydraDataset
-from pylib.run_hydra_model import train as h_train
-from pylib.run_model import train
+from pylib.herbarium_old_dataset import HerbariumOldDataset
+from pylib.run_hydra_model import train
+from pylib.run_old_model import train as o_train
 
 
 def parse_args():
@@ -105,8 +105,8 @@ def parse_args():
     arg_parser.add_argument(
         "--trait",
         nargs="*",
-        choices=HerbariumDataset.all_traits,
-        default=HerbariumDataset.all_traits[0],
+        choices=HerbariumOldDataset.all_traits,
+        default=HerbariumOldDataset.all_traits[0],
         help="""Which trait to classify. You may use this argument multiple times.
             (default: %(default)s) NOTE: This option is deprecated.""",
     )
@@ -135,7 +135,7 @@ def main():
     args = parse_args()
     orders = db.select_orders(args.database, args.split_run)
     net = EfficientNetOld(args.backbone, orders, args.load_weights)
-    train(args, net, orders)
+    o_train(args, net, orders)
 
 
 def main_hydra():
@@ -143,7 +143,7 @@ def main_hydra():
     args = parse_args()
     orders = db.select_orders(args.database, args.split_run)
     net = EfficientNetHydra(HerbariumHydraDataset.all_traits, orders, vars(args))
-    h_train(args, net, orders)
+    train(args, net, orders)
 
 
 if __name__ == "__main__":

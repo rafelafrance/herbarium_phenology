@@ -7,8 +7,8 @@ from pathlib import Path
 from pylib import db
 from pylib.efficient_net_hydra import BACKBONES
 from pylib.efficient_net_old import EfficientNetOld
-from pylib.herbarium_dataset import HerbariumDataset
-from pylib.run_model import infer
+from pylib.herbarium_old_dataset import HerbariumOldDataset
+from pylib.run_old_model import infer
 
 
 def parse_args():
@@ -67,8 +67,8 @@ def parse_args():
     arg_parser.add_argument(
         "--trait",
         nargs="*",
-        choices=HerbariumDataset.all_traits,
-        default=HerbariumDataset.all_traits[0],
+        choices=HerbariumOldDataset.all_traits,
+        default=HerbariumOldDataset.all_traits[0],
         help="""Which trait to classify. You may use this argument multiple times.
             (default: %(default)s) NOTE: This option is deprecated.""",
     )

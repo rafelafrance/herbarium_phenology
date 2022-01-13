@@ -12,7 +12,7 @@ from .const import ROOT_DIR
 Sheet = namedtuple("Sheet", "path coreid order trait")
 
 
-class HerbariumDataset(Dataset):
+class HerbariumOldDataset(Dataset):
     """Generate augmented data."""
 
     all_traits: list[str] = " flowering fruiting leaf_out ".split()

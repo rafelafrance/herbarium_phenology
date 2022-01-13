@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from herbarium.pylib import db
-from herbarium.pylib.herbarium_dataset import HerbariumDataset
+from herbarium.pylib.herbarium_old_dataset import HerbariumOldDataset
 from herbarium.pylib.idigbio_load import TRAITS
 
 # Make a few attempts to download a page
@@ -125,7 +125,7 @@ def get_image_norm(database, classifier, split_run, batch_size=16, num_workers=4
     """Get the mean and standard deviation of the image channels."""
     device = "cuda" if torch.cuda.is_available() else "cpu"
     data = db.select_split(database, split_run, split="train")
-    split = HerbariumDataset(data, classifier)
+    split = HerbariumOldDataset(data, classifier)
     loader = DataLoader(split, batch_size=batch_size, num_workers=num_workers)
 
     # TODO: Has bad round-off error according to Numerical Recipes in C, 2d ed. p 613
