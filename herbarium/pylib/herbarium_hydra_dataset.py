@@ -84,12 +84,14 @@ class HerbariumHydraDataset(Dataset):
             "coreid": sheet.coreid,
         }
 
-    def to_trait(self, sheet) -> torch.Tensor:
+    def to_trait(self, sheet) -> (torch.tensor, torch.tensor):
         """Convert sheet flags to trait classes."""
-        for trait in self.traits:
-            pass
-        traits = [1.0 if sheet[t] == "1" else 0.0 for t in self.traits]
-        return torch.Tensor(traits)
+        flags = [0] * len(self.traits)
+        traits = [0.0] * len(self.traits)
+        for i, trait in enumerate(self.traits):
+            flags[i] = 1 if sheet[trait] == "1" or sheet[f"not_{trait}"] == "1" else 0
+            traits[i] = 1 if sheet[trait] == "1" else 0
+        return torch.tensor(flags), torch.tensor(traits)
 
     def to_order(self, sheet):
         """Convert the phylogenetic order to a one-hot encoding for the order."""
@@ -97,8 +99,12 @@ class HerbariumHydraDataset(Dataset):
         order[self.orders[sheet["order_"]]] = 1.0
         return order
 
-    def pos_weight(self) -> list:
+    def pos_weight(self) -> torch.tensor:
         """Calculate the positive weight for traits in this dataset."""
-        weight = sum(s.trait for s in self.sheets)
-        pos_wt = [(len(self) - wt) / wt if wt else 0.0 for wt in weight]
-        return pos_wt
+        pos = [0.0] * len(self.traits)
+        total = [0.0] * len(self.traits)
+        for i, _ in enumerate(self.traits):
+            total[i] = sum(1.0 if s.flags[i] else 0.0 for s in self.sheets)
+            pos[i] = sum(1.0 if s.traits[i] == 1.0 else 0.0 for s in self.sheets)
+        pos_wt = [(t - p) / p if p else 0.0 for p, t in zip(pos, total)]
+        return torch.tensor(pos_wt)

@@ -9,12 +9,15 @@ from torch.utils.data import DataLoader
 
 from . import db
 from . import log
-from .herbarium_dataset import HerbariumDataset
+from .herbarium_hydra_dataset import HerbariumHydraDataset
+
+# from torch.utils.tensorboard import SummaryWriter
 
 
 def train(args, model, orders):
     """Train a model."""
     log.started()
+    # writer = SummaryWriter()
 
     device = torch.device("cuda" if torch.has_cuda else "cpu")
     model.to(device)
@@ -22,7 +25,9 @@ def train(args, model, orders):
     train_split = db.select_split(
         args.database, args.split_run, split="train", limit=args.limit
     )
-    train_dataset = HerbariumDataset(train_split, model, orders=orders, augment=True)
+    train_dataset = HerbariumHydraDataset(
+        train_split, model, orders=orders, augment=True
+    )
     train_loader = DataLoader(
         train_dataset,
         shuffle=True,
@@ -37,7 +42,7 @@ def train(args, model, orders):
         split="val",
         limit=args.limit,
     )
-    val_dataset = HerbariumDataset(val_split, model, orders=orders)
+    val_dataset = HerbariumHydraDataset(val_split, model, orders=orders)
     val_loader = DataLoader(
         val_dataset, batch_size=args.batch_size, num_workers=args.workers
     )
@@ -63,27 +68,17 @@ def train(args, model, orders):
         val_loss, val_acc = one_epoch(model, val_loader, device, criterion)
 
         flag = ""
-        # if (val_loss, -val_acc) <= (best_loss, -best_acc):
-        #     best_loss = val_loss
-        #     file_name = args.save_model.with_stem(args.save_model.stem + "_loss")
-        #     flag += " --"
-        #     save_model(model, optimizer, epoch, best_loss, val_acc, file_name)
-
         if (val_acc, -val_loss) >= (best_acc, -best_loss):
             best_acc = val_acc
             file_name = args.save_model.with_stem(args.save_model.stem + "_acc")
             flag += " ++"
             save_model(model, optimizer, epoch, best_loss, best_acc, file_name)
 
-        # if epoch % 10 == 0:
-        #     save_model(model, optimizer, epoch, best_loss, best_acc, args.save_model)
-
         logging.info(
             f"{epoch:2}: Train: loss {train_loss:0.6f} acc {train_acc:0.6f}\t"
             f"Valid: loss {val_loss:0.6f} acc {val_acc:0.6f}{flag}"
         )
 
-    # save_model(model, optimizer, end_epoch - 1, best_loss, best_acc, args.save_model)
     log.finished()
 
 
@@ -99,7 +94,7 @@ def test(args, model, orders):
     test_split = db.select_split(
         args.database, args.split_run, split="test", limit=args.limit
     )
-    test_dataset = HerbariumDataset(test_split, model, orders=orders)
+    test_dataset = HerbariumHydraDataset(test_split, model, orders=orders)
     test_loader = DataLoader(
         test_dataset,
         batch_size=args.batch_size,
@@ -163,7 +158,7 @@ def infer(args, model, orders):
     model.to(device)
 
     infer_split = db.select_images(args.database, limit=args.limit)
-    infer_dataset = HerbariumDataset(infer_split, model, orders=orders)
+    infer_dataset = HerbariumHydraDataset(infer_split, model, orders=orders)
     infer_loader = DataLoader(
         infer_dataset,
         batch_size=args.batch_size,

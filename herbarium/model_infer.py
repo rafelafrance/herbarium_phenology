@@ -5,8 +5,8 @@ import textwrap
 from pathlib import Path
 
 from pylib import db
-from pylib.efficient_net import BACKBONES
-from pylib.efficient_net import EfficientNet
+from pylib.efficient_net_hydra import BACKBONES
+from pylib.efficient_net_old import EfficientNetOld
 from pylib.herbarium_dataset import HerbariumDataset
 from pylib.run_model import infer
 
@@ -31,20 +31,22 @@ def parse_args():
         "--backbone",
         choices=list(BACKBONES.keys()),
         default=list(BACKBONES.keys())[0],
-        help="""Which neural network to use.""",
+        help="""Which neural network backbone to use.""",
     )
 
     arg_parser.add_argument(
         "--load-weights",
         type=Path,
+        metavar="PATH",
         required=True,
-        help="""Use this model.""",
+        help="""Use this model for inference.""",
     )
 
     arg_parser.add_argument(
         "--inference-run",
         required=True,
-        help="""Name this inference run.""",
+        help="""Name this inference run. Inference results are stored in the
+            database.""",
     )
 
     arg_parser.add_argument(
@@ -57,6 +59,7 @@ def parse_args():
     arg_parser.add_argument(
         "--workers",
         type=int,
+        metavar="INT",
         default=4,
         help="""Number of workers for loading data. (default: %(default)s)""",
     )
@@ -66,12 +69,14 @@ def parse_args():
         nargs="*",
         choices=HerbariumDataset.all_traits,
         default=HerbariumDataset.all_traits[0],
-        help="""Which trait to classify. (default: %(default)s)""",
+        help="""Which trait to classify. You may use this argument multiple times.
+            (default: %(default)s) NOTE: This option is deprecated.""",
     )
 
     arg_parser.add_argument(
         "--limit",
         type=int,
+        metavar="INT",
         help="""Limit the input to this many records.""",
     )
 
@@ -83,9 +88,7 @@ def main():
     """Infer traits."""
     args = parse_args()
     orders = db.select_orders(args.database, args.split_run)
-    net = EfficientNet(
-        args.backbone, orders, args.load_weights, args.freeze, args.trait
-    )
+    net = EfficientNetOld(args.backbone, orders, args.load_weights)
     infer(args, net, orders)
 
 

@@ -22,16 +22,13 @@ __pycache__
 output/
 data/
 
-# notebooks
+# Notebooks
 .ipynb_checkpoints/
-
-# models
-models/
 
 # Temp files
 temp/
 junk*
 old/
 
-# lightning
-lightning_logs/
+# Log files
+runs/

@@ -91,7 +91,7 @@ class EfficientNetHydra(nn.Module):
                     nn.SiLU(inplace=True),
                     nn.BatchNorm1d(num_features=fc_feat3),
                     #
-                    # nn.Dropout(p=self.dropout, inplace=True),
+                    # nn.Dropout(p=params["dropout"], inplace=True),
                     nn.Linear(in_features=fc_feat3, out_features=1),
                     # nn.Sigmoid(),
                 )
