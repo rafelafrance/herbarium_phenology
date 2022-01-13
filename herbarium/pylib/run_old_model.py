@@ -23,7 +23,7 @@ def train(args, model, orders):
         args.database, args.split_run, split="train", limit=args.limit
     )
     train_dataset = HerbariumOldDataset(
-        train_split, model, traits=args.trait, orders=orders, augment=True
+        train_split, model, orders=orders, traits=args.trait, augment=True
     )
     train_loader = DataLoader(
         train_dataset,

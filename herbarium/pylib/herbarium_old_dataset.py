@@ -87,8 +87,8 @@ class HerbariumOldDataset(Dataset):
         order[self.orders[sheet["order_"]]] = 1.0
         return order
 
-    def pos_weight(self) -> torch.tensor:
+    def pos_weight(self) -> torch.Tensor:
         """Calculate the positive weight for traits in this dataset."""
         weight = sum(s.trait for s in self.sheets)
-        pos_wt = [(len(self) - wt) / wt if wt else 0.0 for wt in weight]
-        return torch.tensor(pos_wt)
+        pos_wt = (len(self) - weight) / weight if weight else 0.0
+        return torch.Tensor(pos_wt)
