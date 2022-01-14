@@ -29,6 +29,7 @@ socket.setdefaulttimeout(TIMEOUT)
 COLUMN = "accessuri"
 
 # Catch these errors during downloads and image validation
+# Python error handling sucks!
 ERRORS = (
     AttributeError,
     BufferError,
@@ -39,6 +40,7 @@ ERRORS = (
     RuntimeError,
     SyntaxError,
     TypeError,
+    ValueError,
     DecompressionBombWarning,
 )
 
@@ -89,18 +91,20 @@ def download_images(csv_file, image_dir, error=None):
                 print(f"Could not download: {row[COLUMN]}", file=err, flush=True)
 
 
-def validate_images(image_dir, database, error, glob="*.jpg"):
+def validate_images(image_dir, database, error, glob="*.jpg", every=100):
     """Put valid image paths into the database."""
+    db.create_images_table(database)
+
     sql = """select * from images"""
     existing = {r["coreid"] for r in db.rows_as_dicts(database, sql)}
+    new_paths = {p for p in image_dir.glob(glob) if p.stem not in existing}
     images = []
+
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)  # No EXIF warnings
         warnings.filterwarnings("error", category=DecompressionBombWarning)
         with open(error, "a") if error else sys.stderr as err:
-            for path in tqdm(image_dir.glob(glob)):
-                if path in existing:
-                    continue
+            for path in tqdm(new_paths):
                 try:
                     image = Image.open(path)
                     image.verify()
@@ -121,7 +125,10 @@ def validate_images(image_dir, database, error, glob="*.jpg"):
                     if image:
                         image.close()
 
-    db.create_images_table(database)
+                if len(images) % every == 0:
+                    db.insert_images(database, images)
+                    images = []
+
     db.insert_images(database, images)
 
 
