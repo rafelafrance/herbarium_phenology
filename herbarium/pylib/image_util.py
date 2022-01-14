@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from herbarium.pylib import db
-from herbarium.pylib.herbarium_old_dataset import HerbariumOldDataset
+from herbarium.pylib.herbarium_hydra_dataset import HerbariumHydraDataset
 from herbarium.pylib.idigbio_load import TRAITS
 
 # Make a few attempts to download a page
@@ -29,6 +29,7 @@ socket.setdefaulttimeout(TIMEOUT)
 COLUMN = "accessuri"
 
 # Catch these errors during downloads and image validation
+# Python error handling sucks!
 ERRORS = (
     AttributeError,
     BufferError,
@@ -39,6 +40,8 @@ ERRORS = (
     RuntimeError,
     SyntaxError,
     TypeError,
+    ValueError,
+    DecompressionBombWarning,
 )
 
 
@@ -88,15 +91,20 @@ def download_images(csv_file, image_dir, error=None):
                 print(f"Could not download: {row[COLUMN]}", file=err, flush=True)
 
 
-def validate_images(image_dir, database, error, glob="*.jpg"):
+def validate_images(image_dir, database, error, glob="*.jpg", every=100):
     """Put valid image paths into the database."""
+    db.create_images_table(database)
+
+    sql = """select * from images"""
+    existing = {r["coreid"] for r in db.rows_as_dicts(database, sql)}
+    new_paths = {p for p in image_dir.glob(glob) if p.stem not in existing}
     images = []
+
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)  # No EXIF warnings
         warnings.filterwarnings("error", category=DecompressionBombWarning)
         with open(error, "a") if error else sys.stderr as err:
-            for path in tqdm(image_dir.glob(glob)):
-                image = None
+            for path in tqdm(new_paths):
                 try:
                     image = Image.open(path)
                     image.verify()
@@ -117,7 +125,10 @@ def validate_images(image_dir, database, error, glob="*.jpg"):
                     if image:
                         image.close()
 
-    db.create_images_table(database, drop=True)
+                if len(images) % every == 0:
+                    db.insert_images(database, images)
+                    images = []
+
     db.insert_images(database, images)
 
 
@@ -125,7 +136,7 @@ def get_image_norm(database, classifier, split_run, batch_size=16, num_workers=4
     """Get the mean and standard deviation of the image channels."""
     device = "cuda" if torch.cuda.is_available() else "cpu"
     data = db.select_split(database, split_run, split="train")
-    split = HerbariumOldDataset(data, classifier)
+    split = HerbariumHydraDataset(data, classifier)
     loader = DataLoader(split, batch_size=batch_size, num_workers=num_workers)
 
     # TODO: Has bad round-off error according to Numerical Recipes in C, 2d ed. p 613
