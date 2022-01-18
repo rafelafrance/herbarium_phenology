@@ -1,15 +1,15 @@
 """Generate training data."""
 import warnings
 from collections import namedtuple
-from pathlib import Path
 
 import torch
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-from . import db
 from .const import ROOT_DIR
+
+ALL_TRAITS = " flowering fruiting leaf_out ".split()
 
 Sheet = namedtuple("Sheet", "path coreid order y_true")
 InferenceSheet = namedtuple("Sheet", "path coreid order")
@@ -34,17 +34,15 @@ def build_transforms(model, augment=False):
     return transforms.Compose(xform)
 
 
-def to_order(orders, sheet):
+def to_order(orders, rec):
     """Convert the phylogenetic order to a one-hot encoding for the order."""
     order = torch.zeros(len(orders), dtype=torch.float)
-    order[orders[sheet["order_"]]] = 1.0
+    order[orders[rec["order_"]]] = 1.0
     return order
 
 
 class HerbariumDataset(Dataset):
     """Generate augmented data."""
-
-    all_traits: list[str] = " flowering fruiting leaf_out ".split()
 
     def __init__(
         self,
@@ -57,7 +55,7 @@ class HerbariumDataset(Dataset):
     ) -> None:
         super().__init__()
 
-        self.trait: str = trait_name if trait_name else self.all_traits[0]
+        self.trait: str = trait_name if trait_name else ALL_TRAITS[0]
 
         orders = orders if orders else []
         self.orders: dict[str, int] = {o: i for i, o in enumerate(orders)}
@@ -103,37 +101,30 @@ class HerbariumDataset(Dataset):
 class InferenceDataset(Dataset):
     """Create a dataset from images in a directory."""
 
-    all_traits = " flowering fruiting leaf_out ".split()
-
     def __init__(
         self,
-        database: Path,
-        paths: list[Path],
+        image_recs: list[dict],
         model,
         *,
+        trait_name: str = None,
         orders: list[str] = None,
-        traits: list[str] = None,
     ) -> None:
         super().__init__()
 
-        self.trait: str = traits if traits else self.all_traits[0]
+        self.trait: str = trait_name if trait_name else ALL_TRAITS[0]
 
         orders = orders if orders else []
         self.orders: dict[str, int] = {o: i for i, o in enumerate(orders)}
 
         self.transform = build_transforms(model)
 
-        rows = {r["coreid"]: r for r in db.select_images(database)}
-
-        self.sheets: list[InferenceSheet] = []
-        for path in paths:
-            coreid = path.stem
-            sheet = rows[coreid]
+        self.records: list[InferenceSheet] = []
+        for rec in image_recs:
             self.sheets.append(
                 InferenceSheet(
-                    str(path),
-                    coreid,
-                    to_order(self.orders, sheet),
+                    rec["path"],
+                    rec["coreid"],
+                    to_order(self.orders, rec),
                 )
             )
 
@@ -143,7 +134,7 @@ class InferenceDataset(Dataset):
     def __getitem__(self, index):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning)  # No EXIF warnings
-            sheet = self.sheets[index]
-            image = Image.open(ROOT_DIR / sheet.path).convert("RGB")
+            rec = self.records[index]
+            image = Image.open(ROOT_DIR / rec.path).convert("RGB")
             image = self.transform(image)
-        return image, sheet.order, sheet.coreid
+        return image, rec.order, rec.coreid

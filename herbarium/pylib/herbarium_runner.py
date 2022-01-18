@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 from . import db
 from . import log
 from .herbarium_dataset import HerbariumDataset
+from .herbarium_dataset import InferenceDataset
 
 ArgsType = Union[Namespace]
 
@@ -109,10 +110,7 @@ class HerbariumTrainingRunner(HerbariumRunner):
             running_loss += loss.item()
             running_acc += accuracy(y_pred, y_true)
 
-        return {
-            "loss": running_loss / len(loader.dataset),
-            "acc": running_acc / len(loader.dataset),
-        }
+        return {"loss": running_loss / len(loader), "acc": running_acc / len(loader)}
 
     def configure_optimizers(self):
         """Configure the optimizer."""
@@ -173,15 +171,140 @@ class HerbariumTrainingRunner(HerbariumRunner):
 
 
 class HerbariumTestingRunner(HerbariumRunner):
-    """Test a hydra model."""
+    """Test the model."""
+
+    def __init__(self, model, trait, orders, args: ArgsType):
+        super().__init__(model, trait, orders, args)
+
+        db.create_test_runs_table(args.database)
+
+        self.split_run = args.split_run
+        self.test_run = args.test_run
+
+        self.test_dataset = self.get_dataset(
+            self.database, self.split_run, "test", limit=self.limit
+        )
+
+        self.test_loader = self.test_dataloader()
+        self.criterion = self.configure_criteria()
+
+    def test_dataloader(self):
+        """Load the validation split for the data."""
+        return DataLoader(
+            self.test_dataset, batch_size=self.batch_size, num_workers=self.workers
+        )
+
+    def configure_criteria(self):
+        """Configure the criterion for model improvement."""
+        pos_weight = self.test_dataset.pos_weight().to(self.device)
+        criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+        return criterion
+
+    def test(self):
+        """Test the model on hold-out data."""
+        log.started()
+
+        self.model.eval()
+
+        test_loss = 0.0
+        test_acc = 0.0
+
+        batch = []
+
+        for images, orders, y_true, coreids in self.test_loader:
+            images = images.to(self.device)
+            orders = orders.to(self.device)
+            y_true = y_true.to(self.device)
+
+            y_pred = self.model(images, orders)
+            loss = self.criterion(y_pred, y_true)
+
+            test_loss += loss.item()
+            test_acc += accuracy(y_pred, y_true)
+
+            y_pred = torch.sigmoid(y_pred)
+
+            y_pred = y_pred.detach().cpu()
+            y_true = y_true.detach().cpu()
+
+            for true, pred, coreid in zip(y_true, y_pred, coreids):
+                batch.append(
+                    {
+                        "coreid": coreid,
+                        "test_run": self.test_run,
+                        "split_run": self.split_run,
+                        "trait": self.trait,
+                        "true": true.item(),
+                        "pred": pred.item(),
+                    }
+                )
+
+        db.insert_test_runs(self.database, batch, self.test_run, self.split_run)
+
+        test_loss /= len(self.test_loader)
+        test_acc /= len(self.test_loader)
+
+        logging.info(f"Test: loss {test_loss:0.6f} acc {test_acc:0.6f}")
+        log.finished()
 
 
 class HerbariumInferenceRunner(HerbariumRunner):
-    """Run inference on a hydra model."""
+    """Run inference on the model."""
+
+    def __init__(self, model, trait, orders, args: ArgsType):
+        super().__init__(model, trait, orders, args)
+
+        self.inference_run = args.inference_run
+
+        db.create_inferences_table(args.database)
+
+        infer_recs = db.select_images(args.database, limit=args.limit)
+
+        self.infer_dataset = InferenceDataset(
+            infer_recs, model, trait_name=self.trait, orders=self.orders
+        )
+
+        self.infer_loader = self.infer_dataloader()
+
+    def infer_dataloader(self):
+        """Load the validation split for the data."""
+        return DataLoader(
+            self.infer_dataset, batch_size=self.batch_size, num_workers=self.workers
+        )
+
+    def infer(self):
+        """Run inference on images."""
+        log.started()
+
+        self.model.eval()
+
+        batch = []
+
+        for images, orders, _, coreids in self.infer_loader:
+            images = images.to(self.device)
+            orders = orders.to(self.device)
+
+            y_pred = self.model(images, orders)
+            y_pred = torch.sigmoid(y_pred)
+            y_pred = y_pred.detach().cpu()
+
+            for pred, coreid in zip(y_pred, coreids):
+                batch.append(
+                    {
+                        "coreid": coreid,
+                        "inference_run": self.inference_run,
+                        "trait": self.trait,
+                        "pred": pred.item(),
+                    }
+                )
+
+        db.insert_inferences(self.database, batch, self.inference_run)
+
+        log.finished()
 
 
 def accuracy(y_pred, y_true):
     """Calculate the accuracy of the model."""
     pred = torch.round(torch.sigmoid(y_pred))
     equals = (pred == y_true).type(torch.float)
-    return torch.sum(equals)
+    return torch.mean(equals)

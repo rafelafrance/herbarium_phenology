@@ -6,7 +6,7 @@ import textwrap
 from pathlib import Path
 
 from pylib import db
-from pylib.herbarium_dataset import HerbariumDataset
+from pylib.herbarium_dataset import ALL_TRAITS
 from pylib.herbarium_model import BACKBONES
 from pylib.herbarium_model import HerbariumModel
 from pylib.herbarium_runner import HerbariumTrainingRunner
@@ -101,8 +101,8 @@ def parse_args():
 
     arg_parser.add_argument(
         "--trait",
-        choices=HerbariumDataset.all_traits,
-        default=HerbariumDataset.all_traits[0],
+        choices=ALL_TRAITS,
+        default=ALL_TRAITS[0],
         help="""Which trait to classify.""",
     )
 
@@ -132,8 +132,8 @@ def main():
 
     model = HerbariumModel(orders, args)
 
-    trainer = HerbariumTrainingRunner(model, args.trait, orders, args)
-    trainer.train()
+    runner = HerbariumTrainingRunner(model, args.trait, orders, args)
+    runner.train()
 
 
 if __name__ == "__main__":

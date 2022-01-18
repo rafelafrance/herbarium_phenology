@@ -5,11 +5,10 @@ import textwrap
 from pathlib import Path
 
 from pylib import db
+from pylib.herbarium_dataset import ALL_TRAITS
 from pylib.herbarium_model import BACKBONES
-
-from junk.old_dataset import OldDataset
-from junk.old_efficient_net import OldEfficientNet
-from junk.old_model_runner import infer
+from pylib.herbarium_model import HerbariumModel
+from pylib.herbarium_runner import HerbariumInferenceRunner
 
 
 def parse_args():
@@ -67,11 +66,9 @@ def parse_args():
 
     arg_parser.add_argument(
         "--trait",
-        nargs="*",
-        choices=OldDataset.all_traits,
-        default=OldDataset.all_traits[0],
-        help="""Which trait to classify. You may use this argument multiple times.
-            (default: %(default)s) NOTE: This option is deprecated.""",
+        choices=ALL_TRAITS,
+        default=ALL_TRAITS[0],
+        help="""Which trait to classify.""",
     )
 
     arg_parser.add_argument(
@@ -89,8 +86,11 @@ def main():
     """Infer traits."""
     args = parse_args()
     orders = db.select_orders(args.database, args.split_run)
-    model = OldEfficientNet(args.backbone, orders, args.load_weights)
-    infer(args, model, orders)
+
+    model = HerbariumModel(orders, args)
+
+    runner = HerbariumInferenceRunner(model, args.trait, orders, args)
+    runner.infer()
 
 
 if __name__ == "__main__":
