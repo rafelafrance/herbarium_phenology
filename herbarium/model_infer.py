@@ -5,7 +5,7 @@ import textwrap
 from pathlib import Path
 
 from pylib import db
-from pylib.hydra_model import BACKBONES
+from pylib.herbarium_model import BACKBONES
 
 from junk.old_dataset import OldDataset
 from junk.old_efficient_net import OldEfficientNet
@@ -89,8 +89,8 @@ def main():
     """Infer traits."""
     args = parse_args()
     orders = db.select_orders(args.database, args.split_run)
-    net = OldEfficientNet(args.backbone, orders, args.load_weights)
-    infer(args, net, orders)
+    model = OldEfficientNet(args.backbone, orders, args.load_weights)
+    infer(args, model, orders)
 
 
 if __name__ == "__main__":

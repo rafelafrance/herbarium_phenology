@@ -4,23 +4,7 @@ import sqlite3
 from pathlib import Path
 from typing import Union
 
-import numpy as np
-
 DbPath = Union[Path, str]
-
-
-def adapt_array(array):
-    """Save an array as bytes in the DB."""
-    return array.tobytes()
-
-
-def convert_array(array):
-    """Convert an array field into a numpy array."""
-    return np.frombuffer(array)
-
-
-sqlite3.register_adapter(np.array, adapt_array)
-sqlite3.register_converter("array", convert_array)
 
 
 def build_select(sql: str, *, limit: int = 0, **kwargs) -> tuple[str, list]:
@@ -213,46 +197,6 @@ def insert_test_runs(
                     ( coreid,  test_run,  split_run,  trait,  true,  pred)
              values (:coreid, :test_run, :split_run, :trait, :true, :pred);"""
     insert_batch(database, sql, batch)
-
-
-# ############# Backbone table #########################################################
-
-
-def create_backbone_table(database: DbPath, drop: bool = False) -> None:
-    """Save inference results."""
-    sql = """
-        create table if not exists backbones (
-            coreid       text,
-            backbone_run text,
-            model        text,
-            backbone     array
-        );
-        """
-    create_table(database, sql, drop=drop)
-
-
-def insert_backbones(
-    database: DbPath, batch: list, backbone_run: str, model: str
-) -> None:
-    """Insert a batch of sheets records."""
-    sql = "delete from backbones where backbone_run = ? and model = ?"
-    with sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES) as cxn:
-        cxn.execute(sql, (backbone_run, model))
-    sql = """insert into backbones
-                    ( coreid,  backbone_run,  model,  backbone)
-             values (:coreid, :backbone_run, :model, :backbone);"""
-    insert_batch(database, sql, batch)
-
-
-def select_backbones(
-    database: DbPath, backbone_run: str, model: str, limit: int = 0
-) -> list[dict]:
-    """Select all records for a split_run/split combination."""
-    sql = """select * from backbones
-              where backbone_run = ?
-                and model = ?"""
-    sql, params = build_select(sql, limit=limit, backbone_run=backbone_run, model=model)
-    return rows_as_dicts(database, sql, params)
 
 
 # ########### Inferences table #########################################################

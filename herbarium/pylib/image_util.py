@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from herbarium.pylib import db
-from herbarium.pylib.hydra_dataset import HydraDataset
+from herbarium.pylib.herbarium_dataset import HydraDataset
 from herbarium.pylib.idigbio_load import TRAITS
 
 # Make a few attempts to download a page

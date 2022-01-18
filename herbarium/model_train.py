@@ -6,10 +6,10 @@ import textwrap
 from pathlib import Path
 
 from pylib import db
-from pylib.hydra_dataset import HydraDataset
-from pylib.hydra_model import BACKBONES
-from pylib.hydra_model import HydraModel
-from pylib.hydra_runner import HydraTrainingRunner
+from pylib.herbarium_dataset import HerbariumDataset
+from pylib.herbarium_model import BACKBONES
+from pylib.herbarium_model import HerbariumModel
+from pylib.herbarium_runner import HerbariumTrainingRunner
 
 
 def parse_args():
@@ -101,11 +101,9 @@ def parse_args():
 
     arg_parser.add_argument(
         "--trait",
-        nargs="*",
-        choices=HydraDataset.all_traits,
-        default=HydraDataset.all_traits[0],
-        help="""Which trait to classify. You may use this argument multiple times.
-            (default: %(default)s) NOTE: This option is deprecated.""",
+        choices=HerbariumDataset.all_traits,
+        default=HerbariumDataset.all_traits[0],
+        help="""Which trait to classify.""",
     )
 
     arg_parser.add_argument(
@@ -131,12 +129,11 @@ def main():
     """Train a model using just pytorch."""
     args = parse_args()
     orders = db.select_orders(args.database, args.split_run)
-    traits = HydraDataset.all_traits
 
-    model = HydraModel(traits, orders, args)
+    model = HerbariumModel(orders, args)
 
-    trainer = HydraTrainingRunner(model, traits, orders, args)
-    trainer.run()
+    trainer = HerbariumTrainingRunner(model, args.trait, orders, args)
+    trainer.train()
 
 
 if __name__ == "__main__":

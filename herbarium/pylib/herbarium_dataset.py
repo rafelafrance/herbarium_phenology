@@ -11,13 +11,13 @@ from torchvision import transforms
 from . import db
 from .const import ROOT_DIR
 
-Sheet = namedtuple("Sheet", "path coreid order trait")
+Sheet = namedtuple("Sheet", "path coreid order y_true")
 InferenceSheet = namedtuple("Sheet", "path coreid order")
 
 
-def build_transforms(net, augment):
+def build_transforms(model, augment=False):
     """Build a pipeline of image transforms specific to the dataset."""
-    xform = [transforms.Resize(net.size)]
+    xform = [transforms.Resize(model.size)]
 
     if augment:
         xform += [
@@ -28,7 +28,7 @@ def build_transforms(net, augment):
 
     xform += [
         transforms.ToTensor(),
-        transforms.Normalize(net.mean, net.std_dev),
+        transforms.Normalize(model.mean, model.std_dev),
     ]
 
     return transforms.Compose(xform)
@@ -41,7 +41,7 @@ def to_order(orders, sheet):
     return order
 
 
-class HydraDataset(Dataset):
+class HerbariumDataset(Dataset):
     """Generate augmented data."""
 
     all_traits: list[str] = " flowering fruiting leaf_out ".split()
@@ -49,7 +49,7 @@ class HydraDataset(Dataset):
     def __init__(
         self,
         sheets: list[dict],
-        net,
+        model,
         *,
         trait_name: str = None,
         orders: list[str] = None,
@@ -57,12 +57,12 @@ class HydraDataset(Dataset):
     ) -> None:
         super().__init__()
 
-        self.traits: str = trait_name if trait_name else self.all_traits[0]
+        self.trait: str = trait_name if trait_name else self.all_traits[0]
 
         orders = orders if orders else []
         self.orders: dict[str, int] = {o: i for i, o in enumerate(orders)}
 
-        self.transform = build_transforms(net, augment)
+        self.transform = build_transforms(model, augment)
 
         self.sheets: list[Sheet] = []
         for sheet in sheets:
@@ -70,8 +70,8 @@ class HydraDataset(Dataset):
                 Sheet(
                     sheet["path"],
                     sheet["coreid"],
-                    to_order(orders, sheet),
-                    self.to_trait(sheet),
+                    to_order(self.orders, sheet),
+                    self.y_true(sheet),
                 )
             )
 
@@ -84,23 +84,20 @@ class HydraDataset(Dataset):
             sheet = self.sheets[index]
             image = Image.open(ROOT_DIR / sheet.path).convert("RGB")
             image = self.transform(image)
-        return image, sheet.order, sheet.trait, sheet.coreid
+        return image, sheet.order, sheet.y_true, sheet.coreid
 
-    def to_trait(self, sheet) -> (torch.tensor, torch.tensor):
+    def y_true(self, sheet) -> (torch.tensor, torch.tensor):
         """Convert sheet traits to trait classes."""
-        traits = [0.0] * len(self.traits)
-        for i, trait in enumerate(self.traits):
-            traits[i] = 1 if sheet[trait] == "1" else 0
-        return torch.tensor(traits, dtype=torch.float)
+        value = 1.0 if sheet[self.trait] == "1" else 0.0
+        return torch.tensor([value], dtype=torch.float)
 
     def pos_weight(self) -> torch.tensor:
-        """Calculate the positive weight for traits in this dataset."""
-        pos = [0.0] * len(self.traits)
-        total = [0.0] * len(self.traits)
-        for i, _ in enumerate(self.traits):
-            pos[i] = sum(1.0 if s.trait[i] == 1.0 else 0.0 for s in self.sheets)
-        pos_wt = [(t - p) / p if p else 0.0 for p, t in zip(pos, total)]
-        return torch.tensor(pos_wt)
+        """Calculate the weights for the positive & negative cases of the trait."""
+        total = len(self)
+        pos = sum(1.0 if s.y_true == 1.0 else 0.0 for s in self.sheets)
+        neg = total - pos
+        pos_wt = pos / neg if neg > 0.0 else 1.0
+        return torch.tensor(pos_wt, dtype=torch.float)
 
 
 class InferenceDataset(Dataset):
@@ -112,7 +109,7 @@ class InferenceDataset(Dataset):
         self,
         database: Path,
         paths: list[Path],
-        net,
+        model,
         *,
         orders: list[str] = None,
         traits: list[str] = None,
@@ -124,7 +121,7 @@ class InferenceDataset(Dataset):
         orders = orders if orders else []
         self.orders: dict[str, int] = {o: i for i, o in enumerate(orders)}
 
-        self.transform = build_transforms(net)
+        self.transform = build_transforms(model)
 
         rows = {r["coreid"]: r for r in db.select_images(database)}
 
@@ -136,7 +133,7 @@ class InferenceDataset(Dataset):
                 InferenceSheet(
                     str(path),
                     coreid,
-                    to_order(orders, sheet),
+                    to_order(self.orders, sheet),
                 )
             )
 

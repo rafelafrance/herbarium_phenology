@@ -1,4 +1,4 @@
-"""Create EfficientNets that uses plant orders as well as images for input."""
+"""Create EfficientNets that use plant orders as well as images for input."""
 from argparse import Namespace
 
 import torch
@@ -47,7 +47,7 @@ BACKBONES = {
 }
 
 
-class HydraBackbone(nn.Module):
+class HerbariumBackbone(nn.Module):
     """Backbone for all of the trait nets."""
 
     def __init__(self, args: Namespace):
@@ -69,7 +69,7 @@ class HydraBackbone(nn.Module):
         return self.model(x)
 
 
-class HydraHead(nn.Module):
+class HerbariumHead(nn.Module):
     """Classify a trait using backbone output & phylogenetic orders as sidecar data."""
 
     def __init__(self, orders: list[str], args: Namespace):
@@ -77,9 +77,9 @@ class HydraHead(nn.Module):
 
         self.orders = orders
 
+        self.lr = args.learning_rate
         self.workers = args.workers
         self.batch_size = args.batch_size
-        self.lr = args.learning_rate
 
         model_params = BACKBONES[args.backbone]
 
@@ -106,7 +106,7 @@ class HydraHead(nn.Module):
             #
             # nn.Dropout(p=params["dropout"], inplace=True),
             nn.Linear(in_features=fc_feat3, out_features=1),
-            nn.Sigmoid(),
+            # nn.Sigmoid(),
         )
 
     def forward(self, x):
@@ -114,14 +114,14 @@ class HydraHead(nn.Module):
         return self.model(x)
 
 
-class HydraModel(nn.Module):
+class HerbariumModel(nn.Module):
     """The full hydra model."""
 
-    def __init__(self, traits: list[str], orders: list[str], args: Namespace):
+    def __init__(self, orders: list[str], args: Namespace):
         super().__init__()
 
-        self.backbone = HydraBackbone(args)
-        self.heads = nn.ModuleList([HydraHead(orders, args) for _ in traits])
+        self.backbone = HerbariumBackbone(args)
+        self.head = HerbariumHead(orders, args)
 
         self.state = torch.load(args.load_weights) if args.load_weights else {}
         if self.state.get("model_state"):
@@ -131,5 +131,5 @@ class HydraModel(nn.Module):
         """feed the backbone to all of the classifiers."""
         x0 = self.backbone(x0)
         x = torch.cat((x0, x1), dim=1)
-        xs = [h(x) for h in self.heads]
-        return torch.hstack(xs)
+        x = self.head(x)
+        return x

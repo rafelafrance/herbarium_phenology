@@ -107,8 +107,8 @@ def main():
     """Train a model using just pytorch."""
     args = parse_args()
     orders = db.select_orders(args.database, args.split_run)
-    net = OldEfficientNet(args.backbone, orders, args.load_weights)
-    test(args, net, orders)
+    model = OldEfficientNet(args.backbone, orders, args.load_weights)
+    test(args, model, orders)
 
 
 if __name__ == "__main__":
