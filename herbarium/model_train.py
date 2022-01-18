@@ -6,13 +6,10 @@ import textwrap
 from pathlib import Path
 
 from pylib import db
-from pylib.efficient_net_hydra import BACKBONES
-from pylib.efficient_net_hydra import EfficientNetHydra
-from pylib.efficient_net_old import EfficientNetOld
-from pylib.herbarium_hydra_dataset import HerbariumHydraDataset
-from pylib.herbarium_old_dataset import HerbariumOldDataset
-from pylib.run_hydra_model import train
-from pylib.run_old_model import train as o_train
+from pylib.hydra_dataset import HydraDataset
+from pylib.hydra_model import BACKBONES
+from pylib.hydra_model import HydraModel
+from pylib.hydra_runner import HydraTrainingRunner
 
 
 def parse_args():
@@ -105,8 +102,8 @@ def parse_args():
     arg_parser.add_argument(
         "--trait",
         nargs="*",
-        choices=HerbariumOldDataset.all_traits,
-        default=HerbariumOldDataset.all_traits[0],
+        choices=HydraDataset.all_traits,
+        default=HydraDataset.all_traits[0],
         help="""Which trait to classify. You may use this argument multiple times.
             (default: %(default)s) NOTE: This option is deprecated.""",
     )
@@ -134,18 +131,13 @@ def main():
     """Train a model using just pytorch."""
     args = parse_args()
     orders = db.select_orders(args.database, args.split_run)
-    net = EfficientNetOld(args.backbone, orders, args.load_weights)
-    o_train(args, net, orders)
+    traits = HydraDataset.all_traits
 
+    model = HydraModel(traits, orders, args)
 
-def main_hydra():
-    """Train a model using just pytorch."""
-    args = parse_args()
-    orders = db.select_orders(args.database, args.split_run)
-    net = EfficientNetHydra(HerbariumHydraDataset.all_traits, orders, vars(args))
-    train(args, net, orders)
+    trainer = HydraTrainingRunner(model, traits, orders, args)
+    trainer.run()
 
 
 if __name__ == "__main__":
-    # main()
-    main_hydra()
+    main()

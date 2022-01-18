@@ -1,9 +1,26 @@
 """Utilities for angiosperm.sqlite databases."""
+import re
 import sqlite3
 from pathlib import Path
 from typing import Union
 
+import numpy as np
+
 DbPath = Union[Path, str]
+
+
+def adapt_array(array):
+    """Save an array as bytes in the DB."""
+    return array.tobytes()
+
+
+def convert_array(array):
+    """Convert an array field into a numpy array."""
+    return np.frombuffer(array)
+
+
+sqlite3.register_adapter(np.array, adapt_array)
+sqlite3.register_converter("array", convert_array)
 
 
 def build_select(sql: str, *, limit: int = 0, **kwargs) -> tuple[str, list]:
@@ -39,7 +56,7 @@ def build_where(sql: str, **kwargs) -> tuple[str, list]:
 def rows_as_dicts(database: DbPath, sql: str, params: list = None) -> list[dict]:
     """Convert the SQL execute cursor to a list of dicts."""
     params = params if params else []
-    with sqlite3.connect(database) as cxn:
+    with sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES) as cxn:
         cxn.row_factory = sqlite3.Row
         rows = [dict(r) for r in cxn.execute(sql, params)]
     return rows
@@ -48,12 +65,14 @@ def rows_as_dicts(database: DbPath, sql: str, params: list = None) -> list[dict]
 def insert_batch(database: DbPath, sql: str, batch: list) -> None:
     """Insert a batch of records."""
     if batch:
-        with sqlite3.connect(database) as cxn:
+        with sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES) as cxn:
             cxn.executemany(sql, batch)
 
 
-def create_table(database: DbPath, sql: str, table: str, *, drop: bool = False) -> None:
+def create_table(database: DbPath, sql: str, *, drop: bool = False) -> None:
     """Create a table."""
+    match = re.search(r"if \s+ not \s+ exists \s+ (w+)", sql, flags=re.I | re.X)
+    table = match.group(1)
     with sqlite3.connect(database) as cxn:
         if drop:
             cxn.executescript(f"""drop table if exists {table};""")
@@ -74,7 +93,7 @@ def create_images_table(database: DbPath, drop: bool = False) -> None:
             height    integer
         );
         """
-    create_table(database, sql, "images", drop=drop)
+    create_table(database, sql, drop=drop)
 
 
 def insert_images(database: DbPath, batch: list) -> None:
@@ -110,7 +129,7 @@ def create_splits_table(database: DbPath, drop: bool = False) -> None:
             coreid    text
         );
         """
-    create_table(database, sql, "splits", drop=drop)
+    create_table(database, sql, drop=drop)
 
 
 def insert_splits(database: DbPath, batch: list) -> None:
@@ -180,7 +199,7 @@ def create_test_runs_table(database: DbPath, drop: bool = False) -> None:
             pred      real
         );
         """
-    create_table(database, sql, "test_runs", drop=drop)
+    create_table(database, sql, drop=drop)
 
 
 def insert_test_runs(
@@ -196,16 +215,51 @@ def insert_test_runs(
     insert_batch(database, sql, batch)
 
 
+# ############# Backbone table #########################################################
+
+
+def create_backbone_table(database: DbPath, drop: bool = False) -> None:
+    """Save inference results."""
+    sql = """
+        create table if not exists backbones (
+            coreid       text,
+            backbone_run text,
+            model        text,
+            backbone     array
+        );
+        """
+    create_table(database, sql, drop=drop)
+
+
+def insert_backbones(
+    database: DbPath, batch: list, backbone_run: str, model: str
+) -> None:
+    """Insert a batch of sheets records."""
+    sql = "delete from backbones where backbone_run = ? and model = ?"
+    with sqlite3.connect(database, detect_types=sqlite3.PARSE_DECLTYPES) as cxn:
+        cxn.execute(sql, (backbone_run, model))
+    sql = """insert into backbones
+                    ( coreid,  backbone_run,  model,  backbone)
+             values (:coreid, :backbone_run, :model, :backbone);"""
+    insert_batch(database, sql, batch)
+
+
+def select_backbones(
+    database: DbPath, backbone_run: str, model: str, limit: int = 0
+) -> list[dict]:
+    """Select all records for a split_run/split combination."""
+    sql = """select * from backbones
+              where backbone_run = ?
+                and model = ?"""
+    sql, params = build_select(sql, limit=limit, backbone_run=backbone_run, model=model)
+    return rows_as_dicts(database, sql, params)
+
+
 # ########### Inferences table #########################################################
 
 
 def create_inferences_table(database: DbPath, drop: bool = False) -> None:
-    """Create train/validation/test splits of the data.
-
-    This is so I don't wind up training on my test data. Because an image can belong
-    to multiple classes I need to be careful that I don't add any core IDs in the
-    test split to the training/validation splits.
-    """
+    """Save inference results."""
     sql = """
         create table if not exists inferences (
             coreid        text,
@@ -214,7 +268,7 @@ def create_inferences_table(database: DbPath, drop: bool = False) -> None:
             pred          real
         );
         """
-    create_table(database, sql, "test_runs", drop=drop)
+    create_table(database, sql, drop=drop)
 
 
 def insert_inferences(database: DbPath, batch: list, inference_run: str) -> None:

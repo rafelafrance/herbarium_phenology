@@ -6,10 +6,11 @@ import textwrap
 from pathlib import Path
 
 from pylib import db
-from pylib.efficient_net_hydra import BACKBONES
-from pylib.efficient_net_old import EfficientNetOld
-from pylib.herbarium_old_dataset import HerbariumOldDataset
-from pylib.run_old_model import test
+from pylib.hydra_backbone import BACKBONES
+
+from junk.old_dataset import OldDataset
+from junk.old_efficient_net import OldEfficientNet
+from junk.old_model_runner import test
 
 
 def parse_args():
@@ -77,8 +78,8 @@ def parse_args():
     arg_parser.add_argument(
         "--trait",
         nargs="*",
-        choices=HerbariumOldDataset.all_traits,
-        default=HerbariumOldDataset.all_traits[0],
+        choices=OldDataset.all_traits,
+        default=OldDataset.all_traits[0],
         help="""Which trait to classify. You may use this argument multiple times.
             (default: %(default)s) NOTE: This option is deprecated.""",
     )
@@ -106,7 +107,7 @@ def main():
     """Train a model using just pytorch."""
     args = parse_args()
     orders = db.select_orders(args.database, args.split_run)
-    net = EfficientNetOld(args.backbone, orders, args.load_weights)
+    net = OldEfficientNet(args.backbone, orders, args.load_weights)
     test(args, net, orders)
 
 
