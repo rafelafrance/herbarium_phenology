@@ -1,4 +1,4 @@
-"""Given download the images in the iDigBio database."""
+"""Download the images in the iDigBio database."""
 import os
 import socket
 import sys
@@ -14,9 +14,9 @@ from skimage import io
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from herbarium.pylib import db
-from herbarium.pylib.herbarium_dataset import HydraDataset
-from herbarium.pylib.idigbio_load import TRAITS
+from . import db
+from .herbarium_dataset import HerbariumDataset
+from .idigbio_load import TRAITS
 
 # Make a few attempts to download a page
 ATTEMPTS = 3
@@ -57,8 +57,6 @@ def sample_records(database, csv_dir, splits=8, limit=100):
                 where {trait} = 1
                   and order_ = ?
                   and coreid not in (select coreid from images)
-                  and accessuri not like '%harvard%'
-                  and accessuri not like '%uconn%'
              order by random()
             """
             sql, _ = db.build_select(sql, limit=limit)
@@ -136,7 +134,7 @@ def get_image_norm(database, classifier, split_run, batch_size=16, num_workers=4
     """Get the mean and standard deviation of the image channels."""
     device = "cuda" if torch.cuda.is_available() else "cpu"
     data = db.select_split(database, split_run, split="train")
-    split = HydraDataset(data, classifier)
+    split = HerbariumDataset(data, classifier)
     loader = DataLoader(split, batch_size=batch_size, num_workers=num_workers)
 
     # TODO: Has bad round-off error according to Numerical Recipes in C, 2d ed. p 613

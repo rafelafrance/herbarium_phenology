@@ -55,8 +55,10 @@ def insert_batch(database: DbPath, sql: str, batch: list) -> None:
 
 def create_table(database: DbPath, sql: str, *, drop: bool = False) -> None:
     """Create a table."""
-    match = re.search(r"if \s+ not \s+ exists \s+ (w+)", sql, flags=re.I | re.X)
+    flags = re.IGNORECASE | re.VERBOSE
+    match = re.search(r" if \s+ not \s+ exists \s+ (\w+) ", sql, flags=flags)
     table = match.group(1)
+
     with sqlite3.connect(database) as cxn:
         if drop:
             cxn.executescript(f"""drop table if exists {table};""")

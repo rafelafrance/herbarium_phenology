@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Train a model to classify herbarium traits."""
 import argparse
-import sys
 import textwrap
 from pathlib import Path
 
 from pylib import db
-from pylib.herbarium_dataset import ALL_TRAITS
+from pylib import model_util as mu
+from pylib.const import ALL_TRAITS
 from pylib.herbarium_model import BACKBONES
 from pylib.herbarium_model import HerbariumModel
 from pylib.herbarium_runner import HerbariumTrainingRunner
@@ -41,8 +41,14 @@ def parse_args():
         metavar="NAME",
         required=True,
         help="""Which data split to use. Splits are saved in the database and each
-            one is used for a specific purpose. So, the split-run must be in the
-            database.""",
+            one is used for a specific purpose.""",
+    )
+
+    arg_parser.add_argument(
+        "--trait",
+        choices=ALL_TRAITS,
+        required=True,
+        help="""Train to classify this trait.""",
     )
 
     arg_parser.add_argument(
@@ -100,13 +106,6 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--trait",
-        choices=ALL_TRAITS,
-        default=ALL_TRAITS[0],
-        help="""Which trait to classify.""",
-    )
-
-    arg_parser.add_argument(
         "--limit",
         type=int,
         metavar="INT",
@@ -115,12 +114,7 @@ def parse_args():
 
     args = arg_parser.parse_args()
 
-    split_runs = db.select_all_split_runs(args.database)
-    if args.split_run not in split_runs:
-        print(f"{args.split_run} is not in split_runs. Valid split_runs:")
-        for run in split_runs:
-            print(run)
-        sys.exit(1)
+    mu.validate_split_runs(args)
 
     return args
 

@@ -7,9 +7,8 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
+from .const import ALL_TRAITS
 from .const import ROOT_DIR
-
-ALL_TRAITS = " flowering fruiting leaf_out ".split()
 
 Sheet = namedtuple("Sheet", "path coreid order y_true")
 InferenceSheet = namedtuple("Sheet", "path coreid order")

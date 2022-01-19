@@ -5,7 +5,7 @@ import textwrap
 from pathlib import Path
 
 from pylib import db
-from pylib.herbarium_dataset import ALL_TRAITS
+from pylib.const import ALL_TRAITS
 from pylib.herbarium_model import BACKBONES
 from pylib.herbarium_model import HerbariumModel
 from pylib.herbarium_runner import HerbariumInferenceRunner
@@ -44,9 +44,17 @@ def parse_args():
 
     arg_parser.add_argument(
         "--inference-run",
+        metavar="NAME",
         required=True,
         help="""Name this inference run. Inference results are stored in the
             database.""",
+    )
+
+    arg_parser.add_argument(
+        "--trait",
+        choices=ALL_TRAITS,
+        required=True,
+        help="""Which trait to infer.""",
     )
 
     arg_parser.add_argument(
@@ -62,13 +70,6 @@ def parse_args():
         metavar="INT",
         default=4,
         help="""Number of workers for loading data. (default: %(default)s)""",
-    )
-
-    arg_parser.add_argument(
-        "--trait",
-        choices=ALL_TRAITS,
-        default=ALL_TRAITS[0],
-        help="""Which trait to classify.""",
     )
 
     arg_parser.add_argument(
