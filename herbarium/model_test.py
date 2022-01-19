@@ -36,7 +36,7 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--load-weights",
+        "--load-model",
         type=Path,
         required=True,
         help="""Use this model for testing.""",

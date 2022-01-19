@@ -13,7 +13,7 @@ from pylib.herbarium_runner import HerbariumInferenceRunner
 
 def parse_args():
     """Process command-line arguments."""
-    description = """Test a herbarium phenology classifier model."""
+    description = """Run inference using a herbarium phenology classifier model."""
     arg_parser = argparse.ArgumentParser(
         description=textwrap.dedent(description), fromfile_prefix_chars="@"
     )
@@ -35,7 +35,7 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--load-weights",
+        "--load-model",
         type=Path,
         metavar="PATH",
         required=True,

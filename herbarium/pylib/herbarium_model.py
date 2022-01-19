@@ -123,7 +123,7 @@ class HerbariumModel(nn.Module):
         self.backbone = HerbariumBackbone(args)
         self.head = HerbariumHead(orders, args)
 
-        self.state = torch.load(args.load_weights) if args.load_weights else {}
+        self.state = torch.load(args.load_model) if args.load_model else {}
         if self.state.get("model_state"):
             self.load_state_dict(self.state["model_state"])
 

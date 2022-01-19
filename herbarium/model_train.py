@@ -53,7 +53,7 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--load-weights",
+        "--load-model",
         type=Path,
         metavar="PATH",
         help="""Continue training with weights from this model.""",
