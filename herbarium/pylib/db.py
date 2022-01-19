@@ -143,7 +143,7 @@ def select_all_orders(database: DbPath) -> list[str]:
     return orders
 
 
-def select_orders(database: DbPath, split_run: str) -> list[str]:
+def select_split_run_orders(database: DbPath, split_run: str) -> list[str]:
     """Get all of the phylogenetic orders for a split run."""
     sql = """select distinct order_
                from splits

@@ -128,7 +128,7 @@ def parse_args():
 def main():
     """Train a model using just pytorch."""
     args = parse_args()
-    orders = db.select_orders(args.database, args.split_run)
+    orders = db.select_all_orders(args.database)
 
     model = HerbariumModel(orders, args)
 
