@@ -1,5 +1,5 @@
 """Create EfficientNets that use plant orders as well as images for input."""
-from argparse import Namespace
+from pathlib import Path
 
 import torch
 import torchvision
@@ -50,10 +50,10 @@ BACKBONES = {
 class HerbariumBackbone(nn.Module):
     """Backbone for all of the trait nets."""
 
-    def __init__(self, args: Namespace):
+    def __init__(self, backbone: str):
         super().__init__()
 
-        model_params = BACKBONES[args.backbone]
+        model_params = BACKBONES[backbone]
         self.size = model_params["size"]
         self.mean = (0.485, 0.456, 0.406)  # ImageNet
         self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
@@ -72,16 +72,12 @@ class HerbariumBackbone(nn.Module):
 class HerbariumHead(nn.Module):
     """Classify a trait using backbone output & phylogenetic orders as sidecar data."""
 
-    def __init__(self, orders: list[str], args: Namespace):
+    def __init__(self, orders: list[str], backbone: str):
         super().__init__()
 
         self.orders = orders
 
-        self.lr = args.learning_rate
-        self.workers = args.workers
-        self.batch_size = args.batch_size
-
-        model_params = BACKBONES[args.backbone]
+        model_params = BACKBONES[backbone]
 
         in_feat = model_params["in_feat"] + len(orders)
         fc_feat1 = in_feat // 4
@@ -117,13 +113,13 @@ class HerbariumHead(nn.Module):
 class HerbariumModel(nn.Module):
     """The full hydra model."""
 
-    def __init__(self, orders: list[str], args: Namespace):
+    def __init__(self, orders: list[str], backbone: str, load_model: Path):
         super().__init__()
 
-        self.backbone = HerbariumBackbone(args)
-        self.head = HerbariumHead(orders, args)
+        self.backbone = HerbariumBackbone(backbone)
+        self.head = HerbariumHead(orders, backbone)
 
-        self.state = torch.load(args.load_model) if args.load_model else {}
+        self.state = torch.load(load_model) if load_model else {}
         if self.state.get("model_state"):
             self.load_state_dict(self.state["model_state"])
 

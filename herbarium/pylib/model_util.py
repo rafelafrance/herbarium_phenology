@@ -1,7 +1,7 @@
 """Common function for dealing with model training, validation, or inference."""
 import sys
 
-from herbarium.pylib import db
+from . import db
 
 
 def validate_split_runs(args):

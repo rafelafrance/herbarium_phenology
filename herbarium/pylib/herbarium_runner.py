@@ -20,11 +20,11 @@ ArgsType = Union[Namespace]
 class HerbariumRunner:
     """Base class for running a hydra model."""
 
-    def __init__(self, model, trait, orders, args: ArgsType):
+    def __init__(self, model, orders, args: ArgsType):
         self.model = model
-        self.trait = trait
         self.orders = orders
 
+        self.trait = args.trait
         self.batch_size = args.batch_size
         self.database = args.database
         self.workers = args.workers
@@ -48,8 +48,8 @@ class HerbariumRunner:
 class HerbariumTrainingRunner(HerbariumRunner):
     """Train a hydra model."""
 
-    def __init__(self, model, trait, orders, args: ArgsType):
-        super().__init__(model, trait, orders, args)
+    def __init__(self, model, orders, args: ArgsType):
+        super().__init__(model, orders, args)
 
         self.lr = args.learning_rate
         self.split_run = args.split_run
@@ -73,7 +73,7 @@ class HerbariumTrainingRunner(HerbariumRunner):
         self.start_epoch = self.model.state.get("epoch", 0) + 1
         self.end_epoch = self.start_epoch + args.epochs
 
-    def train(self):
+    def run(self):
         """Train the model."""
         log.started()
 
@@ -173,8 +173,8 @@ class HerbariumTrainingRunner(HerbariumRunner):
 class HerbariumTestingRunner(HerbariumRunner):
     """Test the model."""
 
-    def __init__(self, model, trait, orders, args: ArgsType):
-        super().__init__(model, trait, orders, args)
+    def __init__(self, model, orders, args: ArgsType):
+        super().__init__(model, orders, args)
 
         db.create_test_runs_table(args.database)
 
@@ -200,7 +200,7 @@ class HerbariumTestingRunner(HerbariumRunner):
         criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
         return criterion
 
-    def test(self):
+    def run(self):
         """Test the model on hold-out data."""
         log.started()
 
@@ -251,8 +251,8 @@ class HerbariumTestingRunner(HerbariumRunner):
 class HerbariumInferenceRunner(HerbariumRunner):
     """Run inference on the model."""
 
-    def __init__(self, model, trait, orders, args: ArgsType):
-        super().__init__(model, trait, orders, args)
+    def __init__(self, model, orders, args: ArgsType):
+        super().__init__(model, orders, args)
 
         self.inference_run = args.inference_run
 
@@ -272,7 +272,7 @@ class HerbariumInferenceRunner(HerbariumRunner):
             self.infer_dataset, batch_size=self.batch_size, num_workers=self.workers
         )
 
-    def infer(self):
+    def run(self):
         """Run inference on images."""
         log.started()
 

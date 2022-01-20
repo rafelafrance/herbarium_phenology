@@ -124,10 +124,10 @@ def main():
     args = parse_args()
     orders = db.select_all_orders(args.database)
 
-    model = HerbariumModel(orders, args)
+    model = HerbariumModel(orders, args.backbone, args.load_model)
 
-    runner = HerbariumTrainingRunner(model, args.trait, orders, args)
-    runner.train()
+    runner = HerbariumTrainingRunner(model, orders, args)
+    runner.run()
 
 
 if __name__ == "__main__":
