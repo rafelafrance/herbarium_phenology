@@ -1,5 +1,7 @@
 """Run a hydra model for training, testing, or inference."""
 import logging
+from abc import ABC
+from abc import abstractmethod
 from argparse import Namespace
 from typing import Union
 
@@ -17,7 +19,7 @@ from .herbarium_dataset import InferenceDataset
 ArgsType = Union[Namespace]
 
 
-class HerbariumRunner:
+class HerbariumRunner(ABC):
     """Base class for running a hydra model."""
 
     def __init__(self, model, orders, args: ArgsType):
@@ -43,6 +45,10 @@ class HerbariumRunner:
             orders=self.orders,
             augment=augment,
         )
+
+    @abstractmethod
+    def run(self):
+        """Run the function of the class"""
 
 
 class HerbariumTrainingRunner(HerbariumRunner):
@@ -170,7 +176,7 @@ class HerbariumTrainingRunner(HerbariumRunner):
         return False
 
 
-class HerbariumTestingRunner(HerbariumRunner):
+class HerbariumTestRunner(HerbariumRunner):
     """Test the model."""
 
     def __init__(self, model, orders, args: ArgsType):

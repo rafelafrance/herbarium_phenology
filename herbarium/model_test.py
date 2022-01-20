@@ -9,7 +9,7 @@ from pylib import model_util as mu
 from pylib.const import ALL_TRAITS
 from pylib.herbarium_model import BACKBONES
 from pylib.herbarium_model import HerbariumModel
-from pylib.herbarium_runner import HerbariumTestingRunner
+from pylib.herbarium_runner import HerbariumTestRunner
 
 
 def parse_args():
@@ -102,7 +102,7 @@ def main():
 
     model = HerbariumModel(orders, args.backbone, args.load_model)
 
-    runner = HerbariumTestingRunner(model, orders, args)
+    runner = HerbariumTestRunner(model, orders, args)
     runner.run()
 
 

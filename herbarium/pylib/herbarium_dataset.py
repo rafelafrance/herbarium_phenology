@@ -93,7 +93,7 @@ class HerbariumDataset(Dataset):
         total = len(self)
         pos = sum(1.0 if s.y_true == 1.0 else 0.0 for s in self.sheets)
         neg = total - pos
-        pos_wt = pos / neg if neg > 0.0 else 1.0
+        pos_wt = neg / pos if pos > 0.0 else 1.0
         return torch.tensor(pos_wt, dtype=torch.float)
 
 

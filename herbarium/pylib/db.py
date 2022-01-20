@@ -201,6 +201,16 @@ def insert_test_runs(
     insert_batch(database, sql, batch)
 
 
+def select_test_run(database: DbPath, test_run: str, limit: int = 0) -> list[dict]:
+    """Select all records for a split_run/split combination."""
+    sql = """select *
+               from test_runs
+               join angiosperms using (coreid)
+               join images using (coreid)"""
+    sql, params = build_select(sql, limit=limit, test_run=test_run)
+    return rows_as_dicts(database, sql, params)
+
+
 # ########### Inferences table #########################################################
 
 
