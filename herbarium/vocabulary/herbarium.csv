@@ -95,22 +95,32 @@ leaf_out,leaf
 leaf_out,leaves
 leaf_out,veg
 leaf_out,vegetative
+not_flowering,after flowering
+not_flowering,after flowers
 not_flowering,flower: n
 not_flowering,no blooms
 not_flowering,no flowers
 not_flowering,non-reproductive
 not_flowering,not blooming
+not_flowering,not blooms
 not_flowering,not flowering
 not_flowering,past flowering
+not_flowering,past flowers
 not_flowering,post flowering
+not_flowering,post flowers
 not_flowering,post-flowering
+not_flowering,post-flowers
 not_flowering,pre-flowering
+not_flowering,pre-flowers
 not_fruiting,fruit: n
 not_fruiting,no fruits
 not_fruiting,not fruiting
+not_fruiting,not fruiting
 not_fruiting,past fruiting
+not_fruiting,past fruits
 not_fruiting,post-frt
 not_fruiting,post-fruit
+not_fruiting,post-fruits
 not_fruiting,sterile
 not_leaf_out,post-leaf
 not_leaf_out,pre-leaf
