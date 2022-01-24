@@ -64,7 +64,7 @@ class HerbariumDataset(Dataset):
                     sheet["path"],
                     sheet["coreid"],
                     to_order(self.orders, sheet),
-                    sheet["target"],
+                    torch.tensor([sheet["target"]], dtype=torch.float),
                 )
             )
 
@@ -79,11 +79,11 @@ class HerbariumDataset(Dataset):
             image = self.transform(image)
         return image, sheet.order, sheet.target, sheet.coreid
 
-    def pos_weight(self) -> torch.tensor:
+    def pos_weight(self):
         """Calculate the weights for the positive & negative cases of the trait."""
         pos = sum(s.target for s in self.sheets)
         pos_wt = (len(self) - pos) / pos if pos > 0.0 else 1.0
-        return torch.tensor(pos_wt, dtype=torch.float)
+        return [pos_wt]
 
 
 class InferenceDataset(Dataset):

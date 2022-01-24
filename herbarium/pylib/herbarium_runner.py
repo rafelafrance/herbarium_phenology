@@ -147,7 +147,8 @@ class HerbariumTrainingRunner(HerbariumRunner):
 
     def configure_criteria(self):
         """Configure the criterion for model improvement."""
-        pos_weight = self.train_dataset.pos_weight().to(self.device)
+        pos_weight = self.train_dataset.pos_weight()
+        pos_weight = torch.tensor(pos_weight, dtype=torch.float).to(self.device)
         criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
         return criterion
 
@@ -228,7 +229,8 @@ class HerbariumTestRunner(HerbariumRunner):
 
     def configure_criteria(self):
         """Configure the criterion for model improvement."""
-        pos_weight = self.test_dataset.pos_weight().to(self.device)
+        pos_weight = self.test_dataset.pos_weight()
+        pos_weight = torch.tensor(pos_weight, dtype=torch.float).to(self.device)
         criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
         return criterion
 
