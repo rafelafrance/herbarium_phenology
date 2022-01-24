@@ -47,7 +47,7 @@ def parse_args():
         "--test-set",
         metavar="NAME",
         required=True,
-        help="""Name this test set. Test results are stored in the database.""",
+        help="""Name this test set.""",
     )
 
     arg_parser.add_argument(

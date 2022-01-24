@@ -50,13 +50,6 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--target-set",
-        metavar="NAME",
-        required=True,
-        help="""Use this target set for trait target values.""",
-    )
-
-    arg_parser.add_argument(
         "--trait",
         choices=ALL_TRAITS,
         required=True,
