@@ -8,19 +8,6 @@ from pylib import idigbio_load
 from pylib import log
 
 
-def main(args):
-    """Load the data."""
-    if args.show_csv_files:
-        print(idigbio_load.show_csv_files(args.zip_file))
-        return
-
-    if args.show_csv_headers:
-        print(idigbio_load.show_csv_headers(args.zip_file, args.show_csv_headers))
-        return
-
-    idigbio_load.load_idigbio_data(args.database, args.zip_file, args.chunk_size)
-
-
 def parse_args():
     """Process command-line arguments."""
     description = """
@@ -75,10 +62,23 @@ def parse_args():
     return args
 
 
-if __name__ == "__main__":
+def main():
+    """Load the data."""
     log.started()
+    args = parse_args()
 
-    ARGS = parse_args()
-    main(ARGS)
+    if args.show_csv_files:
+        print(idigbio_load.show_csv_files(args.zip_file))
+        return
+
+    if args.show_csv_headers:
+        print(idigbio_load.show_csv_headers(args.zip_file, args.show_csv_headers))
+        return
+
+    idigbio_load.load_idigbio_data(args.database, args.zip_file, args.chunk_size)
 
     log.finished()
+
+
+if __name__ == "__main__":
+    main()

@@ -66,6 +66,34 @@ def create_table(database: DbPath, sql: str, *, drop: bool = False) -> None:
         cxn.executescript(sql)
 
 
+# ########### NLP results table #######################################################
+
+
+def create_targets_table(database: DbPath, drop: bool = False) -> None:
+    """Create a table to hold the results of NLP traits data."""
+    sql = """
+        create table if not exists targets (
+            coreid     text,
+            target_set text,
+            trait      text,
+            target     real
+        );
+        """
+    create_table(database, sql, drop=drop)
+
+
+def insert_targets(database: DbPath, batch: list, target_set: str) -> None:
+    """Insert a batch of target records."""
+    sql = "delete from targets where target_set = ?"
+    with sqlite3.connect(database) as cxn:
+        cxn.execute(sql, (target_set,))
+
+    sql = """insert into targets
+                    ( coreid,  target_set,  trait,  target)
+             values (:coreid, :target_set, :trait, :target);"""
+    insert_batch(database, sql, batch)
+
+
 # ########### Image table ##########################################################
 
 
@@ -73,10 +101,10 @@ def create_images_table(database: DbPath, drop: bool = False) -> None:
     """Create a table with paths to the valid herbarium sheet images."""
     sql = """
         create table if not exists images (
-            coreid    text primary key,
-            path      text unique,
-            width     integer,
-            height    integer
+            coreid text primary key,
+            path   text unique,
+            width  integer,
+            height integer
         );
         """
     create_table(database, sql, drop=drop)
@@ -110,7 +138,7 @@ def create_splits_table(database: DbPath, drop: bool = False) -> None:
     """
     sql = """
         create table if not exists splits (
-            split_run text,
+            split_set text,
             split     text,
             coreid    text
         );
@@ -120,20 +148,35 @@ def create_splits_table(database: DbPath, drop: bool = False) -> None:
 
 def insert_splits(database: DbPath, batch: list) -> None:
     """Insert a batch of sheets records."""
-    sql = """insert into splits ( split_run,  split,  coreid)
-                         values (:split_run, :split, :coreid);"""
+    sql = """insert into splits ( split_set,  split,  coreid)
+                         values (:split_set, :split, :coreid);"""
     insert_batch(database, sql, batch)
 
 
 def select_split(
-    database: DbPath, split_run: str, split: str, limit: int = 0
+    *,
+    database: DbPath,
+    split_set: str,
+    split: str,
+    target_set: str,
+    trait: str,
+    limit: int = 0,
 ) -> list[dict]:
-    """Select all records for a split_run/split combination."""
+    """Select all records for a split_set/split combination."""
     sql = """select *
                from splits
                join angiosperms using (coreid)
-               join images using (coreid)"""
-    sql, params = build_select(sql, limit=limit, split_run=split_run, split=split)
+               join images using (coreid)
+               join targets using (coreid)
+            """
+    sql, params = build_select(
+        sql,
+        split_set=split_set,
+        split=split,
+        target_set=target_set,
+        trait=trait,
+        limit=limit,
+    )
     return rows_as_dicts(database, sql, params)
 
 
@@ -145,21 +188,21 @@ def select_all_orders(database: DbPath) -> list[str]:
     return orders
 
 
-def select_split_run_orders(database: DbPath, split_run: str) -> list[str]:
-    """Get all of the phylogenetic orders for a split run."""
+def select_split_set_orders(database: DbPath, split_set: str) -> list[str]:
+    """Get all of the phylogenetic orders for a split set."""
     sql = """select distinct order_
                from splits
                join angiosperms using (coreid)
-              where split_run = ?
+              where split_set = ?
            order by order_"""
     with sqlite3.connect(database) as cxn:
-        orders = [r[0] for r in cxn.execute(sql, (split_run,))]
+        orders = [r[0] for r in cxn.execute(sql, (split_set,))]
     return orders
 
 
-def select_all_split_runs(database: DbPath) -> list[str]:
+def select_all_split_sets(database: DbPath) -> list[str]:
     """Get all split runs in the database."""
-    sql = """select distinct split_run from splits order by split_run"""
+    sql = """select distinct split_set from splits order by split_set"""
     with sqlite3.connect(database) as cxn:
         runs = [r[0] for r in cxn.execute(sql)]
     return runs
@@ -169,45 +212,40 @@ def select_all_split_runs(database: DbPath) -> list[str]:
 
 
 def create_test_runs_table(database: DbPath, drop: bool = False) -> None:
-    """Create train/validation/test splits of the data.
-
-    This is so I don't wind up training on my test data. Because an image can belong
-    to multiple classes I need to be careful that I don't add any core IDs in the
-    test split to the training/validation splits.
-    """
+    """Create test runs table."""
     sql = """
-        create table if not exists test_runs (
+        create table if not exists test_sets (
             coreid    text,
-            test_run  text,
-            split_run text,
+            test_set  text,
+            split_set text,
             trait     text,
-            true      real,
+            target    real,
             pred      real
         );
         """
     create_table(database, sql, drop=drop)
 
 
-def insert_test_runs(
-    database: DbPath, batch: list, test_run: str, split_run: str
+def insert_test_set(
+    database: DbPath, batch: list, test_set: str, split_set: str
 ) -> None:
-    """Insert a batch of sheets records."""
-    sql = "delete from test_runs where test_run = ? and split_run = ?"
+    """Insert a batch of test set records."""
+    sql = "delete from test_sets where test_set = ? and split_set = ?"
     with sqlite3.connect(database) as cxn:
-        cxn.execute(sql, (test_run, split_run))
-    sql = """insert into test_runs
-                    ( coreid,  test_run,  split_run,  trait,  true,  pred)
-             values (:coreid, :test_run, :split_run, :trait, :true, :pred);"""
+        cxn.execute(sql, (test_set, split_set))
+    sql = """insert into test_sets
+                    ( coreid,  test_set,  split_set,  trait,  target,  pred)
+             values (:coreid, :test_set, :split_set, :trait, :target, :pred);"""
     insert_batch(database, sql, batch)
 
 
-def select_test_run(database: DbPath, test_run: str, limit: int = 0) -> list[dict]:
-    """Select all records for a split_run/split combination."""
+def select_test_set(database: DbPath, test_set: str, limit: int = 0) -> list[dict]:
+    """Select all records for a test set."""
     sql = """select *
-               from test_runs
+               from test_sets
                join angiosperms using (coreid)
                join images using (coreid)"""
-    sql, params = build_select(sql, limit=limit, test_run=test_run)
+    sql, params = build_select(sql, limit=limit, test_set=test_set)
     return rows_as_dicts(database, sql, params)
 
 
@@ -219,7 +257,7 @@ def create_inferences_table(database: DbPath, drop: bool = False) -> None:
     sql = """
         create table if not exists inferences (
             coreid        text,
-            inference_run text,
+            inference_set text,
             trait         text,
             pred          real
         );
@@ -227,11 +265,11 @@ def create_inferences_table(database: DbPath, drop: bool = False) -> None:
     create_table(database, sql, drop=drop)
 
 
-def insert_inferences(database: DbPath, batch: list, inference_run: str) -> None:
-    """Insert a batch of sheets records."""
-    sql = "delete from inferences where inference_run = ?"
+def insert_inferences(database: DbPath, batch: list, inference_set: str) -> None:
+    """Insert a batch of inference records."""
+    sql = "delete from inferences where inference_set = ?"
     with sqlite3.connect(database) as cxn:
-        cxn.execute(sql, (inference_run,))
-    sql = """insert into inferences ( coreid,  inference_run,  trait,  pred)
-                             values (:coreid, :inference_run, :trait, :pred);"""
+        cxn.execute(sql, (inference_set,))
+    sql = """insert into inferences ( coreid,  inference_set,  trait,  pred)
+                             values (:coreid, :inference_set, :trait, :pred);"""
     insert_batch(database, sql, batch)

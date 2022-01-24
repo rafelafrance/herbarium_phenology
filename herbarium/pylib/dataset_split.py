@@ -26,7 +26,7 @@ def assign_records(args):
             coreids = {row["coreid"] for row in rows} - used
             used |= coreids
 
-            batch = [{"split_run": args.split_run, "coreid": i} for i in coreids]
+            batch = [{"split_set": args.split_set, "coreid": i} for i in coreids]
 
             count = len(coreids)
 

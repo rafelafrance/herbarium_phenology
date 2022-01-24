@@ -32,7 +32,7 @@ SEARCH_FIELDS = """
     reproductivecondition occurrenceremarks fieldnotes dynamicproperties """.split()
 
 
-def filter_records(in_db: Path, out_db: Path, filter_run: str) -> None:
+def filter_records(in_db: Path, out_db: Path, filter_set: str) -> None:
     """Remove records that are not angiosperms, have no phenological data, etc."""
     renames = get_column_renames()
     in_sql = build_select(renames)
@@ -44,12 +44,12 @@ def filter_records(in_db: Path, out_db: Path, filter_run: str) -> None:
     with sqlite3.connect(in_db) as in_cxn, sqlite3.connect(out_db) as out_cxn:
         in_cxn.row_factory = sqlite3.Row
 
-        all_columns = list(renames.values()) + ["filter_run"] + load.TRAITS
+        all_columns = list(renames.values()) + ["filter_set"] + load.TRAITS
         create_angiosperms_table(out_cxn, all_columns)
 
         for raw in tqdm(in_cxn.execute(in_sql)):
             row = dict(raw)
-            row["filter_run"] = filter_run
+            row["filter_set"] = filter_set
 
             # Add empty traits to the record
             for field in load.TRAITS:
@@ -96,14 +96,12 @@ def build_select(renames):
     columns = [f"`{k}` as {v}" for k, v in renames.items()]
     fields = ", ".join(columns)
     sql = f"""
-          with multiples as (
+        with multiples as (
             select coreid
               from multimedia
           group by coreid
             having count(*) > 1
-          ),
-          families as (select name as family from apg_ii_family_names
-                 union select name           from apg_iv_family_names)
+        )
         select {fields}
         from multimedia
         join occurrence using (coreid)
@@ -111,18 +109,14 @@ def build_select(renames):
        where coreid not in (select coreid from multiples)
          and accessuri <> ''
          and `dwc:basisofrecord` <> 'fossilspecimen'
-         and (   `dwc:phylum` in (select phylum from phyla)
-              or `dwc:class`  in (select class_ from classes)
-              or `dwc:order`  in (select order_ from orders)
-              or `dwc:family` in (select family from families)
-             );
+         and `dwc:order` in (select order_ from orders);
        """
     return sql
 
 
 def build_insert(renames):
     """Build an insert statement for the angiosperm records."""
-    columns = list(renames.values()) + ["filter_run"] + load.TRAITS
+    columns = list(renames.values()) + ["filter_set"] + load.TRAITS
     fields = ", ".join(columns)
     values = [f":{f}" for f in columns]
     values = ", ".join(values)
@@ -136,8 +130,6 @@ def create_angiosperms_table(out_cxn, columns):
     fields = ",\n".join(fields)
 
     sql = f"""
-        drop table if exists angiosperms;
-
         create table if not exists angiosperms (
             coreid text primary key,
             {fields}

@@ -37,7 +37,7 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--split-run",
+        "--split-set",
         metavar="NAME",
         required=True,
         help="""Which data split to use. Splits are saved in the database and each

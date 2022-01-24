@@ -9,10 +9,9 @@ TODO list:
 - ~~Get flowering, fruiting, and leaf-out information from iDigBio fields using a variety of NLP techniques.~~
 - ~~Train a neural network(s) to classify images as flowering, fruiting, and leaf-out.~~
 - ~~Download image data targeted at underrepresented traits (flowering, fruiting, etc.) and phylogenetic orders.~~
-- Use semi-supervised learning to build up data for missing traits. Most herbarium records have data about one trait, we want to train a model to recognize all traits at once.
-- Prepare data for showing the results, false (& true) positives and negatives.
+- Use semi-supervised learning to build up data for missing traits. Most herbarium records have annotations about one trait.
 - Fun & games with the model architecture.
-- Create detailed notes of what we're doing and make it the new README.
+- Create detailed notes of what we're doing and link to them in the README.
 
 This project extends Brian Stucky's work located [here](https://gitlab.com/stuckyb/herbarium_phenology).
 
@@ -24,8 +23,10 @@ TODO: This is a tad bit complicated.
 1. Create a virtual environment
    1. Make sure you have a virtual environment manage install. I use `virtualenv`.
       1. `pip install --user virtualenv`
-   2. Create a virtual environment.
+   2. Check out a tag.
       1. `cd /path/to/herbarim_phenology`
+      2. `git checkout v0.1` (or another tag)
+   2. Create a virtual environment.
       2. `virtualenv -p python3.9 .venv` (You may use python 3.9+)
       3. `source ./.venv/bin/activate`
    3. Install module requirements.

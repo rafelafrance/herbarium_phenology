@@ -5,20 +5,14 @@ import textwrap
 from datetime import datetime
 from pathlib import Path
 
+from pylib import filter_records as fr
 from pylib import log
-from pylib.filter_records import filter_records
-
-
-def main(args: argparse.Namespace) -> None:
-    """Filter the records."""
-    filter_records(args.in_db, args.out_db, args.filter_run)
 
 
 def parse_args() -> argparse.Namespace:
     """Process command-line arguments."""
-    description = """Filter records to only include angiosperm records with
-        a single image and it must contain a notation on flowering, fruiting, or
-        leaf-out."""
+    description = """TODO: Rewrite this to allow multiple NLP runs and records without
+        notations."""
 
     arg_parser = argparse.ArgumentParser(
         description=textwrap.dedent(description), fromfile_prefix_chars="@"
@@ -42,19 +36,22 @@ def parse_args() -> argparse.Namespace:
 
     default = datetime.now().isoformat(sep="_", timespec="seconds")
     arg_parser.add_argument(
-        "--filter-run",
+        "--filter-set",
         default=default,
-        help="""Name the filter run to allow multiple extracts.""",
+        help="""Name the filter set to allow multiple extracts.""",
     )
 
     args = arg_parser.parse_args()
     return args
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Filter the records."""
     log.started()
-
-    ARGS = parse_args()
-    main(ARGS)
-
+    args = parse_args()
+    fr.filter_records(args.in_db, args.out_db, args.filter_set)
     log.finished()
+
+
+if __name__ == "__main__":
+    main()

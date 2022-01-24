@@ -5,10 +5,10 @@ from . import db
 
 
 def validate_split_runs(args):
-    """Make sure that the entered split run is in the database."""
-    split_runs = db.select_all_split_runs(args.database)
-    if args.split_run not in split_runs:
-        print(f"'{args.split_run}' is not in split_runs. Valid split_runs:")
+    """Make sure that the entered split set is in the database."""
+    split_runs = db.select_all_split_sets(args.database)
+    if args.split_set not in split_runs:
+        print(f"'{args.split_set}' is not in split_runs. Valid split_runs:")
         print(", ".join(split_runs))
         sys.exit(1)
 

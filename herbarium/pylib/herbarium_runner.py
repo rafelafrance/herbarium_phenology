@@ -35,13 +35,21 @@ class HerbariumRunner(ABC):
         self.device = torch.device("cuda" if torch.has_cuda else "cpu")
         self.model.to(self.device)
 
-    def get_dataset(self, database, split_run, split, augment=False, limit=0):
+    def get_dataset(
+        self, database, split_set, split, target_set, trait, augment=False, limit=0
+    ):
         """Get a dataset for training, validation, testing, or inference."""
-        raw_data = db.select_split(database, split_run, split, limit)
+        raw_data = db.select_split(
+            database=database,
+            split_set=split_set,
+            split=split,
+            target_set=target_set,
+            trait=trait,
+            limit=limit,
+        )
         return HerbariumDataset(
             raw_data,
             self.model.backbone,
-            trait_name=self.trait,
             orders=self.orders,
             augment=augment,
         )
@@ -58,14 +66,26 @@ class HerbariumTrainingRunner(HerbariumRunner):
         super().__init__(model, orders, args)
 
         self.lr = args.learning_rate
-        self.split_run = args.split_run
+        self.split_set = args.split_set
         self.save_model = args.save_model
+        self.target_set = args.target_set
 
         self.train_dataset = self.get_dataset(
-            self.database, self.split_run, "train", augment=True, limit=self.limit
+            database=self.database,
+            split_set=self.split_set,
+            split="train",
+            target_set=self.target_set,
+            trait=self.trait,
+            augment=True,
+            limit=self.limit,
         )
         self.val_dataset = self.get_dataset(
-            self.database, self.split_run, "val", limit=self.limit
+            database=self.database,
+            split_set=self.split_set,
+            split="val",
+            target_set=self.target_set,
+            trait=self.trait,
+            limit=self.limit,
         )
 
         self.train_loader = self.train_dataloader()
@@ -100,13 +120,13 @@ class HerbariumTrainingRunner(HerbariumRunner):
         running_loss = 0.0
         running_acc = 0.0
 
-        for images, orders, y_true, _ in loader:
+        for images, orders, targets, _ in loader:
             images = images.to(self.device)
             orders = orders.to(self.device)
-            y_true = y_true.to(self.device)
+            targets = targets.to(self.device)
 
-            y_pred = self.model(images, orders)
-            loss = self.criterion(y_pred, y_true)
+            preds = self.model(images, orders)
+            loss = self.criterion(preds, targets)
 
             if optimizer:
                 optimizer.zero_grad()
@@ -114,7 +134,7 @@ class HerbariumTrainingRunner(HerbariumRunner):
                 optimizer.step()
 
             running_loss += loss.item()
-            running_acc += accuracy(y_pred, y_true)
+            running_acc += accuracy(preds, targets)
 
         return {"loss": running_loss / len(loader), "acc": running_acc / len(loader)}
 
@@ -184,11 +204,17 @@ class HerbariumTestRunner(HerbariumRunner):
 
         db.create_test_runs_table(args.database)
 
-        self.split_run = args.split_run
-        self.test_run = args.test_run
+        self.split_set = args.split_set
+        self.test_set = args.test_set
+        self.target_set = args.target_set
 
         self.test_dataset = self.get_dataset(
-            self.database, self.split_run, "test", limit=self.limit
+            database=self.database,
+            split_set=self.split_set,
+            split="test",
+            target_set=self.target_set,
+            trait=self.trait,
+            limit=self.limit,
         )
 
         self.test_loader = self.test_dataloader()
@@ -217,35 +243,35 @@ class HerbariumTestRunner(HerbariumRunner):
 
         batch = []
 
-        for images, orders, y_true, coreids in self.test_loader:
+        for images, orders, targets, coreids in self.test_loader:
             images = images.to(self.device)
             orders = orders.to(self.device)
-            y_true = y_true.to(self.device)
+            targets = targets.to(self.device)
 
-            y_pred = self.model(images, orders)
-            loss = self.criterion(y_pred, y_true)
+            preds = self.model(images, orders)
+            loss = self.criterion(preds, targets)
 
             test_loss += loss.item()
-            test_acc += accuracy(y_pred, y_true)
+            test_acc += accuracy(preds, targets)
 
-            y_pred = torch.sigmoid(y_pred)
+            preds = torch.sigmoid(preds)
 
-            y_pred = y_pred.detach().cpu()
-            y_true = y_true.detach().cpu()
+            preds = preds.detach().cpu()
+            targets = targets.detach().cpu()
 
-            for true, pred, coreid in zip(y_true, y_pred, coreids):
+            for target, pred, coreid in zip(targets, preds, coreids):
                 batch.append(
                     {
                         "coreid": coreid,
-                        "test_run": self.test_run,
-                        "split_run": self.split_run,
+                        "test_set": self.test_set,
+                        "split_set": self.split_set,
                         "trait": self.trait,
-                        "true": true.item(),
+                        "target": target.item(),
                         "pred": pred.item(),
                     }
                 )
 
-        db.insert_test_runs(self.database, batch, self.test_run, self.split_run)
+        db.insert_test_set(self.database, batch, self.test_set, self.split_set)
 
         test_loss /= len(self.test_loader)
         test_acc /= len(self.test_loader)
@@ -260,16 +286,13 @@ class HerbariumInferenceRunner(HerbariumRunner):
     def __init__(self, model, orders, args: ArgsType):
         super().__init__(model, orders, args)
 
-        self.inference_run = args.inference_run
+        self.inference_set = args.inference_set
 
         db.create_inferences_table(args.database)
 
         infer_recs = db.select_images(args.database, limit=args.limit)
 
-        self.infer_dataset = InferenceDataset(
-            infer_recs, model, trait_name=self.trait, orders=self.orders
-        )
-
+        self.infer_dataset = InferenceDataset(infer_recs, model, orders=self.orders)
         self.infer_loader = self.infer_dataloader()
 
     def infer_dataloader(self):
@@ -290,27 +313,27 @@ class HerbariumInferenceRunner(HerbariumRunner):
             images = images.to(self.device)
             orders = orders.to(self.device)
 
-            y_pred = self.model(images, orders)
-            y_pred = torch.sigmoid(y_pred)
-            y_pred = y_pred.detach().cpu()
+            preds = self.model(images, orders)
+            preds = torch.sigmoid(preds)
+            preds = preds.detach().cpu()
 
-            for pred, coreid in zip(y_pred, coreids):
+            for pred, coreid in zip(preds, coreids):
                 batch.append(
                     {
                         "coreid": coreid,
-                        "inference_run": self.inference_run,
+                        "inference_set": self.inference_set,
                         "trait": self.trait,
                         "pred": pred.item(),
                     }
                 )
 
-        db.insert_inferences(self.database, batch, self.inference_run)
+        db.insert_inferences(self.database, batch, self.inference_set)
 
         log.finished()
 
 
-def accuracy(y_pred, y_true):
+def accuracy(preds, targets):
     """Calculate the accuracy of the model."""
-    pred = torch.round(torch.sigmoid(y_pred))
-    equals = (pred == y_true).type(torch.float)
+    pred = torch.round(torch.sigmoid(preds))
+    equals = (pred == targets).type(torch.float)
     return torch.mean(equals)

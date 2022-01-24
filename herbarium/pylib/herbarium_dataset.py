@@ -7,10 +7,9 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-from .const import ALL_TRAITS
 from .const import ROOT_DIR
 
-Sheet = namedtuple("Sheet", "path coreid order y_true")
+Sheet = namedtuple("Sheet", "path coreid order target")
 InferenceSheet = namedtuple("Sheet", "path coreid order")
 
 
@@ -48,13 +47,10 @@ class HerbariumDataset(Dataset):
         sheets: list[dict],
         model,
         *,
-        trait_name: str = None,
         orders: list[str] = None,
         augment: bool = False,
     ) -> None:
         super().__init__()
-
-        self.trait: str = trait_name if trait_name else ALL_TRAITS[0]
 
         orders = orders if orders else []
         self.orders: dict[str, int] = {o: i for i, o in enumerate(orders)}
@@ -68,7 +64,7 @@ class HerbariumDataset(Dataset):
                     sheet["path"],
                     sheet["coreid"],
                     to_order(self.orders, sheet),
-                    self.y_true(sheet),
+                    sheet["target"],
                 )
             )
 
@@ -81,17 +77,12 @@ class HerbariumDataset(Dataset):
             sheet = self.sheets[index]
             image = Image.open(ROOT_DIR / sheet.path).convert("RGB")
             image = self.transform(image)
-        return image, sheet.order, sheet.y_true, sheet.coreid
-
-    def y_true(self, sheet) -> (torch.tensor, torch.tensor):
-        """Convert sheet traits to trait classes."""
-        value = 1.0 if sheet[self.trait] == "1" else 0.0
-        return torch.tensor([value], dtype=torch.float)
+        return image, sheet.order, sheet.target, sheet.coreid
 
     def pos_weight(self) -> torch.tensor:
         """Calculate the weights for the positive & negative cases of the trait."""
         total = len(self)
-        pos = sum(1.0 if s.y_true == 1.0 else 0.0 for s in self.sheets)
+        pos = sum(1.0 if s.target == 1.0 else 0.0 for s in self.sheets)
         neg = total - pos
         pos_wt = neg / pos if pos > 0.0 else 1.0
         return torch.tensor(pos_wt, dtype=torch.float)
@@ -105,12 +96,9 @@ class InferenceDataset(Dataset):
         image_recs: list[dict],
         model,
         *,
-        trait_name: str = None,
         orders: list[str] = None,
     ) -> None:
         super().__init__()
-
-        self.trait: str = trait_name if trait_name else ALL_TRAITS[0]
 
         orders = orders if orders else []
         self.orders: dict[str, int] = {o: i for i, o in enumerate(orders)}
