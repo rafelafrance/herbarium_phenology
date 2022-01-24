@@ -81,10 +81,8 @@ class HerbariumDataset(Dataset):
 
     def pos_weight(self) -> torch.tensor:
         """Calculate the weights for the positive & negative cases of the trait."""
-        total = len(self)
-        pos = sum(1.0 if s.target == 1.0 else 0.0 for s in self.sheets)
-        neg = total - pos
-        pos_wt = neg / pos if pos > 0.0 else 1.0
+        pos = sum(s.target for s in self.sheets)
+        pos_wt = (len(self) - pos) / pos if pos > 0.0 else 1.0
         return torch.tensor(pos_wt, dtype=torch.float)
 
 

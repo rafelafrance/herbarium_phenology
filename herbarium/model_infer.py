@@ -46,8 +46,7 @@ def parse_args():
         "--inference-set",
         metavar="NAME",
         required=True,
-        help="""Name this inference set. Inference results are stored in the
-            database.""",
+        help="""Name this inference set.""",
     )
 
     arg_parser.add_argument(

@@ -202,7 +202,7 @@ class HerbariumTestRunner(HerbariumRunner):
     def __init__(self, model, orders, args: ArgsType):
         super().__init__(model, orders, args)
 
-        db.create_test_runs_table(args.database)
+        db.create_tests_table(args.database)
 
         self.split_set = args.split_set
         self.test_set = args.test_set
@@ -271,7 +271,7 @@ class HerbariumTestRunner(HerbariumRunner):
                     }
                 )
 
-        db.insert_test_set(self.database, batch, self.test_set, self.split_set)
+        db.insert_tests(self.database, batch, self.test_set, self.split_set)
 
         test_loss /= len(self.test_loader)
         test_acc /= len(self.test_loader)

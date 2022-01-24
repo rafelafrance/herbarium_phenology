@@ -66,7 +66,18 @@ def create_table(database: DbPath, sql: str, *, drop: bool = False) -> None:
         cxn.executescript(sql)
 
 
-# ########### NLP results table #######################################################
+# ########### orders table #######################################################
+
+
+def select_all_orders(database: DbPath) -> list[str]:
+    """Get all orders with images."""
+    sql = """select order_ from orders order by order_"""
+    with sqlite3.connect(database) as cxn:
+        orders = [r[0] for r in cxn.execute(sql)]
+    return orders
+
+
+# ########### target traits table  ####################################################
 
 
 def create_targets_table(database: DbPath, drop: bool = False) -> None:
@@ -92,6 +103,14 @@ def insert_targets(database: DbPath, batch: list, target_set: str) -> None:
                     ( coreid,  target_set,  trait,  target)
              values (:coreid, :target_set, :trait, :target);"""
     insert_batch(database, sql, batch)
+
+
+def select_all_target_sets(database: DbPath) -> list[str]:
+    """Get all split runs in the database."""
+    sql = """select distinct target_set from targets order by target_set"""
+    with sqlite3.connect(database) as cxn:
+        runs = [r[0] for r in cxn.execute(sql)]
+    return runs
 
 
 # ########### Image table ##########################################################
@@ -121,7 +140,9 @@ def select_images(database: DbPath, limit: int = 0) -> list[dict]:
     """Select all images."""
     sql = """select *
                from images
-               join angiosperms using (coreid)"""
+               join angiosperms using (coreid)
+              where order_ <> ''
+            """
     sql, params = build_select(sql, limit=limit)
     return rows_as_dicts(database, sql, params)
 
@@ -180,14 +201,6 @@ def select_split(
     return rows_as_dicts(database, sql, params)
 
 
-def select_all_orders(database: DbPath) -> list[str]:
-    """Get all orders with images."""
-    sql = """select distinct order_ from angiosperms order by order_"""
-    with sqlite3.connect(database) as cxn:
-        orders = [r[0] for r in cxn.execute(sql)]
-    return orders
-
-
 def select_split_set_orders(database: DbPath, split_set: str) -> list[str]:
     """Get all of the phylogenetic orders for a split set."""
     sql = """select distinct order_
@@ -211,10 +224,10 @@ def select_all_split_sets(database: DbPath) -> list[str]:
 # ########### Test runs table ##########################################################
 
 
-def create_test_runs_table(database: DbPath, drop: bool = False) -> None:
+def create_tests_table(database: DbPath, drop: bool = False) -> None:
     """Create test runs table."""
     sql = """
-        create table if not exists test_sets (
+        create table if not exists tests (
             coreid    text,
             test_set  text,
             split_set text,
@@ -226,23 +239,21 @@ def create_test_runs_table(database: DbPath, drop: bool = False) -> None:
     create_table(database, sql, drop=drop)
 
 
-def insert_test_set(
-    database: DbPath, batch: list, test_set: str, split_set: str
-) -> None:
+def insert_tests(database: DbPath, batch: list, test_set: str, split_set: str) -> None:
     """Insert a batch of test set records."""
-    sql = "delete from test_sets where test_set = ? and split_set = ?"
+    sql = "delete from tests where test_set = ? and split_set = ?"
     with sqlite3.connect(database) as cxn:
         cxn.execute(sql, (test_set, split_set))
-    sql = """insert into test_sets
+    sql = """insert into tests
                     ( coreid,  test_set,  split_set,  trait,  target,  pred)
              values (:coreid, :test_set, :split_set, :trait, :target, :pred);"""
     insert_batch(database, sql, batch)
 
 
-def select_test_set(database: DbPath, test_set: str, limit: int = 0) -> list[dict]:
+def select_tests(database: DbPath, test_set: str, limit: int = 0) -> list[dict]:
     """Select all records for a test set."""
     sql = """select *
-               from test_sets
+               from tests
                join angiosperms using (coreid)
                join images using (coreid)"""
     sql, params = build_select(sql, limit=limit, test_set=test_set)

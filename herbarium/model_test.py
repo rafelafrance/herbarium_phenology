@@ -97,7 +97,8 @@ def parse_args():
 
     args = arg_parser.parse_args()
 
-    mu.validate_split_runs(args)
+    mu.validate_split_set(args)
+    mu.validate_target_set(args)
 
     return args
 
