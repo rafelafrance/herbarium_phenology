@@ -22,6 +22,15 @@ def validate_target_set(args):
         sys.exit(1)
 
 
+def validate_inference_set(args):
+    """Make sure that the entered split set is in the database."""
+    inference_sets = db.select_all_inference_sets(args.database)
+    if args.inference_set not in inference_sets:
+        print(f"'{args.inference_set}' is not in inference sets. Valid inference_sets:")
+        print(", ".join(inference_sets))
+        sys.exit(1)
+
+
 def validate_orders(args):
     """Make sure the entered orders are in the database."""
     if not args.order:

@@ -16,7 +16,7 @@ from tqdm import tqdm
 
 from . import db
 from .herbarium_dataset import HerbariumDataset
-from .idigbio_load import TRAITS
+from junk.idigbio_load import TRAITS
 
 # Make a few attempts to download a page
 ATTEMPTS = 3

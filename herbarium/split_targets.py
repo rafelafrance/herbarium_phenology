@@ -4,8 +4,51 @@ import argparse
 import textwrap
 from pathlib import Path
 
-from pylib import dataset_split as ds
+from pylib import const
+from pylib import db
 from pylib.const import ALL_TRAITS
+from tqdm import tqdm
+
+
+def assign_records(args):
+    """Assign records to splits.
+
+    We want to distribute the database records over the orders and traits in proportion
+    to the actual distribution as possible.
+    """
+    orders = db.select_all_orders(args.database)
+    used = set()
+
+    for order in tqdm(orders):
+        for trait in const.ALL_TRAIT_FIELDS:
+            sql = f"""
+               select coreid
+                 from images join angiosperms using (coreid)
+                where order_ = ? and {trait} = 1
+             order by random() """
+            rows = db.rows_as_dicts(args.database, sql, [order])
+
+            coreids = {row["coreid"] for row in rows} - used
+            used |= coreids
+
+            batch = [{"split_set": args.split_set, "coreid": i} for i in coreids]
+
+            count = len(coreids)
+
+            test_split = round(count * args.test_split)
+            val_split = round(count * (args.test_split + args.val_split))
+
+            for i in range(count):
+                if i <= test_split:
+                    split = "test"
+                elif i <= val_split:
+                    split = "val"
+                else:
+                    split = "train"
+
+                batch[i]["split"] = split
+
+            db.insert_splits(args.database, batch)
 
 
 def parse_args():
@@ -28,16 +71,7 @@ def parse_args():
         "--split-set",
         metavar="NAME",
         required=True,
-        help="""Which data split to create. Splits are saved in the database and each
-            one is used for a specific purpose.""",
-    )
-
-    arg_parser.add_argument(
-        "--trait",
-        nargs="*",
-        choices=ALL_TRAITS,
-        help="""Filter the data so that the dataset contains this trait. You may use
-            this argument more than once.""",
+        help="""Give the split set this name.""",
     )
 
     arg_parser.add_argument(
@@ -84,7 +118,7 @@ def main():
     if not args.trait:
         args.trait = ALL_TRAITS
 
-    ds.assign_records(args)
+    assign_records(args)
 
 
 if __name__ == "__main__":

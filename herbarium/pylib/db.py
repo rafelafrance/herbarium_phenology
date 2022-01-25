@@ -214,7 +214,7 @@ def select_split_set_orders(database: DbPath, split_set: str) -> list[str]:
 
 
 def select_all_split_sets(database: DbPath) -> list[str]:
-    """Get all split runs in the database."""
+    """Get all split set names in the database."""
     sql = """select distinct split_set from splits order by split_set"""
     with sqlite3.connect(database) as cxn:
         runs = [r[0] for r in cxn.execute(sql)]
@@ -284,3 +284,20 @@ def insert_inferences(database: DbPath, batch: list, inference_set: str) -> None
     sql = """insert into inferences ( coreid,  inference_set,  trait,  pred)
                              values (:coreid, :inference_set, :trait, :pred);"""
     insert_batch(database, sql, batch)
+
+
+def select_inferences(
+    database: DbPath, inference_set: str, limit: int = 0
+) -> list[dict]:
+    """Select all images."""
+    sql = """ select * from inferences join angiosperms using (coreid) """
+    sql, params = build_select(sql, inference_set=inference_set, limit=limit)
+    return rows_as_dicts(database, sql, params)
+
+
+def select_all_inference_sets(database: DbPath) -> list[str]:
+    """Get all inference set names in the database."""
+    sql = """select distinct inference_set from splits inferences by inference_set"""
+    with sqlite3.connect(database) as cxn:
+        runs = [r[0] for r in cxn.execute(sql)]
+    return runs

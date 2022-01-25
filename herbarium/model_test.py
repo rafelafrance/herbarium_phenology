@@ -5,7 +5,7 @@ import textwrap
 from pathlib import Path
 
 from pylib import db
-from pylib import model_util as mu
+from pylib import validate_args as val
 from pylib.const import ALL_TRAITS
 from pylib.herbarium_model import BACKBONES
 from pylib.herbarium_model import HerbariumModel
@@ -97,8 +97,8 @@ def parse_args():
 
     args = arg_parser.parse_args()
 
-    mu.validate_split_set(args)
-    mu.validate_target_set(args)
+    val.validate_split_set(args)
+    val.validate_target_set(args)
 
     return args
 
