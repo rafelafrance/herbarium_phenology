@@ -4,29 +4,29 @@ import sys
 from . import db
 
 
-def validate_split_set(args):
+def validate_split_set(database, split_set):
     """Make sure that the entered split set is in the database."""
-    split_sets = db.select_all_split_sets(args.database)
-    if args.split_set not in split_sets:
-        print(f"'{args.split_set}' is not in split_runs. Valid split_sets:")
+    split_sets = db.select_all_split_sets(database)
+    if split_set not in split_sets:
+        print(f"'{split_set}' is not in split_runs. Valid split_sets:")
         print(", ".join(split_sets))
         sys.exit(1)
 
 
-def validate_target_set(args):
+def validate_target_set(database, target_set):
     """Make sure that the entered split set is in the database."""
-    target_sets = db.select_all_target_sets(args.database)
-    if args.target_set not in target_sets:
-        print(f"'{args.target_set}' is not in targets. Valid target_sets:")
+    target_sets = db.select_all_target_sets(database)
+    if target_set not in target_sets:
+        print(f"'{target_set}' is not in targets. Valid target_sets:")
         print(", ".join(target_sets))
         sys.exit(1)
 
 
-def validate_inference_set(args):
+def validate_inference_set(database, inference_set):
     """Make sure that the entered split set is in the database."""
-    inference_sets = db.select_all_inference_sets(args.database)
-    if args.inference_set not in inference_sets:
-        print(f"'{args.inference_set}' is not in inference sets. Valid inference_sets:")
+    inference_sets = db.select_all_inference_sets(database)
+    if inference_set not in inference_sets:
+        print(f"'{inference_set}' is not in inference sets. Valid inference_sets:")
         print(", ".join(inference_sets))
         sys.exit(1)
 

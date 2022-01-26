@@ -117,6 +117,10 @@ class HerbariumModel(nn.Module):
         super().__init__()
 
         self.backbone = HerbariumBackbone(backbone)
+        self.size = self.backbone.size
+        self.mean = self.backbone.mean
+        self.std_dev = self.backbone.std_dev
+
         self.head = HerbariumHead(orders, backbone)
 
         self.state = torch.load(load_model) if load_model else {}

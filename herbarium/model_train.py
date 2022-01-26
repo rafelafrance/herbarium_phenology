@@ -121,8 +121,8 @@ def parse_args():
 
     args = arg_parser.parse_args()
 
-    val.validate_split_set(args)
-    val.validate_target_set(args)
+    val.validate_split_set(args.database, args.split_set)
+    val.validate_target_set(args.database, args.target_set)
 
     return args
 

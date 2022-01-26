@@ -6,32 +6,59 @@ from pathlib import Path
 
 from pylib import db
 from pylib import validate_args as val
+from pylib.const import ALL_TRAITS
 
 
 def label(args):
     """Create the target dataset."""
-    all_inf = db.select_inferences(args.database, args.inference_set)
 
-    batch = []
+    batch = extend_target_set(
+        args.database, args.target_set, args.base_target_set, args.trait
+    )
+    ids = {r["coreid"] for r in batch}
 
-    for inf in all_inf:
-        if inf["pred"] <= args.min_threshold:
+    for row in db.select_inferences(args.database, args.inference_set, args.trait):
+        if row["coreid"] in ids:
+            continue
+
+        if row["pred"] <= args.min_threshold:
             target = 0.0
-        elif inf["pred"] >= args.max_threshold:
+        elif row["pred"] >= args.max_threshold:
             target = 1.0
         else:
             continue
 
+        ids.add(row["coreid"])
+
         batch.append(
             {
-                "coreid": inf["coreid"],
+                "coreid": row["coreid"],
                 "target_set": args.target_set,
-                "trait": inf["trait"],
+                "source_set": f"pseudo_{args.inference_set}",
+                "trait": row["trait"],
                 "target": target,
             }
         )
 
-    db.insert_targets(args.database, batch, args.target_set)
+    db.insert_targets(args.database, batch, args.target_set, args.trait)
+
+
+def extend_target_set(database, target_set, base_target_set, trait) -> list[dict]:
+    """Start with this as the base target set."""
+    batch = []
+    if base_target_set:
+        sql = """
+            select *
+              from targets
+              join images using (coreid)
+             where target_set = ?
+               and trait = ?"""
+        batch = db.rows_as_dicts(database, sql, [base_target_set, trait])
+        for row in batch:
+            source_set = row["source_set"] if row["source_set"] else base_target_set
+            row["source_set"] = source_set
+            row["target_set"] = target_set
+    return batch
 
 
 def parse_args():
@@ -65,6 +92,20 @@ def parse_args():
     )
 
     arg_parser.add_argument(
+        "--trait",
+        choices=ALL_TRAITS,
+        required=True,
+        help="""Which trait to infer.""",
+    )
+
+    arg_parser.add_argument(
+        "--base-target-set",
+        metavar="NAME",
+        help="""Start with this target set. Add target records from this set before
+            adding any records from the --inference-set.""",
+    )
+
+    arg_parser.add_argument(
         "--min-threshold",
         type=float,
         metavar="FLOAT",
@@ -84,7 +125,9 @@ def parse_args():
 
     args = arg_parser.parse_args()
 
-    val.validate_inference_set(args)
+    val.validate_inference_set(args.database, args.inference_set)
+    if args.base_target_set:
+        val.validate_target_set(args.database, args.base_target_set)
 
     return args
 

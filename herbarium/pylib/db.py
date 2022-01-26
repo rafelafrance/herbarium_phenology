@@ -1,6 +1,7 @@
 """Utilities for angiosperm.sqlite databases."""
 import re
 import sqlite3
+import sys
 from pathlib import Path
 from typing import Union
 
@@ -57,6 +58,10 @@ def create_table(database: DbPath, sql: str, *, drop: bool = False) -> None:
     """Create a table."""
     flags = re.IGNORECASE | re.VERBOSE
     match = re.search(r" if \s+ not \s+ exists \s+ (\w+) ", sql, flags=flags)
+
+    if not match:
+        sys.exit(f"Could not parse create table for '{sql}'")
+
     table = match.group(1)
 
     with sqlite3.connect(database) as cxn:
@@ -86,6 +91,7 @@ def create_targets_table(database: DbPath, drop: bool = False) -> None:
         create table if not exists targets (
             coreid     text,
             target_set text,
+            source_set text,
             trait      text,
             target     real
         );
@@ -93,15 +99,15 @@ def create_targets_table(database: DbPath, drop: bool = False) -> None:
     create_table(database, sql, drop=drop)
 
 
-def insert_targets(database: DbPath, batch: list, target_set: str) -> None:
+def insert_targets(database: DbPath, batch: list, target_set: str, trait: str) -> None:
     """Insert a batch of target records."""
-    sql = "delete from targets where target_set = ?"
+    sql = "delete from targets where target_set = ? and trait = ?"
     with sqlite3.connect(database) as cxn:
-        cxn.execute(sql, (target_set,))
+        cxn.execute(sql, (target_set, trait))
 
     sql = """insert into targets
-                    ( coreid,  target_set,  trait,  target)
-             values (:coreid, :target_set, :trait, :target);"""
+                    ( coreid,  target_set,  source_set,  trait,  target)
+             values (:coreid, :target_set, :source_set, :trait, :target);"""
     insert_batch(database, sql, batch)
 
 
@@ -141,7 +147,7 @@ def select_images(database: DbPath, limit: int = 0) -> list[dict]:
     sql = """select *
                from images
                join angiosperms using (coreid)
-              where order_ <> ''
+              where order_ in (select order_ from orders)
             """
     sql, params = build_select(sql, limit=limit)
     return rows_as_dicts(database, sql, params)
@@ -287,17 +293,22 @@ def insert_inferences(database: DbPath, batch: list, inference_set: str) -> None
 
 
 def select_inferences(
-    database: DbPath, inference_set: str, limit: int = 0
+    database: DbPath, inference_set: str, trait: str, limit: int = 0
 ) -> list[dict]:
     """Select all images."""
     sql = """ select * from inferences join angiosperms using (coreid) """
-    sql, params = build_select(sql, inference_set=inference_set, limit=limit)
+    sql, params = build_select(
+        sql, inference_set=inference_set, trait=trait, limit=limit
+    )
     return rows_as_dicts(database, sql, params)
 
 
 def select_all_inference_sets(database: DbPath) -> list[str]:
     """Get all inference set names in the database."""
-    sql = """select distinct inference_set from splits inferences by inference_set"""
+    sql = """
+        select distinct inference_set
+          from inferences
+      order by inference_set"""
     with sqlite3.connect(database) as cxn:
         runs = [r[0] for r in cxn.execute(sql)]
     return runs

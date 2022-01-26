@@ -54,8 +54,7 @@ def parse_args():
         "--split-set",
         metavar="NAME",
         required=True,
-        help="""Which data split to use. Splits are saved in the database and each
-            one is used for a specific purpose.""",
+        help="""Which data split set to use.""",
     )
 
     arg_parser.add_argument(
@@ -97,8 +96,8 @@ def parse_args():
 
     args = arg_parser.parse_args()
 
-    val.validate_split_set(args)
-    val.validate_target_set(args)
+    val.validate_split_set(args.database, args.split_set)
+    val.validate_target_set(args.database, args.target_set)
 
     return args
 

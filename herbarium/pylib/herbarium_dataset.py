@@ -47,12 +47,11 @@ class HerbariumDataset(Dataset):
         sheets: list[dict],
         model,
         *,
-        orders: list[str] = None,
+        orders: list[str],
         augment: bool = False,
     ) -> None:
         super().__init__()
 
-        orders = orders if orders else []
         self.orders: dict[str, int] = {o: i for i, o in enumerate(orders)}
 
         self.transform = build_transforms(model, augment)
@@ -94,22 +93,21 @@ class InferenceDataset(Dataset):
         image_recs: list[dict],
         model,
         *,
-        orders: list[str] = None,
+        orders: list[str],
     ) -> None:
         super().__init__()
 
-        orders = orders if orders else []
         self.orders: dict[str, int] = {o: i for i, o in enumerate(orders)}
 
         self.transform = build_transforms(model)
 
-        self.records: list[InferenceSheet] = []
-        for rec in image_recs:
+        self.sheets: list[InferenceSheet] = []
+        for sheet in image_recs:
             self.sheets.append(
                 InferenceSheet(
-                    rec["path"],
-                    rec["coreid"],
-                    to_order(self.orders, rec),
+                    sheet["path"],
+                    sheet["coreid"],
+                    to_order(self.orders, sheet),
                 )
             )
 
@@ -119,7 +117,7 @@ class InferenceDataset(Dataset):
     def __getitem__(self, index):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning)  # No EXIF warnings
-            rec = self.records[index]
-            image = Image.open(ROOT_DIR / rec.path).convert("RGB")
+            sheet = self.sheets[index]
+            image = Image.open(ROOT_DIR / sheet.path).convert("RGB")
             image = self.transform(image)
-        return image, rec.order, rec.coreid
+        return image, sheet.order, sheet.coreid

@@ -3,20 +3,20 @@ import logging
 from abc import ABC
 from abc import abstractmethod
 from argparse import Namespace
-from typing import Union
 
 import numpy as np
 import torch
 from torch import nn
 from torch import optim
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from . import db
 from . import log
 from .herbarium_dataset import HerbariumDataset
 from .herbarium_dataset import InferenceDataset
 
-ArgsType = Union[Namespace]
+ArgsType = Namespace
 
 
 class HerbariumRunner(ABC):
@@ -311,7 +311,7 @@ class HerbariumInferenceRunner(HerbariumRunner):
 
         batch = []
 
-        for images, orders, _, coreids in self.infer_loader:
+        for images, orders, coreids in tqdm(self.infer_loader):
             images = images.to(self.device)
             orders = orders.to(self.device)
 
