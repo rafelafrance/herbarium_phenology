@@ -8,7 +8,7 @@ def validate_split_set(database, split_set):
     """Make sure that the entered split set is in the database."""
     split_sets = db.select_all_split_sets(database)
     if split_set not in split_sets:
-        print(f"'{split_set}' is not in split_runs. Valid split_sets:")
+        print(f"'{split_set}' is not in split sets. Valid split_sets:")
         print(", ".join(split_sets))
         sys.exit(1)
 

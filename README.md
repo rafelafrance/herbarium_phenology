@@ -9,7 +9,7 @@ TODO list:
 - ~~Get flowering, fruiting, and leaf-out information from iDigBio fields using a variety of NLP techniques.~~
 - ~~Train a neural network(s) to classify images as flowering, fruiting, and leaf-out.~~
 - ~~Download image data targeted at underrepresented traits (flowering, fruiting, etc.) and phylogenetic orders.~~
-- Use semi-supervised learning to build up data for missing traits. Most herbarium records have annotations about one trait.
+- ~~Use semi-supervised learning to build up data for missing traits. Most herbarium records have annotations about one trait.~~
 - Fun & games with the model architecture.
 - Create detailed notes of what we're doing and link to them in the README.
 
@@ -18,7 +18,7 @@ This project extends Brian Stucky's work located [here](https://gitlab.com/stuck
 
 ## Setup
 
-TODO: This is a tad bit complicated.
+**TODO**: This is a tad bit complicated.
 
 1. Create a virtual environment
    1. Make sure you have a virtual environment manage install. I use `virtualenv`.
