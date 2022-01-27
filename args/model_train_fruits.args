@@ -1,0 +1,10 @@
+--database=data/angiosperms.sqlite
+--save-model=data/models/fruiting/b0_fruits_all_orders_pseudo.pt
+--split-set=pseudo_fruits_1
+--target-set=fruits_all_orders
+--trait=fruiting
+--backbone=b0
+--load-model=data/models/fruiting/b0_fruits_all_orders_2.pt
+--batch-size=64
+--workers=8
+--epochs=50

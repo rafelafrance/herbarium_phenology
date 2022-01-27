@@ -1,0 +1,9 @@
+--database=data/angiosperms.sqlite
+--save-model=data/models/leaf_out/b0_leaf_out_all_orders_1.pt
+--split-set=leaf_out
+--target-set=leaf_out_all_orders
+--trait=leaf_out
+--backbone=b0
+--batch-size=64
+--workers=8
+--epochs=50
