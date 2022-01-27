@@ -52,7 +52,8 @@ def extend_target_set(database, target_set, base_target_set, trait) -> list[dict
               from targets
               join images using (coreid)
              where target_set = ?
-               and trait = ?"""
+               and trait = ?
+        """
         batch = db.rows_as_dicts(database, sql, [base_target_set, trait])
         for row in batch:
             source_set = row["source_set"] if row["source_set"] else base_target_set

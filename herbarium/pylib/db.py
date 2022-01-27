@@ -82,6 +82,16 @@ def select_all_orders(database: DbPath) -> list[str]:
     return orders
 
 
+# ########### angiosperms table  ######################################################
+
+
+def create_angiosperms_index(database):
+    """Make sure there is only one record per coreid."""
+    sql = """create unique index angiosperms_coreid on angiosperms (coreid);"""
+    with sqlite3.connect(database) as cxn:
+        cxn.executescript(sql)
+
+
 # ########### target traits table  ####################################################
 
 
@@ -95,6 +105,8 @@ def create_targets_table(database: DbPath, drop: bool = False) -> None:
             trait      text,
             target     real
         );
+
+        create unique index targets_idx on targets (coreid, target_set, trait);
         """
     create_table(database, sql, drop=drop)
 
@@ -169,6 +181,7 @@ def create_splits_table(database: DbPath, drop: bool = False) -> None:
             split     text,
             coreid    text
         );
+        create unique index splits_idx on splits (split_set, coreid);
         """
     create_table(database, sql, drop=drop)
 
@@ -241,6 +254,7 @@ def create_tests_table(database: DbPath, drop: bool = False) -> None:
             target    real,
             pred      real
         );
+        create unique index tests_idx on tests (coreid, test_set, trait);
         """
     create_table(database, sql, drop=drop)
 
@@ -278,6 +292,7 @@ def create_inferences_table(database: DbPath, drop: bool = False) -> None:
             trait         text,
             pred          real
         );
+        create unique index inferences_idx on inferences (coreid, inference_set, trait);
         """
     create_table(database, sql, drop=drop)
 
