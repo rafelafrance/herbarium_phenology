@@ -95,6 +95,8 @@ class HerbariumTrainingRunner(HerbariumRunner):
 
         self.best_loss = self.model.state.get("best_loss", np.Inf)
         self.best_acc = self.model.state.get("accuracy", 0.0)
+        self.run_loss = np.Inf
+        self.run_acc = 0.0
 
         self.start_epoch = self.model.state.get("epoch", 0) + 1
         self.end_epoch = self.start_epoch + args.epochs
@@ -180,6 +182,20 @@ class HerbariumTrainingRunner(HerbariumRunner):
 
     def save_checkpoint(self, val_stats, epoch):
         """Save the model if it meets criteria for being the current best model."""
+        if (val_stats["acc"], -val_stats["loss"]) >= (self.run_acc, -self.run_loss):
+            self.run_acc = val_stats["acc"]
+            self.run_loss = val_stats["loss"]
+            torch.save(
+                {
+                    "epoch": epoch,
+                    "model_state": self.model.state_dict(),
+                    "optimizer_state": self.optimizer.state_dict(),
+                    "best_loss": self.best_loss,
+                    "accuracy": self.best_acc,
+                },
+                self.save_model.with_stem(self.save_model.stem + "_chk"),
+            )
+
         if (val_stats["acc"], -val_stats["loss"]) >= (self.best_acc, -self.best_loss):
             self.best_acc = val_stats["acc"]
             self.best_loss = val_stats["loss"]
@@ -194,6 +210,7 @@ class HerbariumTrainingRunner(HerbariumRunner):
                 self.save_model,
             )
             return True
+
         return False
 
 
