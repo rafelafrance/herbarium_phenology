@@ -7,16 +7,12 @@ from urllib.request import urlretrieve
 
 import numpy as np
 import pandas as pd
-import torch
 from PIL import Image
 from PIL.Image import DecompressionBombWarning
 from skimage import io
-from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from . import db
-from .herbarium_dataset import HerbariumDataset
-from junk.idigbio_load import TRAITS
 
 # Make a few attempts to download a page
 ATTEMPTS = 3
@@ -27,6 +23,26 @@ socket.setdefaulttimeout(TIMEOUT)
 
 # The column that holds the image URL
 COLUMN = "accessuri"
+
+# The name of columns in the iDigBio zip file that we want
+OCCURRENCE = """ coreid dwc:basisOfRecord dwc:kingdom dwc:phylum dwc:class
+    dwc:order dwc:family dwc:genus dwc:specificEpithet dwc:scientificName
+    dwc:eventDate dwc:continent dwc:country dwc:stateProvince dwc:county dwc:locality
+    idigbio:geoPoint
+    """.split()
+
+# The name of columns we want in the iDigBio zip file
+OCCURRENCE_RAW = """ coreid dwc:reproductiveCondition dwc:occurrenceRemarks
+    dwc:dynamicProperties dwc:fieldNotes
+    """.split()
+
+# The name of columns we want in the iDigBio zip file
+MULTIMEDIA = """ coreid accessURI """.split()
+
+# Extra flags
+TRAITS = """
+        flowering      fruiting     leaf_out
+    not_flowering  not_fruiting not_leaf_out """.split()
 
 # Catch these errors during downloads and image validation
 # Python error handling sucks!
@@ -130,22 +146,22 @@ def validate_images(image_dir, database, error, glob="*.jpg", every=100):
     db.insert_images(database, images)
 
 
-def get_image_norm(database, classifier, split_set, batch_size=16, num_workers=4):
-    """Get the mean and standard deviation of the image channels."""
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    data = db.select_split(database, split_set, split="train")
-    split = HerbariumDataset(data, classifier)
-    loader = DataLoader(split, batch_size=batch_size, num_workers=num_workers)
-
-    # TODO: Has bad round-off error according to Numerical Recipes in C, 2d ed. p 613
-    sum_, sq_sum, count = 0.0, 0.0, 0
-
-    for images, _ in tqdm(loader):
-        images = images.to(device)
-        sum_ += torch.mean(images, dim=[0, 2, 3])
-        sq_sum += torch.mean(images ** 2, dim=[0, 2, 3])
-        count += 1
-
-    mean = sum_ / count
-    std = (sq_sum / count - mean ** 2) ** 0.5
-    return mean, std
+# def get_image_norm(database, classifier, split_set, batch_size=16, num_workers=4):
+#     """Get the mean and standard deviation of the image channels."""
+#     device = "cuda" if torch.cuda.is_available() else "cpu"
+#     data = db.select_split(database, split_set, split="train")
+#     split = HerbariumDataset(data, classifier)
+#     loader = DataLoader(split, batch_size=batch_size, num_workers=num_workers)
+#
+#     # TODO: Has bad round-off error according to Numerical Recipes in C, 2d ed. p 613
+#     sum_, sq_sum, count = 0.0, 0.0, 0
+#
+#     for images, _ in tqdm(loader):
+#         images = images.to(device)
+#         sum_ += torch.mean(images, dim=[0, 2, 3])
+#         sq_sum += torch.mean(images ** 2, dim=[0, 2, 3])
+#         count += 1
+#
+#     mean = sum_ / count
+#     std = (sq_sum / count - mean ** 2) ** 0.5
+#     return mean, std

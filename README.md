@@ -21,7 +21,7 @@ This project extends Brian Stucky's work located [here](https://gitlab.com/stuck
 **TODO**: This is a tad bit complicated.
 
 1. Create a virtual environment
-   1. Make sure you have a virtual environment manage install. I use `virtualenv`.
+   1. Make sure you have a virtual environment manager installed. I use `virtualenv`.
       1. `pip install --user virtualenv`
    2. Check out a tag.
       1. `cd /path/to/herbarim_phenology`
@@ -33,7 +33,7 @@ This project extends Brian Stucky's work located [here](https://gitlab.com/stuck
       1. `python -m pip install --upgrade pip setuptools wheel`
       2. `python -m pip install -r requirements`
    4. Download a vocabulary for spaCy.
-      1. python -m spacy download en_core_web_sm
+      1. `python -m spacy download en_core_web_sm`
    5. I have a module for common spacy functions, install that.
       1. `python -m pip install git+https://github.com/rafelafrance/traiter.git@master#egg=traiter`
    6. Install the appropriate version of pytorch & pytorch vision. If your computer has an NVIDIA GPU I recommend the 1st line. If you do not have one, use the 2nd line.

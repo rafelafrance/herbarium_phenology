@@ -10,7 +10,7 @@ from torchvision import transforms
 from .const import ROOT_DIR
 
 Sheet = namedtuple("Sheet", "path coreid order target")
-InferenceSheet = namedtuple("Sheet", "path coreid order")
+InferenceSheet = namedtuple("InferenceSheet", "path coreid order")
 
 
 def build_transforms(model, augment=False):

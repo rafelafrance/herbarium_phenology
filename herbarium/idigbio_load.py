@@ -12,25 +12,9 @@ import pandas as pd
 from pylib import log
 from tqdm import tqdm
 
-# The name of columns in the iDigBio zip file that we want
-OCCURRENCE = """ coreid dwc:basisOfRecord dwc:kingdom dwc:phylum dwc:class
-    dwc:order dwc:family dwc:genus dwc:specificEpithet dwc:scientificName
-    dwc:eventDate dwc:continent dwc:country dwc:stateProvince dwc:county dwc:locality
-    idigbio:geoPoint
-    """.split()
-
-# The name of columns we want in the iDigBio zip file
-OCCURRENCE_RAW = """ coreid dwc:reproductiveCondition dwc:occurrenceRemarks
-    dwc:dynamicProperties dwc:fieldNotes
-    """.split()
-
-# The name of columns we want in the iDigBio zip file
-MULTIMEDIA = """ coreid accessURI """.split()
-
-# Extra flags
-TRAITS = """
-        flowering      fruiting     leaf_out
-    not_flowering  not_fruiting not_leaf_out """.split()
+from herbarium.pylib.download_images import MULTIMEDIA
+from herbarium.pylib.download_images import OCCURRENCE
+from herbarium.pylib.download_images import OCCURRENCE_RAW
 
 
 def load_idigbio_data(db: Path, zip_file: Path, chunk_size: int) -> None:
