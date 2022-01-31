@@ -1,0 +1,10 @@
+--database=data/angiosperms.sqlite
+--save-model=data/models/flowering/b0_flowering_2.pt
+--split-set=flowering
+--target-set=first_run
+--trait=flowering
+--backbone=b0
+--load-model=data/models/flowering/b0_flowering_1.pt
+--batch-size=64
+--workers=8
+--epochs=50

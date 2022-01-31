@@ -11,12 +11,16 @@ DbPath = Union[Path, str]
 def build_select(sql: str, *, limit: int = 0, **kwargs) -> tuple[str, list]:
     """Select records given a base SQL statement and keyword parameters."""
     sql, params = build_where(sql, **kwargs)
+    sql = limit_clause(sql, params, limit)
+    return sql, params
 
+
+def limit_clause(sql, params, limit):
+    """Append a limit clause if needed."""
     if limit:
         sql += " limit ?"
         params.append(limit)
-
-    return sql, params
+    return sql
 
 
 def build_where(sql: str, **kwargs) -> tuple[str, list]:
@@ -103,7 +107,7 @@ def create_targets_table(database: DbPath, drop: bool = False) -> None:
         create table if not exists targets (
             coreid     text,
             target_set text,
-            source_set text,
+            filter_set text,
             trait      text,
             target     real
         );
@@ -121,8 +125,8 @@ def insert_targets(database: DbPath, batch: list, target_set: str, trait: str) -
         cxn.execute(sql, (target_set, trait))
 
     sql = """insert into targets
-                    ( coreid,  target_set,  source_set,  trait,  target)
-             values (:coreid, :target_set, :source_set, :trait, :target);"""
+                    ( coreid,  target_set,  filter_set,  trait,  target)
+             values (:coreid, :target_set, :filter_set, :trait, :target);"""
     insert_batch(database, sql, batch)
 
 
@@ -319,6 +323,33 @@ def select_inferences(
     sql, params = build_select(
         sql, inference_set=inference_set, trait=trait, limit=limit
     )
+    return rows_as_dicts(database, sql, params)
+
+
+def select_pseudo_split(
+    *,
+    database: DbPath,
+    trait: str,
+    inference_set: str,
+    target_set: str,
+    min_threshold: float,
+    max_threshold: float,
+    limit: int = 0,
+) -> list[dict]:
+    """Select all records for a split_set/split combination."""
+    sql = """
+        select *
+         from inferences
+         join angiosperms using (coreid)
+         join images using (coreid)
+         join targets using (coreid)
+        where inferences.trait = ?
+          and inference_set = ?
+          and targets.trait = ?
+          and target_set = ?
+          and (pred <= ? or pred >= ?) """
+    params = [trait, inference_set, trait, target_set, min_threshold, max_threshold]
+    sql = limit_clause(sql, params, limit)
     return rows_as_dicts(database, sql, params)
 
 

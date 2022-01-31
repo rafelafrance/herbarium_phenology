@@ -13,70 +13,82 @@ Sheet = namedtuple("Sheet", "path coreid order target")
 InferenceSheet = namedtuple("InferenceSheet", "path coreid order")
 
 
-def build_transforms(model, augment=False):
-    """Build a pipeline of image transforms specific to the dataset."""
-    xform = [transforms.Resize(model.size)]
-
-    if augment:
-        xform += [
-            transforms.AutoAugment(transforms.AutoAugmentPolicy.IMAGENET),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomVerticalFlip(),
-        ]
-
-    xform += [
-        transforms.ToTensor(),
-        transforms.Normalize(model.mean, model.std_dev),
-    ]
-
-    return transforms.Compose(xform)
-
-
-def to_order(orders, rec):
-    """Convert the phylogenetic order to a one-hot encoding for the order."""
-    order = torch.zeros(len(orders), dtype=torch.float)
-    order[orders[rec["order_"]]] = 1.0
-    return order
-
-
 class HerbariumDataset(Dataset):
     """Generate augmented data."""
 
     def __init__(
         self,
-        sheets: list[dict],
+        image_recs: list[dict],
         model,
         *,
         orders: list[str],
         augment: bool = False,
     ) -> None:
         super().__init__()
-
         self.orders: dict[str, int] = {o: i for i, o in enumerate(orders)}
+        self.transform = self.build_transforms(model, augment)
+        self.sheets = self.build_sheets(image_recs)
 
-        self.transform = build_transforms(model, augment)
-
-        self.sheets: list[Sheet] = []
-        for sheet in sheets:
-            self.sheets.append(
+    def build_sheets(self, image_recs) -> list[Sheet]:
+        """Build the sheets we are using for the dataset."""
+        sheets: list[Sheet] = []
+        for rec in image_recs:
+            target = self.get_target(rec)
+            sheets.append(
                 Sheet(
-                    sheet["path"],
-                    sheet["coreid"],
-                    to_order(self.orders, sheet),
-                    torch.tensor([sheet["target"]], dtype=torch.float),
+                    rec["path"],
+                    rec["coreid"],
+                    self.to_order(self.orders, rec),
+                    torch.tensor([target], dtype=torch.float),
                 )
             )
+        return sheets
+
+    def get_target(self, rec):
+        """Return the target value for the sheet."""
+        return rec["target"]
 
     def __len__(self):
         return len(self.sheets)
 
     def __getitem__(self, index) -> tuple:
+        image, sheet = self.raw_item(index)
+        return image, sheet.order, sheet.target, sheet.coreid
+
+    def raw_item(self, index):
+        """Get the raw item data."""
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning)  # No EXIF warnings
             sheet = self.sheets[index]
             image = Image.open(ROOT_DIR / sheet.path).convert("RGB")
             image = self.transform(image)
-        return image, sheet.order, sheet.target, sheet.coreid
+        return image, sheet
+
+    @staticmethod
+    def build_transforms(model, augment=False):
+        """Build a pipeline of image transforms specific to the dataset."""
+        xform = [transforms.Resize(model.size)]
+
+        if augment:
+            xform += [
+                transforms.AutoAugment(transforms.AutoAugmentPolicy.IMAGENET),
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomVerticalFlip(),
+            ]
+
+        xform += [
+            transforms.ToTensor(),
+            transforms.Normalize(model.mean, model.std_dev),
+        ]
+
+        return transforms.Compose(xform)
+
+    @staticmethod
+    def to_order(orders, rec):
+        """Convert the phylogenetic order to a one-hot encoding for the order."""
+        order = torch.zeros(len(orders), dtype=torch.float)
+        order[orders[rec["order_"]]] = 1.0
+        return order
 
     def pos_weight(self):
         """Calculate the weights for the positive & negative cases of the trait."""
@@ -85,8 +97,8 @@ class HerbariumDataset(Dataset):
         return [pos_wt]
 
 
-class InferenceDataset(Dataset):
-    """Create a dataset from images in a directory."""
+class PseudoDataset(HerbariumDataset):
+    """Create a dataset for pseudo-label records."""
 
     def __init__(
         self,
@@ -94,30 +106,36 @@ class InferenceDataset(Dataset):
         model,
         *,
         orders: list[str],
+        min_threshold: float,
+        max_threshold: float,
     ) -> None:
-        super().__init__()
-
-        self.orders: dict[str, int] = {o: i for i, o in enumerate(orders)}
-
-        self.transform = build_transforms(model)
-
-        self.sheets: list[InferenceSheet] = []
-        for sheet in image_recs:
-            self.sheets.append(
-                InferenceSheet(
-                    sheet["path"],
-                    sheet["coreid"],
-                    to_order(self.orders, sheet),
-                )
-            )
-
-    def __len__(self):
-        return len(self.sheets)
+        self.min_threshold = min_threshold
+        self.max_threshold = max_threshold
+        super().__init__(image_recs, model, orders=orders, augment=True)
 
     def __getitem__(self, index):
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=UserWarning)  # No EXIF warnings
-            sheet = self.sheets[index]
-            image = Image.open(ROOT_DIR / sheet.path).convert("RGB")
-            image = self.transform(image)
+        image, sheet = self.raw_item(index)
+        return image, sheet.order, sheet.target
+
+    def get_target(self, rec):
+        """Return the target value for the sheet."""
+        return 0.0 if rec["pred"] <= self.min_threshold else 1.0
+
+
+class InferenceDataset(HerbariumDataset):
+    """Create a dataset from images in a directory."""
+
+    def build_sheets(self, image_recs) -> list[InferenceSheet]:
+        """Build the sheets used for inference."""
+        sheets: list[InferenceSheet] = []
+        for rec in image_recs:
+            sheets.append(
+                InferenceSheet(
+                    rec["path"], rec["coreid"], self.to_order(self.orders, rec)
+                )
+            )
+        return sheets
+
+    def __getitem__(self, index):
+        image, sheet = self.raw_item(index)
         return image, sheet.order, sheet.coreid

@@ -1,5 +1,6 @@
 """Run a hydra model for training, testing, or inference."""
 import logging
+import random
 from abc import ABC
 from abc import abstractmethod
 from argparse import Namespace
@@ -15,12 +16,13 @@ from . import db
 from . import log
 from .herbarium_dataset import HerbariumDataset
 from .herbarium_dataset import InferenceDataset
+from .herbarium_dataset import PseudoDataset
 
 ArgsType = Namespace
 
 
 class HerbariumRunner(ABC):
-    """Base class for running a hydra model."""
+    """Base class for running a herbarium model."""
 
     def __init__(self, model, orders, args: ArgsType):
         self.model = model
@@ -35,32 +37,13 @@ class HerbariumRunner(ABC):
         self.device = torch.device("cuda" if torch.has_cuda else "cpu")
         self.model.to(self.device)
 
-    def get_dataset(
-        self, database, split_set, split, target_set, trait, augment=False, limit=0
-    ):
-        """Get a dataset for training, validation, testing, or inference."""
-        raw_data = db.select_split(
-            database=database,
-            split_set=split_set,
-            split=split,
-            target_set=target_set,
-            trait=trait,
-            limit=limit,
-        )
-        return HerbariumDataset(
-            raw_data,
-            self.model.backbone,
-            orders=self.orders,
-            augment=augment,
-        )
-
     @abstractmethod
     def run(self):
         """Run the function of the class"""
 
 
 class HerbariumTrainingRunner(HerbariumRunner):
-    """Train a hydra model."""
+    """Train a herbarium model."""
 
     def __init__(self, model, orders, args: ArgsType):
         super().__init__(model, orders, args)
@@ -69,24 +52,6 @@ class HerbariumTrainingRunner(HerbariumRunner):
         self.split_set = args.split_set
         self.save_model = args.save_model
         self.target_set = args.target_set
-
-        self.train_dataset = self.get_dataset(
-            database=self.database,
-            split_set=self.split_set,
-            split="train",
-            target_set=self.target_set,
-            trait=self.trait,
-            augment=True,
-            limit=self.limit,
-        )
-        self.val_dataset = self.get_dataset(
-            database=self.database,
-            split_set=self.split_set,
-            split="val",
-            target_set=self.target_set,
-            trait=self.trait,
-            limit=self.limit,
-        )
 
         self.train_loader = self.train_dataloader()
         self.val_loader = self.val_dataloader()
@@ -107,17 +72,19 @@ class HerbariumTrainingRunner(HerbariumRunner):
 
         for epoch in range(self.start_epoch, self.end_epoch):
             self.model.train()
-            train_stats = self.one_epoch(self.train_loader, self.optimizer)
+            train_stats = self.one_epoch(
+                self.train_loader, self.criterion, self.optimizer
+            )
 
             self.model.eval()
-            val_stats = self.one_epoch(self.val_loader)
+            val_stats = self.one_epoch(self.val_loader, self.criterion)
 
             is_best = self.save_checkpoint(val_stats, epoch)
             self.log_stats(train_stats, val_stats, epoch, is_best)
 
         log.finished()
 
-    def one_epoch(self, loader, optimizer=None):
+    def one_epoch(self, loader, criterion, optimizer=None):
         """Train or validate an epoch."""
         running_loss = 0.0
         running_acc = 0.0
@@ -128,7 +95,7 @@ class HerbariumTrainingRunner(HerbariumRunner):
             targets = targets.to(self.device)
 
             preds = self.model(images, orders)
-            loss = self.criterion(preds, targets)
+            loss = criterion(preds, targets)
 
             if optimizer:
                 optimizer.zero_grad()
@@ -149,25 +116,57 @@ class HerbariumTrainingRunner(HerbariumRunner):
 
     def configure_criteria(self):
         """Configure the criterion for model improvement."""
-        pos_weight = self.train_dataset.pos_weight()
+        pos_weight = self.train_loader.dataset.pos_weight()
         pos_weight = torch.tensor(pos_weight, dtype=torch.float).to(self.device)
         criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
         return criterion
 
     def train_dataloader(self):
         """Load the training split for the data."""
+        raw_data = db.select_split(
+            database=self.database,
+            split_set=self.split_set,
+            split="train",
+            target_set=self.target_set,
+            trait=self.trait,
+            limit=self.limit,
+        )
+        dataset = HerbariumDataset(
+            raw_data,
+            self.model,
+            orders=self.orders,
+            augment=True,
+        )
         return DataLoader(
-            self.train_dataset,
+            dataset,
             batch_size=self.batch_size,
             num_workers=self.workers,
             shuffle=True,
-            drop_last=len(self.train_dataset) % self.batch_size == 1,
+            pin_memory=True,
+            drop_last=len(dataset) % self.batch_size == 1,
         )
 
     def val_dataloader(self):
         """Load the validation split for the data."""
+        raw_data = db.select_split(
+            database=self.database,
+            split_set=self.split_set,
+            split="val",
+            target_set=self.target_set,
+            trait=self.trait,
+            limit=self.limit,
+        )
+        dataset = HerbariumDataset(
+            raw_data,
+            self.model,
+            orders=self.orders,
+            augment=False,
+        )
         return DataLoader(
-            self.val_dataset, batch_size=self.batch_size, num_workers=self.workers
+            dataset,
+            batch_size=self.batch_size,
+            num_workers=self.workers,
+            pin_memory=True,
         )
 
     @staticmethod
@@ -175,7 +174,7 @@ class HerbariumTrainingRunner(HerbariumRunner):
         """Log results of the epoch."""
         logging.info(
             f"{epoch:2}: "
-            f"Train: loss {train_stats['loss']:0.6f} acc {train_stats['acc']:0.6f}\t"
+            f"Train: loss {train_stats['loss']:0.6f} acc {train_stats['acc']:0.6f} "
             f"Valid: loss {val_stats['loss']:0.6f} acc {val_stats['acc']:0.6f}"
             f"{' ++' if is_best else ''}"
         )
@@ -226,7 +225,12 @@ class HerbariumTestRunner(HerbariumRunner):
         self.test_set = args.test_set
         self.target_set = args.target_set
 
-        self.test_dataset = self.get_dataset(
+        self.test_loader = self.test_dataloader()
+        self.criterion = self.configure_criteria()
+
+    def test_dataloader(self):
+        """Load the validation split for the data."""
+        raw_data = db.select_split(
             database=self.database,
             split_set=self.split_set,
             split="test",
@@ -234,19 +238,22 @@ class HerbariumTestRunner(HerbariumRunner):
             trait=self.trait,
             limit=self.limit,
         )
-
-        self.test_loader = self.test_dataloader()
-        self.criterion = self.configure_criteria()
-
-    def test_dataloader(self):
-        """Load the validation split for the data."""
+        dataset = HerbariumDataset(
+            raw_data,
+            self.model,
+            orders=self.orders,
+            augment=False,
+        )
         return DataLoader(
-            self.test_dataset, batch_size=self.batch_size, num_workers=self.workers
+            dataset,
+            batch_size=self.batch_size,
+            num_workers=self.workers,
+            pin_memory=True,
         )
 
     def configure_criteria(self):
         """Configure the criterion for model improvement."""
-        pos_weight = self.test_dataset.pos_weight()
+        pos_weight = self.test_loader.dataset.pos_weight()
         pos_weight = torch.tensor(pos_weight, dtype=torch.float).to(self.device)
         criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
         return criterion
@@ -307,17 +314,19 @@ class HerbariumInferenceRunner(HerbariumRunner):
 
         self.inference_set = args.inference_set
 
-        db.create_inferences_table(args.database)
+        db.create_inferences_table(self.database)
 
-        infer_recs = db.select_images(args.database, limit=args.limit)
-
-        self.infer_dataset = InferenceDataset(infer_recs, model, orders=self.orders)
         self.infer_loader = self.infer_dataloader()
 
     def infer_dataloader(self):
         """Load the validation split for the data."""
+        raw_data = db.select_images(self.database, limit=self.limit)
+        dataset = InferenceDataset(raw_data, self.model, orders=self.orders)
         return DataLoader(
-            self.infer_dataset, batch_size=self.batch_size, num_workers=self.workers
+            dataset,
+            batch_size=self.batch_size,
+            num_workers=self.workers,
+            pin_memory=True,
         )
 
     def run(self):
@@ -349,6 +358,105 @@ class HerbariumInferenceRunner(HerbariumRunner):
         db.insert_inferences(self.database, batch, self.inference_set)
 
         log.finished()
+
+
+class HerbariumPseudoRunner(HerbariumTrainingRunner):
+    """Train a herbarium model with pseudo-labels."""
+
+    def __init__(self, model, orders, args: ArgsType):
+        super().__init__(model, orders, args)
+
+        self.inference_set = args.inference_set
+        self.min_threshold = args.min_threshold
+        self.max_threshold = args.max_threshold
+
+        self.pseudo_loader = self.pseudo_dataloader()
+
+    def run(self):
+        """Run train the model using pseudo-labels."""
+        log.started()
+
+        train_criterion, pseudo_criterion = self.criterion
+
+        pseudo_prob = 0.1
+        pseudo_max = 0.9
+        pseudo_step = 0.1
+        pseudo_update = 20
+
+        for epoch in range(self.start_epoch, self.end_epoch):
+            self.model.train()
+
+            if epoch % pseudo_update == 0 and pseudo_prob < pseudo_max:
+                pseudo_prob += pseudo_step
+
+            if random.random() >= pseudo_prob:
+                train_stats = self.one_epoch(
+                    self.train_loader, train_criterion, self.optimizer
+                )
+                is_pseudo = False
+            else:
+                train_stats = self.one_epoch(
+                    self.pseudo_loader, pseudo_criterion, self.optimizer
+                )
+                is_pseudo = True
+
+            self.model.eval()
+            val_stats = self.one_epoch(self.val_loader, train_criterion)
+
+            is_best = self.save_checkpoint(val_stats, epoch)
+            self.logger(train_stats, val_stats, epoch, is_best, is_pseudo)
+
+        log.finished()
+
+    @staticmethod
+    def logger(train_stats, val_stats, epoch, is_best, is_pseudo):
+        """Log results of the epoch."""
+        logging.info(
+            f"{epoch:2}: "
+            f"Train: loss {train_stats['loss']:0.6f} acc {train_stats['acc']:0.6f} "
+            f"Valid: loss {val_stats['loss']:0.6f} acc {val_stats['acc']:0.6f}"
+            f" {'pseudo' if is_pseudo else '      '}"
+            f"{' ++' if is_best else ''}"
+        )
+
+    def configure_criteria(self):
+        """Configure criteria for model improvement."""
+        pos_weight = self.train_loader.dataset.pos_weight()
+        pos_weight = torch.tensor(pos_weight, dtype=torch.float).to(self.device)
+        train_criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+
+        pseudo_weight = self.pseudo_loader.dataset.pos_weight()
+        pseudo_weight = torch.tensor(pseudo_weight, dtype=torch.float).to(self.device)
+        pseudo_criterion = nn.BCEWithLogitsLoss(pos_weight=pseudo_weight)
+
+        return train_criterion, pseudo_criterion
+
+    def pseudo_dataloader(self):
+        """Load the pseudo-dataset."""
+        raw_data = db.select_pseudo_split(
+            database=self.database,
+            trait=self.trait,
+            inference_set=self.inference_set,
+            target_set=self.target_set,
+            min_threshold=self.min_threshold,
+            max_threshold=self.max_threshold,
+            limit=self.limit,
+        )
+        dataset = PseudoDataset(
+            raw_data,
+            self.model,
+            orders=self.orders,
+            min_threshold=self.min_threshold,
+            max_threshold=self.max_threshold,
+        )
+        return DataLoader(
+            dataset,
+            batch_size=self.batch_size,
+            num_workers=self.workers,
+            shuffle=True,
+            pin_memory=True,
+            drop_last=len(dataset) % self.batch_size == 1,
+        )
 
 
 def accuracy(preds, targets):

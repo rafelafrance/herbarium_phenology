@@ -1,0 +1,9 @@
+--database=data/angiosperms.sqlite
+--backbone=b0
+--load-model=data/models/fruiting/b0_fruiting_2.pt
+--test-set=b0_fruiting_pseudo
+--split-set=fruiting
+--target-set=first_run
+--trait=fruiting
+--batch-size=64
+--workers=8
