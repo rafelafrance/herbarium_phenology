@@ -2,6 +2,7 @@
 --save-model=data/models/fruiting/b0_fruiting_pseudo_1.pt
 --split-set=fruiting
 --target-set=first_run
+--inference-set=b0_fruiting_2
 --trait=fruiting
 --backbone=b0
 --load-model=data/models/fruiting/b0_fruiting_2.pt
@@ -9,4 +10,4 @@
 --max-threshold=0.99
 --batch-size=64
 --workers=8
---epochs=50
+--epochs=100

@@ -8,59 +8,8 @@ from pylib import db
 from pylib import validate_args as val
 from pylib.const import ALL_TRAITS
 from pylib.herbarium_model import BACKBONES
-
-
-def label(args):
-    """Create the target dataset."""
-
-    batch = extend_target_set(
-        args.database, args.target_set, args.base_target_set, args.trait
-    )
-    ids = {r["coreid"] for r in batch}
-
-    for row in db.select_inferences(args.database, args.inference_set, args.trait):
-        if row["coreid"] in ids:
-            continue
-
-        if row["pred"] <= args.min_threshold:
-            target = 0.0
-        elif row["pred"] >= args.max_threshold:
-            target = 1.0
-        else:
-            continue
-
-        ids.add(row["coreid"])
-
-        batch.append(
-            {
-                "coreid": row["coreid"],
-                "target_set": args.target_set,
-                "source_set": f"pseudo_{args.inference_set}",
-                "trait": row["trait"],
-                "target": target,
-            }
-        )
-
-    db.insert_targets(args.database, batch, args.target_set, args.trait)
-
-
-def extend_target_set(database, target_set, base_target_set, trait) -> list[dict]:
-    """Start with this as the base target set."""
-    batch = []
-    if base_target_set:
-        sql = """
-            select *
-              from targets
-              join images using (coreid)
-             where target_set = ?
-               and trait = ?
-        """
-        batch = db.rows_as_dicts(database, sql, [base_target_set, trait])
-        for row in batch:
-            source_set = row["source_set"] if row["source_set"] else base_target_set
-            row["source_set"] = source_set
-            row["target_set"] = target_set
-    return batch
+from pylib.herbarium_model import HerbariumModel
+from pylib.herbarium_runner import HerbariumPseudoRunner
 
 
 def parse_args():
@@ -200,7 +149,12 @@ def parse_args():
 def main():
     """Infer traits."""
     args = parse_args()
-    label(args)
+    orders = db.select_all_orders(args.database)
+
+    model = HerbariumModel(orders, args.backbone, args.load_model)
+
+    runner = HerbariumPseudoRunner(model, orders, args)
+    runner.run()
 
 
 if __name__ == "__main__":

@@ -56,7 +56,7 @@ class HerbariumTrainingRunner(HerbariumRunner):
         self.train_loader = self.train_dataloader()
         self.val_loader = self.val_dataloader()
         self.optimizer = self.configure_optimizers()
-        self.criterion = self.configure_criteria()
+        self.criterion = self.configure_criterion(self.train_loader.dataset)
 
         self.best_loss = self.model.state.get("best_loss", np.Inf)
         self.best_acc = self.model.state.get("accuracy", 0.0)
@@ -114,9 +114,9 @@ class HerbariumTrainingRunner(HerbariumRunner):
             optimizer.load_state_dict(self.model.state["optimizer_state"])
         return optimizer
 
-    def configure_criteria(self):
+    def configure_criterion(self, dataset):
         """Configure the criterion for model improvement."""
-        pos_weight = self.train_loader.dataset.pos_weight()
+        pos_weight = dataset.pos_weight()
         pos_weight = torch.tensor(pos_weight, dtype=torch.float).to(self.device)
         criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
         return criterion
@@ -226,7 +226,7 @@ class HerbariumTestRunner(HerbariumRunner):
         self.target_set = args.target_set
 
         self.test_loader = self.test_dataloader()
-        self.criterion = self.configure_criteria()
+        self.criterion = self.configure_criterion(self.test_loader.dataset)
 
     def test_dataloader(self):
         """Load the validation split for the data."""
@@ -251,9 +251,9 @@ class HerbariumTestRunner(HerbariumRunner):
             pin_memory=True,
         )
 
-    def configure_criteria(self):
+    def configure_criterion(self, dataset):
         """Configure the criterion for model improvement."""
-        pos_weight = self.test_loader.dataset.pos_weight()
+        pos_weight = dataset.pos_weight()
         pos_weight = torch.tensor(pos_weight, dtype=torch.float).to(self.device)
         criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
         return criterion
@@ -371,17 +371,16 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
         self.max_threshold = args.max_threshold
 
         self.pseudo_loader = self.pseudo_dataloader()
+        self.pseudo_criterion = self.configure_criterion(self.pseudo_loader.dataset)
 
     def run(self):
         """Run train the model using pseudo-labels."""
         log.started()
 
-        train_criterion, pseudo_criterion = self.criterion
-
         pseudo_prob = 0.1
         pseudo_max = 0.9
         pseudo_step = 0.1
-        pseudo_update = 20
+        pseudo_update = 10
 
         for epoch in range(self.start_epoch, self.end_epoch):
             self.model.train()
@@ -391,17 +390,17 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
 
             if random.random() >= pseudo_prob:
                 train_stats = self.one_epoch(
-                    self.train_loader, train_criterion, self.optimizer
+                    self.train_loader, self.criterion, self.optimizer
                 )
                 is_pseudo = False
             else:
                 train_stats = self.one_epoch(
-                    self.pseudo_loader, pseudo_criterion, self.optimizer
+                    self.pseudo_loader, self.pseudo_criterion, self.optimizer
                 )
                 is_pseudo = True
 
             self.model.eval()
-            val_stats = self.one_epoch(self.val_loader, train_criterion)
+            val_stats = self.one_epoch(self.val_loader, self.criterion)
 
             is_best = self.save_checkpoint(val_stats, epoch)
             self.logger(train_stats, val_stats, epoch, is_best, is_pseudo)
@@ -418,18 +417,6 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
             f" {'pseudo' if is_pseudo else '      '}"
             f"{' ++' if is_best else ''}"
         )
-
-    def configure_criteria(self):
-        """Configure criteria for model improvement."""
-        pos_weight = self.train_loader.dataset.pos_weight()
-        pos_weight = torch.tensor(pos_weight, dtype=torch.float).to(self.device)
-        train_criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
-
-        pseudo_weight = self.pseudo_loader.dataset.pos_weight()
-        pseudo_weight = torch.tensor(pseudo_weight, dtype=torch.float).to(self.device)
-        pseudo_criterion = nn.BCEWithLogitsLoss(pos_weight=pseudo_weight)
-
-        return train_criterion, pseudo_criterion
 
     def pseudo_dataloader(self):
         """Load the pseudo-dataset."""
