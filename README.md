@@ -15,7 +15,6 @@ TODO list:
 
 This project extends Brian Stucky's work located [here](https://gitlab.com/stuckyb/herbarium_phenology).
 
-
 ## Setup
 
 **TODO**: This is a tad bit complicated.
