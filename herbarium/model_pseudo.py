@@ -137,7 +137,48 @@ def parse_args():
         help="""Limit the input to this many records.""",
     )
 
+    arg_parser.add_argument(
+        "--pseudo-min",
+        type=float,
+        metavar="FLOAT",
+        default=0.1,
+        help="""Starting pseudo-label mix-in probability. [0.0, 1.0]
+            (default: %(default)s)""",
+    )
+
+    arg_parser.add_argument(
+        "--pseudo-max",
+        type=float,
+        metavar="FLOAT",
+        default=0.5,
+        help="""Final pseudo-label mix-in probability. [0.0, 1.0]
+            (default: %(default)s)""",
+    )
+
+    arg_parser.add_argument(
+        "--pseudo-step",
+        type=float,
+        metavar="FLOAT",
+        default=0.1,
+        help="""Final pseudo-label mix-in probability. [0.0, 1.0]
+            (default: %(default)s)""",
+    )
+
+    arg_parser.add_argument(
+        "--pseudo-update",
+        type=int,
+        metavar="N",
+        default=10,
+        help="""Update pseudo-label min-in probability every N epochs.
+            (default: %(default)s)""",
+    )
+
     args = arg_parser.parse_args()
+
+    args.pseudo_min = 0.1
+    args.pseudo_max = 0.9
+    args.pseudo_step = 0.1
+    args.pseudo_update = 10
 
     val.validate_split_set(args.database, args.split_set)
     val.validate_inference_set(args.database, args.inference_set)

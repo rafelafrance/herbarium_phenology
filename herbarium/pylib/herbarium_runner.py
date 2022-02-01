@@ -269,7 +269,7 @@ class HerbariumTestRunner(HerbariumRunner):
 
         batch = []
 
-        for images, orders, targets, coreids in self.test_loader:
+        for images, orders, targets, coreids in tqdm(self.test_loader):
             images = images.to(self.device)
             orders = orders.to(self.device)
             targets = targets.to(self.device)
@@ -370,6 +370,11 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
         self.min_threshold = args.min_threshold
         self.max_threshold = args.max_threshold
 
+        self.pseudo_prob = args.pseudo_min
+        self.pseudo_max = args.pseudo_max
+        self.pseudo_step = args.pseudo_step
+        self.pseudo_update = args.pseudo_update
+
         self.pseudo_loader = self.pseudo_dataloader()
         self.pseudo_criterion = self.configure_criterion(self.pseudo_loader.dataset)
 
@@ -377,18 +382,13 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
         """Run train the model using pseudo-labels."""
         log.started()
 
-        pseudo_prob = 0.1
-        pseudo_max = 0.9
-        pseudo_step = 0.1
-        pseudo_update = 10
-
         for epoch in range(self.start_epoch, self.end_epoch):
             self.model.train()
 
-            if epoch % pseudo_update == 0 and pseudo_prob < pseudo_max:
-                pseudo_prob += pseudo_step
+            if epoch % self.pseudo_update == 0 and self.pseudo_prob < self.pseudo_max:
+                self.pseudo_prob += self.pseudo_step
 
-            if random.random() >= pseudo_prob:
+            if random.random() >= self.pseudo_prob:
                 train_stats = self.one_epoch(
                     self.train_loader, self.criterion, self.optimizer
                 )
@@ -414,8 +414,8 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
             f"{epoch:2}: "
             f"Train: loss {train_stats['loss']:0.6f} acc {train_stats['acc']:0.6f} "
             f"Valid: loss {val_stats['loss']:0.6f} acc {val_stats['acc']:0.6f}"
-            f" {'.' if is_pseudo else ' '}"
-            f"{' +' if is_best else ''}"
+            f" {'p' if is_pseudo else ' '}"
+            f"{' ++' if is_best else ''}"
         )
 
     def pseudo_dataloader(self):

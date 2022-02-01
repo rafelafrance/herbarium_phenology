@@ -1,13 +1,13 @@
 --database=data/angiosperms.sqlite
---save-model=data/models/fruiting/b0_fruiting_pseudo_3.pt
+--save-model=data/models/fruiting/b0_fruiting_pseudo_4.pt
 --split-set=fruiting
 --target-set=first_run
---inference-set=b0_fruiting_2
+--inference-set=b0_fruiting_pseudo_3
 --trait=fruiting
 --backbone=b0
---load-model=data/models/fruiting/b0_fruiting_pseudo_2.pt
+--load-model=data/models/fruiting/b0_fruiting_pseudo_3.pt
 --min-threshold=0.1
 --max-threshold=0.99
 --batch-size=64
 --workers=8
---epochs=100
+--epochs=50
