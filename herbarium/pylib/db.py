@@ -339,15 +339,15 @@ def select_pseudo_split(
     """Select all records for a split_set/split combination."""
     sql = """
         select *
-         from inferences
-         join angiosperms using (coreid)
-         join images using (coreid)
-         join targets using (coreid)
-        where inferences.trait = ?
-          and inference_set = ?
-          and targets.trait = ?
-          and target_set = ?
-          and (pred <= ? or pred >= ?) """
+          from inferences
+          join angiosperms using (coreid)
+          join images using (coreid)
+          join targets using (coreid)
+         where inferences.trait = ?
+           and inference_set = ?
+           and targets.trait = ?
+           and target_set = ?
+           and (pred <= ? or pred >= ?) """
     params = [trait, inference_set, trait, target_set, min_threshold, max_threshold]
     sql = limit_clause(sql, params, limit)
     return rows_as_dicts(database, sql, params)

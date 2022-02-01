@@ -1,4 +1,5 @@
 Pillow
+albumentations
 jupyter
 matplotlib
 pandas
