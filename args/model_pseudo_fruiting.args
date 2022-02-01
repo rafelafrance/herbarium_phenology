@@ -5,7 +5,7 @@
 --inference-set=b0_fruiting_2
 --trait=fruiting
 --backbone=b0
---load-model=data/models/fruiting/b0_fruiting_pseudo_3.pt
+--load-model=data/models/fruiting/b0_fruiting_pseudo_2.pt
 --min-threshold=0.1
 --max-threshold=0.99
 --batch-size=64

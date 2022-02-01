@@ -414,8 +414,8 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
             f"{epoch:2}: "
             f"Train: loss {train_stats['loss']:0.6f} acc {train_stats['acc']:0.6f} "
             f"Valid: loss {val_stats['loss']:0.6f} acc {val_stats['acc']:0.6f}"
-            f" {'p' if is_pseudo else ' '}"
-            f"{' ++' if is_best else ''}"
+            f" {'.' if is_pseudo else ' '}"
+            f"{' +' if is_best else ''}"
         )
 
     def pseudo_dataloader(self):
