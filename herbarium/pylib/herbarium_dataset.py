@@ -115,7 +115,7 @@ class PseudoDataset(HerbariumDataset):
 
     def __getitem__(self, index):
         image, sheet = self.raw_item(index)
-        return image, sheet.order, sheet.target
+        return image, sheet.order, sheet.target, sheet.coreid
 
     def get_target(self, rec):
         """Return the target value for the sheet."""
