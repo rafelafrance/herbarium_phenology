@@ -13,7 +13,6 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from . import db
-from . import log
 from .herbarium_dataset import HerbariumDataset
 from .herbarium_dataset import InferenceDataset
 from .herbarium_dataset import PseudoDataset
@@ -70,8 +69,6 @@ class HerbariumTrainingRunner(HerbariumRunner):
 
     def run(self):
         """Train the model."""
-        log.started()
-
         for epoch in range(self.start_epoch, self.end_epoch):
             self.model.train()
             train_stats = self.one_epoch(
@@ -85,7 +82,6 @@ class HerbariumTrainingRunner(HerbariumRunner):
             self.log_stats(train_stats, val_stats, epoch, is_best)
 
         self.writer.close()
-        log.finished()
 
     def one_epoch(self, loader, criterion, optimizer=None, alpha=1.0):
         """Train or validate an epoch."""
@@ -273,8 +269,6 @@ class HerbariumTestRunner(HerbariumRunner):
 
     def run(self):
         """Test the model on hold-out data."""
-        log.started()
-
         self.model.eval()
 
         test_loss = 0.0
@@ -316,7 +310,6 @@ class HerbariumTestRunner(HerbariumRunner):
         test_acc /= len(self.test_loader)
 
         logging.info(f"Test: loss {test_loss:0.6f} acc {test_acc:0.6f}")
-        log.finished()
 
 
 class HerbariumInferenceRunner(HerbariumRunner):
@@ -344,8 +337,6 @@ class HerbariumInferenceRunner(HerbariumRunner):
 
     def run(self):
         """Run inference on images."""
-        log.started()
-
         self.model.eval()
 
         batch = []
@@ -370,8 +361,6 @@ class HerbariumInferenceRunner(HerbariumRunner):
 
         db.insert_inferences(self.database, batch, self.inference_set)
 
-        log.finished()
-
 
 class HerbariumPseudoRunner(HerbariumTrainingRunner):
     """Train a herbarium model with pseudo-labels."""
@@ -393,8 +382,6 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
 
     def run(self):
         """Run train the model using pseudo-labels."""
-        log.started()
-
         for epoch in range(self.start_epoch, self.end_epoch):
             self.model.train()
             train_stats = self.one_epoch(
@@ -413,7 +400,6 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
             self.logger(train_stats, pseudo_stats, val_stats, epoch, is_best, alpha)
 
         self.writer.close()
-        log.finished()
 
     def alpha(self, epoch):
         """Calculate the weights for the pseudo labels."""

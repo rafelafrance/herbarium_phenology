@@ -5,6 +5,7 @@ import textwrap
 from pathlib import Path
 
 from pylib import db
+from pylib import log
 from pylib import validate_args as val
 from pylib.const import ALL_TRAITS
 from pylib.herbarium_model import BACKBONES
@@ -129,6 +130,8 @@ def parse_args():
 
 def main():
     """Train a model using just pytorch."""
+    log.started()
+
     args = parse_args()
     orders = db.select_all_orders(args.database)
 
@@ -136,6 +139,8 @@ def main():
 
     runner = HerbariumTrainingRunner(model, orders, args)
     runner.run()
+
+    log.finished()
 
 
 if __name__ == "__main__":

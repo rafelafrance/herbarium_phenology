@@ -5,6 +5,7 @@ import textwrap
 from pathlib import Path
 
 from pylib import db
+from pylib import log
 from pylib.const import ALL_TRAITS
 from pylib.herbarium_model import BACKBONES
 from pylib.herbarium_model import HerbariumModel
@@ -84,6 +85,8 @@ def parse_args():
 
 def main():
     """Infer traits."""
+    log.started()
+
     args = parse_args()
     orders = db.select_all_orders(args.database)
 
@@ -91,6 +94,8 @@ def main():
 
     runner = HerbariumInferenceRunner(model, orders, args)
     runner.run()
+
+    log.finished()
 
 
 if __name__ == "__main__":
