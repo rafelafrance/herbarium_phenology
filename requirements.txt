@@ -1,12 +1,7 @@
 Pillow
-albumentations
 jupyter
-matplotlib
 pandas
 regex
-scikit-image
-scikit-learn
-scipy
 spacy
 tqdm
 

@@ -75,8 +75,8 @@ def parse_args():
     arg_parser.add_argument(
         "--log-dir",
         type=Path,
-        metavar="PATH",
-        help="""Output log files to this directory.""",
+        metavar="DIR",
+        help="""Save tensorboard logs to this directory.""",
     )
 
     arg_parser.add_argument(

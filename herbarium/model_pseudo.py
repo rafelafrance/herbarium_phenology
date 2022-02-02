@@ -80,6 +80,13 @@ def parse_args():
     )
 
     arg_parser.add_argument(
+        "--log-dir",
+        type=Path,
+        metavar="DIR",
+        help="""Save tensorboard logs to this directory.""",
+    )
+
+    arg_parser.add_argument(
         "--min-threshold",
         type=float,
         metavar="FLOAT",
@@ -141,18 +148,16 @@ def parse_args():
         "--pseudo-min",
         type=float,
         metavar="FLOAT",
-        default=0.1,
-        help="""Starting pseudo-label mix-in probability. [0.0, 1.0]
-            (default: %(default)s)""",
+        default=0.0,
+        help="""Starting pseudo-label loss weight. (default: %(default)s)""",
     )
 
     arg_parser.add_argument(
         "--pseudo-max",
         type=float,
         metavar="FLOAT",
-        default=0.5,
-        help="""Final pseudo-label mix-in probability. [0.0, 1.0]
-            (default: %(default)s)""",
+        default=3.0,
+        help="""Final pseudo-label loss weight. (default: %(default)s)""",
     )
 
     arg_parser.add_argument(
@@ -160,7 +165,7 @@ def parse_args():
         type=float,
         metavar="FLOAT",
         default=0.1,
-        help="""Final pseudo-label mix-in probability. [0.0, 1.0]
+        help="""Increase the pseudo-label loss weight by this.
             (default: %(default)s)""",
     )
 
@@ -169,16 +174,11 @@ def parse_args():
         type=int,
         metavar="N",
         default=10,
-        help="""Update pseudo-label min-in probability every N epochs.
+        help="""Update pseudo-label loss weight every N epochs.
             (default: %(default)s)""",
     )
 
     args = arg_parser.parse_args()
-
-    args.pseudo_min = 0.1
-    args.pseudo_max = 0.9
-    args.pseudo_step = 0.1
-    args.pseudo_update = 10
 
     val.validate_split_set(args.database, args.split_set)
     val.validate_inference_set(args.database, args.inference_set)

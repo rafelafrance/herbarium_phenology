@@ -2,9 +2,7 @@
 import warnings
 from collections import namedtuple
 
-import albumentations as A
 import torch
-from albumentations.pytorch.transforms import ToTensorV2
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
@@ -69,70 +67,18 @@ class HerbariumDataset(Dataset):
     @staticmethod
     def build_transforms(model, augment=False):
         """Build a pipeline of image transforms specific to the dataset."""
-        xform = [A.Resize(model.size, model.size)]
-
-        if augment:
-            xform += [
-                A.RandomRotate90(),
-                A.Flip(),
-                A.Transpose(),
-                A.OneOf(
-                    [
-                        A.IAAAdditiveGaussianNoise(),
-                        A.GaussNoise(),
-                    ],
-                    p=0.2,
-                ),
-                A.OneOf(
-                    [
-                        A.MotionBlur(p=0.2),
-                        A.MedianBlur(blur_limit=3, p=0.1),
-                        A.Blur(blur_limit=3, p=0.1),
-                    ],
-                    p=0.2,
-                ),
-                A.OneOf(
-                    [
-                        A.OpticalDistortion(p=0.3),
-                        A.GridDistortion(p=0.1),
-                        A.IAAPiecewiseAffine(p=0.3),
-                    ],
-                    p=0.2,
-                ),
-                A.OneOf(
-                    [
-                        A.CLAHE(clip_limit=2),
-                        A.IAASharpen(),
-                        A.IAAEmboss(),
-                        A.RandomBrightnessContrast(),
-                    ],
-                    p=0.3,
-                ),
-                A.HueSaturationValue(p=0.3),
-                A.Cutout(),
-            ]
-
-        xform += [
-            A.Normalize(mean=model.mean, std=model.std_dev),
-            ToTensorV2(),
-        ]
-
-        return A.Compose(xform)
-
-    @staticmethod
-    def build_torch_transforms(model, augment=False):
-        """Build a pipeline of image transforms specific to the dataset."""
         xform = [transforms.Resize(model.size)]
 
         if augment:
             xform += [
-                transforms.AutoAugment(transforms.AutoAugmentPolicy.IMAGENET),
+                transforms.AutoAugment(),
                 transforms.RandomHorizontalFlip(),
                 transforms.RandomVerticalFlip(),
             ]
 
         xform += [
             transforms.ToTensor(),
+            transforms.ConvertImageDtype(torch.float),
             transforms.Normalize(model.mean, model.std_dev),
         ]
 

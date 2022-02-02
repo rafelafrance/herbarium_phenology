@@ -5,6 +5,7 @@ import torch
 import torchvision
 from torch import nn
 
+
 BACKBONES = {
     "b0": {
         "backbone": torchvision.models.efficientnet_b0,
@@ -54,12 +55,9 @@ class HerbariumBackbone(nn.Module):
         super().__init__()
 
         model_params = BACKBONES[backbone]
-        self.size = model_params["size"]
-        self.mean = (0.485, 0.456, 0.406)  # ImageNet
-        self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
 
         self.model = model_params["backbone"](pretrained=True)
-        self.model.classifier = nn.Sequential(nn.Identity())
+        self.model.classifier = nn.Identity()
 
         for param in self.model.parameters():
             param.requires_grad = False
@@ -81,33 +79,29 @@ class HerbariumHead(nn.Module):
 
         in_feat = model_params["in_feat"] + len(orders)
         fc_feat1 = in_feat // 4
-        fc_feat2 = in_feat // 8
-        fc_feat3 = in_feat // 16
+        fc_feat2 = in_feat // 16
 
         self.model = nn.Sequential(
             nn.Dropout(p=model_params["dropout"], inplace=True),
-            nn.Linear(in_features=in_feat, out_features=fc_feat1),
+            nn.Linear(in_features=in_feat, out_features=fc_feat1, bias=False),
             nn.SiLU(inplace=True),
             nn.BatchNorm1d(num_features=fc_feat1),
             #
             nn.Dropout(p=model_params["dropout"], inplace=True),
-            nn.Linear(in_features=fc_feat1, out_features=fc_feat2),
+            nn.Linear(in_features=fc_feat1, out_features=fc_feat2, bias=False),
             nn.SiLU(inplace=True),
             nn.BatchNorm1d(num_features=fc_feat2),
             #
-            nn.Dropout(p=model_params["dropout"], inplace=True),
-            nn.Linear(in_features=fc_feat2, out_features=fc_feat3),
-            nn.SiLU(inplace=True),
-            nn.BatchNorm1d(num_features=fc_feat3),
-            #
             # nn.Dropout(p=params["dropout"], inplace=True),
-            nn.Linear(in_features=fc_feat3, out_features=1),
+            nn.Linear(in_features=fc_feat2, out_features=1),
             # nn.Sigmoid(),
         )
 
-    def forward(self, x):
+    def forward(self, x0, x1):
         """Run the classifier forwards with a phylogenetic order (one-hot)."""
-        return self.model(x)
+        x = torch.cat((x0, x1), dim=1)
+        x = self.model(x)
+        return x
 
 
 class HerbariumModel(nn.Module):
@@ -116,10 +110,12 @@ class HerbariumModel(nn.Module):
     def __init__(self, orders: list[str], backbone: str, load_model: Path):
         super().__init__()
 
+        model_params = BACKBONES[backbone]
+        self.size = model_params["size"]
+        self.mean = (0.485, 0.456, 0.406)  # ImageNet
+        self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
+
         self.backbone = HerbariumBackbone(backbone)
-        self.size = self.backbone.size
-        self.mean = self.backbone.mean
-        self.std_dev = self.backbone.std_dev
 
         self.head = HerbariumHead(orders, backbone)
 
@@ -130,6 +126,5 @@ class HerbariumModel(nn.Module):
     def forward(self, x0, x1):
         """feed the backbone to all of the classifiers."""
         x0 = self.backbone(x0)
-        x = torch.cat((x0, x1), dim=1)
-        x = self.head(x)
+        x = self.head(x0, x1)
         return x

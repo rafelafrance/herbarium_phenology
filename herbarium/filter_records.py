@@ -11,7 +11,7 @@
 # from pylib import pipeline
 # from tqdm import tqdm
 #
-# from junk import idigbio_load as load
+# from pylib import idigbio_load as load
 #
 # ON, OFF = 1, ""
 #
@@ -202,7 +202,7 @@
 # from pylib import pipeline
 # from tqdm import tqdm
 #
-# from junk import idigbio_load as load
+# from pylib import idigbio_load as load
 #
 # ON, OFF = 1, ""
 #

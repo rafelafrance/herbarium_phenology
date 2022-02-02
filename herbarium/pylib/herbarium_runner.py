@@ -1,6 +1,5 @@
-"""Run a hydra model for training, testing, or inference."""
+"""Run a model for training, testing, or inference."""
 import logging
-import random
 from abc import ABC
 from abc import abstractmethod
 from argparse import Namespace
@@ -10,6 +9,7 @@ import torch
 from torch import nn
 from torch import optim
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from . import db
@@ -53,6 +53,8 @@ class HerbariumTrainingRunner(HerbariumRunner):
         self.save_model = args.save_model
         self.target_set = args.target_set
 
+        self.writer = SummaryWriter(args.log_dir)
+
         self.train_loader = self.train_dataloader()
         self.val_loader = self.val_dataloader()
         self.optimizer = self.configure_optimizers()
@@ -82,9 +84,10 @@ class HerbariumTrainingRunner(HerbariumRunner):
             is_best = self.save_checkpoint(val_stats, epoch)
             self.log_stats(train_stats, val_stats, epoch, is_best)
 
+        self.writer.close()
         log.finished()
 
-    def one_epoch(self, loader, criterion, optimizer=None):
+    def one_epoch(self, loader, criterion, optimizer=None, alpha=1.0):
         """Train or validate an epoch."""
         running_loss = 0.0
         running_acc = 0.0
@@ -95,7 +98,7 @@ class HerbariumTrainingRunner(HerbariumRunner):
             targets = targets.to(self.device)
 
             preds = self.model(images, orders)
-            loss = criterion(preds, targets)
+            loss = alpha * criterion(preds, targets)
 
             if optimizer:
                 optimizer.zero_grad()
@@ -169,8 +172,7 @@ class HerbariumTrainingRunner(HerbariumRunner):
             pin_memory=True,
         )
 
-    @staticmethod
-    def log_stats(train_stats, val_stats, epoch, is_best):
+    def log_stats(self, train_stats, val_stats, epoch, is_best):
         """Log results of the epoch."""
         logging.info(
             f"{epoch:2}: "
@@ -178,6 +180,17 @@ class HerbariumTrainingRunner(HerbariumRunner):
             f"Valid: loss {val_stats['loss']:0.6f} acc {val_stats['acc']:0.6f}"
             f"{' ++' if is_best else ''}"
         )
+        self.writer.add_scalars(
+            "Training vs. Validation",
+            {
+                "Training loss": train_stats["loss"],
+                "Training accuracy": train_stats["acc"],
+                "Validation loss": val_stats["loss"],
+                "Validation accuracy": val_stats["acc"],
+            },
+            epoch,
+        )
+        self.writer.flush()
 
     def save_checkpoint(self, val_stats, epoch):
         """Save the model if it meets criteria for being the current best model."""
@@ -370,7 +383,7 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
         self.min_threshold = args.min_threshold
         self.max_threshold = args.max_threshold
 
-        self.pseudo_prob = args.pseudo_min
+        self.pseudo_wt = args.pseudo_min
         self.pseudo_max = args.pseudo_max
         self.pseudo_step = args.pseudo_step
         self.pseudo_update = args.pseudo_update
@@ -384,39 +397,30 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
 
         for epoch in range(self.start_epoch, self.end_epoch):
             self.model.train()
+            train_stats = self.one_epoch(
+                self.train_loader, self.criterion, self.optimizer
+            )
 
-            if epoch % self.pseudo_update == 0 and self.pseudo_prob < self.pseudo_max:
-                self.pseudo_prob += self.pseudo_step
-
-            if random.random() >= self.pseudo_prob:
-                train_stats = self.one_epoch(
-                    self.train_loader, self.criterion, self.optimizer
-                )
-                is_pseudo = False
-            else:
-                train_stats = self.one_epoch(
-                    self.pseudo_loader, self.pseudo_criterion, self.optimizer
-                )
-                is_pseudo = True
+            alpha = self.alpha(epoch)
+            pseudo_stats = self.one_epoch(
+                self.pseudo_loader, self.pseudo_criterion, self.optimizer, alpha
+            )
 
             self.model.eval()
             val_stats = self.one_epoch(self.val_loader, self.criterion)
 
             is_best = self.save_checkpoint(val_stats, epoch)
-            self.logger(train_stats, val_stats, epoch, is_best, is_pseudo)
+            self.logger(train_stats, pseudo_stats, val_stats, epoch, is_best, alpha)
 
+        self.writer.close()
         log.finished()
 
-    @staticmethod
-    def logger(train_stats, val_stats, epoch, is_best, is_pseudo):
-        """Log results of the epoch."""
-        logging.info(
-            f"{epoch:2}: "
-            f"Train: loss {train_stats['loss']:0.6f} acc {train_stats['acc']:0.6f} "
-            f"Valid: loss {val_stats['loss']:0.6f} acc {val_stats['acc']:0.6f}"
-            f" {'p' if is_pseudo else ' '}"
-            f"{' ++' if is_best else ''}"
-        )
+    def alpha(self, epoch):
+        """Calculate the weights for the pseudo labels."""
+        if epoch % self.pseudo_update == 0 and self.pseudo_wt < self.pseudo_max:
+            self.pseudo_wt += self.pseudo_step
+            self.pseudo_wt = min(self.pseudo_wt, self.pseudo_max)
+        return self.pseudo_wt
 
     def pseudo_dataloader(self):
         """Load the pseudo-dataset."""
@@ -444,6 +448,30 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
             pin_memory=True,
             drop_last=len(dataset) % self.batch_size == 1,
         )
+
+    def logger(self, train_stats, pseudo_stats, val_stats, epoch, is_best, alpha):
+        """Log results of the epoch."""
+        logging.info(
+            f"{epoch:2}: "
+            f"Train: loss {train_stats['loss']:0.6f} acc {train_stats['acc']:0.6f} "
+            f"Pseudo: loss {pseudo_stats['loss']:0.6f} acc {pseudo_stats['acc']:0.6f} "
+            f"Valid: loss {val_stats['loss']:0.6f} acc {val_stats['acc']:0.6f}"
+            f"{' ++' if is_best else ''}"
+        )
+        self.writer.add_scalars(
+            "Training/Pseudo vs. Validation",
+            {
+                "Training loss": train_stats["loss"],
+                "Training accuracy": train_stats["acc"],
+                "Pseudo alpha": alpha,
+                "Pseudo loss": pseudo_stats["loss"],
+                "Pseudo accuracy": pseudo_stats["acc"],
+                "Validation loss": val_stats["loss"],
+                "Validation accuracy": val_stats["acc"],
+            },
+            epoch,
+        )
+        self.writer.flush()
 
 
 def accuracy(preds, targets):

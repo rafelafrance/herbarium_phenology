@@ -10,7 +10,7 @@ TODO list:
 - ~~Train a neural network(s) to classify images as flowering, fruiting, and leaf-out.~~
 - ~~Download image data targeted at underrepresented traits (flowering, fruiting, etc.) and phylogenetic orders.~~
 - ~~Use semi-supervised learning to build up data for missing traits. Most herbarium records have annotations about one trait.~~
-- Fun & games with the model architecture.
+- ~~Fun & games with the model architecture.~~
 - Create detailed notes of what we're doing and link to them in the README.
 
 This project extends Brian Stucky's work located [here](https://gitlab.com/stuckyb/herbarium_phenology).
