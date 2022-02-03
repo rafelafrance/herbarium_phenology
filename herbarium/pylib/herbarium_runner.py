@@ -417,7 +417,7 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
 
     def alpha(self, epoch):
         """Calculate the loss weight for the pseudo labels."""
-        e = max(0, epoch + self.pseudo_start)
+        e = max(0, epoch - self.pseudo_start)
         return round(min(epoch / 100, self.pseudo_max), 2) if e > 0 else 0.0
 
     def pseudo_dataloader(self, unlabeled_limit):

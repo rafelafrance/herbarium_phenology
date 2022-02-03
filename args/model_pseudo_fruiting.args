@@ -10,4 +10,4 @@
 --workers=8
 --epochs=100
 --unlabeled-limit=2000
---pseudo-start=-20
+--pseudo-start=20
