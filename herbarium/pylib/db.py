@@ -113,7 +113,7 @@ def create_targets_table(database: DbPath, drop: bool = False) -> None:
         );
 
         create unique index if not exists targets_idx
-            on targets (coreid, target_set, trait);
+            on targets (target_set, trait, coreid);
         """
     create_table(database, sql, drop=drop)
 
@@ -261,7 +261,7 @@ def create_tests_table(database: DbPath, drop: bool = False) -> None:
             target    real,
             pred      real
         );
-        create unique index if not exists tests_idx on tests (coreid, test_set, trait);
+        create unique index if not exists tests_idx on tests (test_set, trait, coreid);
         """
     create_table(database, sql, drop=drop)
 
@@ -300,7 +300,7 @@ def create_inferences_table(database: DbPath, drop: bool = False) -> None:
             pred          real
         );
         create unique index if not exists inferences_idx
-            on inferences (coreid, inference_set, trait);
+            on inferences (inference_set, trait, coreid);
         """
     create_table(database, sql, drop=drop)
 
@@ -329,26 +329,25 @@ def select_inferences(
 def select_pseudo_split(
     *,
     database: DbPath,
-    trait: str,
-    inference_set: str,
     target_set: str,
-    min_threshold: float,
-    max_threshold: float,
+    trait: str,
     limit: int = 0,
 ) -> list[dict]:
     """Select all records for a split_set/split combination."""
     sql = """
         select *
-          from inferences
+          from images
           join angiosperms using (coreid)
-          join images using (coreid)
-          join targets using (coreid)
-         where inferences.trait = ?
-           and inference_set = ?
-           and targets.trait = ?
-           and target_set = ?
-           and (pred <= ? or pred >= ?) """
-    params = [trait, inference_set, trait, target_set, min_threshold, max_threshold]
+         where order_ in (select order_ from orders)
+           and coreid not in (
+                select coreid
+                  from targets
+                 where target_set = ?
+                   and trait = ?
+                )
+      order by random()
+    """
+    params = [target_set, trait]
     sql = limit_clause(sql, params, limit)
     return rows_as_dicts(database, sql, params)
 

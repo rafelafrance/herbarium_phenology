@@ -33,20 +33,15 @@ class HerbariumDataset(Dataset):
         """Build the sheets we are using for the dataset."""
         sheets: list[Sheet] = []
         for rec in image_recs:
-            target = self.get_target(rec)
             sheets.append(
                 Sheet(
                     rec["path"],
                     rec["coreid"],
                     self.to_order(self.orders, rec),
-                    torch.tensor([target], dtype=torch.float),
+                    torch.tensor([rec["target"]], dtype=torch.float),
                 )
             )
         return sheets
-
-    def get_target(self, rec):
-        """Return the target value for the sheet."""
-        return rec["target"]
 
     def __len__(self):
         return len(self.sheets)
@@ -98,31 +93,6 @@ class HerbariumDataset(Dataset):
         return [pos_wt]
 
 
-class PseudoDataset(HerbariumDataset):
-    """Create a dataset for pseudo-label records."""
-
-    def __init__(
-        self,
-        image_recs: list[dict],
-        model,
-        *,
-        orders: list[str],
-        min_threshold: float,
-        max_threshold: float,
-    ) -> None:
-        self.min_threshold = min_threshold
-        self.max_threshold = max_threshold
-        super().__init__(image_recs, model, orders=orders, augment=True)
-
-    def __getitem__(self, index):
-        image, sheet = self.raw_item(index)
-        return image, sheet.order, sheet.target, sheet.coreid
-
-    def get_target(self, rec):
-        """Return the target value for the sheet."""
-        return 0.0 if rec["pred"] <= self.min_threshold else 1.0
-
-
 class InferenceDataset(HerbariumDataset):
     """Create a dataset from images in a directory."""
 
@@ -130,11 +100,8 @@ class InferenceDataset(HerbariumDataset):
         """Build the sheets used for inference."""
         sheets: list[InferenceSheet] = []
         for rec in image_recs:
-            sheets.append(
-                InferenceSheet(
-                    rec["path"], rec["coreid"], self.to_order(self.orders, rec)
-                )
-            )
+            order = self.to_order(self.orders, rec)
+            sheets.append(InferenceSheet(rec["path"], rec["coreid"], order))
         return sheets
 
     def __getitem__(self, index):

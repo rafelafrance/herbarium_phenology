@@ -53,13 +53,6 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--inference-set",
-        metavar="NAME",
-        required=True,
-        help="""Use this inference set for creating the target set.""",
-    )
-
-    arg_parser.add_argument(
         "--trait",
         choices=ALL_TRAITS,
         required=True,
@@ -85,24 +78,6 @@ def parse_args():
         type=Path,
         metavar="DIR",
         help="""Save tensorboard logs to this directory.""",
-    )
-
-    arg_parser.add_argument(
-        "--min-threshold",
-        type=float,
-        metavar="FLOAT",
-        default=0.1,
-        help="""When the inference value for the trait is below this the trait is
-            considered to be absent. (default: %(default)s)""",
-    )
-
-    arg_parser.add_argument(
-        "--max-threshold",
-        type=float,
-        metavar="FLOAT",
-        default=0.9,
-        help="""When the inference value for the trait is above this the trait is
-            considered to be present. (default: %(default)s)""",
     )
 
     arg_parser.add_argument(
@@ -146,11 +121,10 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--pseudo-min",
-        type=float,
-        metavar="FLOAT",
-        default=0.0,
-        help="""Starting pseudo-label loss weight. (default: %(default)s)""",
+        "--unlabeled-limit",
+        type=int,
+        metavar="INT",
+        help="""How many unlabeled images to use.""",
     )
 
     arg_parser.add_argument(
@@ -158,31 +132,20 @@ def parse_args():
         type=float,
         metavar="FLOAT",
         default=3.0,
-        help="""Final pseudo-label loss weight. (default: %(default)s)""",
+        help="""Final pseudo label loss weight. (default: %(default)s)""",
     )
 
     arg_parser.add_argument(
-        "--pseudo-step",
+        "--pseudo-start",
         type=float,
-        metavar="FLOAT",
-        default=0.1,
-        help="""Increase the pseudo-label loss weight by this.
-            (default: %(default)s)""",
-    )
-
-    arg_parser.add_argument(
-        "--pseudo-update",
-        type=int,
-        metavar="N",
-        default=10,
-        help="""Update pseudo-label loss weight every N epochs.
-            (default: %(default)s)""",
+        metavar="INT",
+        default=0,
+        help="""Start adding pseudo labels at this epoch.""",
     )
 
     args = arg_parser.parse_args()
 
     val.validate_split_set(args.database, args.split_set)
-    val.validate_inference_set(args.database, args.inference_set)
     val.validate_target_set(args.database, args.target_set)
 
     return args

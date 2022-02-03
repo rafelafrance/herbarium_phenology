@@ -15,7 +15,6 @@ from tqdm import tqdm
 from . import db
 from .herbarium_dataset import HerbariumDataset
 from .herbarium_dataset import InferenceDataset
-from .herbarium_dataset import PseudoDataset
 
 ArgsType = Namespace
 
@@ -83,7 +82,7 @@ class HerbariumTrainingRunner(HerbariumRunner):
 
         self.writer.close()
 
-    def one_epoch(self, loader, criterion, optimizer=None, alpha=1.0):
+    def one_epoch(self, loader, criterion, optimizer=None):
         """Train or validate an epoch."""
         running_loss = 0.0
         running_acc = 0.0
@@ -94,7 +93,7 @@ class HerbariumTrainingRunner(HerbariumRunner):
             targets = targets.to(self.device)
 
             preds = self.model(images, orders)
-            loss = alpha * criterion(preds, targets)
+            loss = criterion(preds, targets)
 
             if optimizer:
                 optimizer.zero_grad()
@@ -368,17 +367,9 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
     def __init__(self, model, orders, args: ArgsType):
         super().__init__(model, orders, args)
 
-        self.inference_set = args.inference_set
-        self.min_threshold = args.min_threshold
-        self.max_threshold = args.max_threshold
-
-        self.pseudo_wt = args.pseudo_min
         self.pseudo_max = args.pseudo_max
-        self.pseudo_step = args.pseudo_step
-        self.pseudo_update = args.pseudo_update
-
-        self.pseudo_loader = self.pseudo_dataloader()
-        self.pseudo_criterion = self.configure_criterion(self.pseudo_loader.dataset)
+        self.pseudo_start = args.pseudo_start
+        self.pseudo_loader = self.pseudo_dataloader(args.unlabeled_limit)
 
     def run(self):
         """Run train the model using pseudo-labels."""
@@ -389,9 +380,11 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
             )
 
             alpha = self.alpha(epoch)
-            pseudo_stats = self.one_epoch(
-                self.pseudo_loader, self.pseudo_criterion, self.optimizer, alpha
-            )
+            pseudo_stats = {"loss": 0.0}
+            if alpha > 0.0:
+                pseudo_stats = self.pseudo_epoch(
+                    self.pseudo_loader, self.criterion, self.optimizer, alpha
+                )
 
             self.model.eval()
             val_stats = self.one_epoch(self.val_loader, self.criterion)
@@ -401,31 +394,41 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
 
         self.writer.close()
 
-    def alpha(self, epoch):
-        """Calculate the weights for the pseudo labels."""
-        if epoch % self.pseudo_update == 0 and self.pseudo_wt < self.pseudo_max:
-            self.pseudo_wt += self.pseudo_step
-            self.pseudo_wt = min(self.pseudo_wt, self.pseudo_max)
-        return self.pseudo_wt
+    def pseudo_epoch(self, loader, criterion, optimizer, alpha):
+        """Train or validate an epoch."""
+        running_loss = 0.0
 
-    def pseudo_dataloader(self):
+        for images, orders, _ in loader:
+            images = images.to(self.device)
+            orders = orders.to(self.device)
+
+            preds = self.model(images, orders)
+            targets = torch.round(torch.sigmoid(preds))
+
+            loss = alpha * criterion(preds, targets)
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            running_loss += loss.item()
+
+        return {"loss": running_loss / len(loader)}
+
+    def alpha(self, epoch):
+        """Calculate the loss weight for the pseudo labels."""
+        e = max(0, epoch + self.pseudo_start)
+        return round(min(epoch / 100, self.pseudo_max), 2) if e > 0 else 0.0
+
+    def pseudo_dataloader(self, unlabeled_limit):
         """Load the pseudo-dataset."""
         raw_data = db.select_pseudo_split(
             database=self.database,
-            trait=self.trait,
-            inference_set=self.inference_set,
             target_set=self.target_set,
-            min_threshold=self.min_threshold,
-            max_threshold=self.max_threshold,
-            limit=self.limit,
+            trait=self.trait,
+            limit=unlabeled_limit,
         )
-        dataset = PseudoDataset(
-            raw_data,
-            self.model,
-            orders=self.orders,
-            min_threshold=self.min_threshold,
-            max_threshold=self.max_threshold,
-        )
+        dataset = InferenceDataset(raw_data, self.model, orders=self.orders)
         return DataLoader(
             dataset,
             batch_size=self.batch_size,
@@ -438,9 +441,9 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
     def logger(self, train_stats, pseudo_stats, val_stats, epoch, is_best, alpha):
         """Log results of the epoch."""
         logging.info(
-            f"{epoch:2}: "
+            f"{epoch:4}: "
             f"Train: loss {train_stats['loss']:0.6f} acc {train_stats['acc']:0.6f} "
-            f"Pseudo: loss {pseudo_stats['loss']:0.6f} acc {pseudo_stats['acc']:0.6f} "
+            f"Pseudo: loss {pseudo_stats['loss']:0.6f} "
             f"Valid: loss {val_stats['loss']:0.6f} acc {val_stats['acc']:0.6f}"
             f"{' ++' if is_best else ''}"
         )
@@ -451,7 +454,6 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
                 "Training accuracy": train_stats["acc"],
                 "Pseudo alpha": alpha,
                 "Pseudo loss": pseudo_stats["loss"],
-                "Pseudo accuracy": pseudo_stats["acc"],
                 "Validation loss": val_stats["loss"],
                 "Validation accuracy": val_stats["acc"],
             },
