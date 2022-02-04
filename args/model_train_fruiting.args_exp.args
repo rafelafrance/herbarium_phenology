@@ -1,0 +1,11 @@
+--database=data/angiosperms.sqlite
+--save-model=data/models/fruiting/b0_fruiting_cnn.pt
+--split-set=fruiting
+--target-set=first_run
+--trait=fruiting
+--backbone=b0
+--log-dir=data/runs/b0_fruiting_cnn
+--batch-size=128
+--workers=8
+--epochs=50
+--experiment

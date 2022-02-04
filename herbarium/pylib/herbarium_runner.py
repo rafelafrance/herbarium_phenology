@@ -68,6 +68,8 @@ class HerbariumTrainingRunner(HerbariumRunner):
 
     def run(self):
         """Train the model."""
+        logging.info("Training started.")
+
         for epoch in range(self.start_epoch, self.end_epoch):
             self.model.train()
             train_stats = self.one_epoch(
@@ -109,6 +111,7 @@ class HerbariumTrainingRunner(HerbariumRunner):
         """Configure the optimizer."""
         optimizer = optim.AdamW(self.model.parameters(), lr=self.lr)
         if self.model.state.get("optimizer_state"):
+            logging.info("Loading the optimizer.")
             optimizer.load_state_dict(self.model.state["optimizer_state"])
         return optimizer
 
@@ -121,6 +124,7 @@ class HerbariumTrainingRunner(HerbariumRunner):
 
     def train_dataloader(self):
         """Load the training split for the data."""
+        logging.info("Loading training data.")
         raw_data = db.select_split(
             database=self.database,
             split_set=self.split_set,
@@ -146,6 +150,7 @@ class HerbariumTrainingRunner(HerbariumRunner):
 
     def val_dataloader(self):
         """Load the validation split for the data."""
+        logging.info("Loading validation data.")
         raw_data = db.select_split(
             database=self.database,
             split_set=self.split_set,
@@ -238,6 +243,7 @@ class HerbariumTestRunner(HerbariumRunner):
 
     def test_dataloader(self):
         """Load the validation split for the data."""
+        logging.info("Loading test data.")
         raw_data = db.select_split(
             database=self.database,
             split_set=self.split_set,
@@ -268,6 +274,8 @@ class HerbariumTestRunner(HerbariumRunner):
 
     def run(self):
         """Test the model on hold-out data."""
+        logging.info("Testing started.")
+
         self.model.eval()
 
         test_loss = 0.0
@@ -325,6 +333,7 @@ class HerbariumInferenceRunner(HerbariumRunner):
 
     def infer_dataloader(self):
         """Load the validation split for the data."""
+        logging.info("Loading inference data.")
         raw_data = db.select_images(self.database, limit=self.limit)
         dataset = InferenceDataset(raw_data, self.model, orders=self.orders)
         return DataLoader(
@@ -336,6 +345,8 @@ class HerbariumInferenceRunner(HerbariumRunner):
 
     def run(self):
         """Run inference on images."""
+        logging.info("Inference started.")
+
         self.model.eval()
 
         batch = []
@@ -373,6 +384,8 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
 
     def run(self):
         """Run train the model using pseudo-labels."""
+        logging.info("Pseudo-training started.")
+
         for epoch in range(self.start_epoch, self.end_epoch):
             self.model.train()
             train_stats = self.one_epoch(
@@ -422,6 +435,7 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
 
     def pseudo_dataloader(self, unlabeled_limit):
         """Load the pseudo-dataset."""
+        logging.info("Loading pseudo-training data.")
         raw_data = db.select_pseudo_split(
             database=self.database,
             target_set=self.target_set,

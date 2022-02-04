@@ -78,13 +78,25 @@ class HerbariumHead(nn.Module):
 
         model_params = BACKBONES[backbone]
 
-        in_feat = model_params["in_feat"] + len(orders)
+        in_feat = model_params["in_feat"]
+        cnn_chan1 = 20
+        mix_feat = in_feat + len(orders) - (2 * 2)
         fc_feat1 = in_feat // 4
         fc_feat2 = in_feat // 16
 
-        self.model = nn.Sequential(
+        self.conv = nn.Sequential(
+            nn.Conv1d(1, cnn_chan1, kernel_size=(3,), bias=False),
+            nn.BatchNorm1d(cnn_chan1),
+            nn.SiLU(inplace=True),
+            #
+            nn.Conv1d(cnn_chan1, 1, kernel_size=(3,), bias=False),
+            nn.BatchNorm1d(1),
+            nn.SiLU(inplace=True),
+        )
+
+        self.fc = nn.Sequential(
             nn.Dropout(p=model_params["dropout"], inplace=True),
-            nn.Linear(in_features=in_feat, out_features=fc_feat1, bias=False),
+            nn.Linear(in_features=mix_feat, out_features=fc_feat1, bias=False),
             nn.SiLU(inplace=True),
             nn.BatchNorm1d(num_features=fc_feat1),
             #
@@ -100,12 +112,15 @@ class HerbariumHead(nn.Module):
 
     def forward(self, x0, x1):
         """Run the classifier forwards with a phylogenetic order (one-hot)."""
+        x0 = torch.unsqueeze(x0, dim=1)
+        x0 = self.conv(x0)
+        x0 = x0.squeeze()
         x = torch.cat((x0, x1), dim=1)
-        x = self.model(x)
+        x = self.fc(x)
         return x
 
 
-class HerbariumModel(nn.Module):
+class HerbariumModelExp(nn.Module):
     """The full hydra model."""
 
     def __init__(self, orders: list[str], backbone: str, load_model: Path):
@@ -122,7 +137,7 @@ class HerbariumModel(nn.Module):
 
         self.state = torch.load(load_model) if load_model else {}
         if self.state.get("model_state"):
-            logging.info("Loading the model.")
+            logging.info("Loading a model.")
             self.load_state_dict(self.state["model_state"])
 
     def forward(self, x0, x1):

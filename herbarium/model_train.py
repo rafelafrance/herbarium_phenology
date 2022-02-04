@@ -10,6 +10,7 @@ from pylib import validate_args as val
 from pylib.const import ALL_TRAITS
 from pylib.herbarium_model import BACKBONES
 from pylib.herbarium_model import HerbariumModel
+from pylib.herbarium_model_exp import HerbariumModelExp
 from pylib.herbarium_runner import HerbariumTrainingRunner
 
 
@@ -120,6 +121,12 @@ def parse_args():
         help="""Limit the input to this many records.""",
     )
 
+    arg_parser.add_argument(
+        "--experiment",
+        action="store_true",
+        help="""Run an experimental model.""",
+    )
+
     args = arg_parser.parse_args()
 
     val.validate_split_set(args.database, args.split_set)
@@ -135,7 +142,10 @@ def main():
     args = parse_args()
     orders = db.select_all_orders(args.database)
 
-    model = HerbariumModel(orders, args.backbone, args.load_model)
+    if args.experiment:
+        model = HerbariumModelExp(orders, args.backbone, args.load_model)
+    else:
+        model = HerbariumModel(orders, args.backbone, args.load_model)
 
     runner = HerbariumTrainingRunner(model, orders, args)
     runner.run()
