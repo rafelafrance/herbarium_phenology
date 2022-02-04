@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 
 import torch
+import torch.nn.functional as F
 import torchvision
 from torch import nn
 
@@ -79,18 +80,19 @@ class HerbariumHead(nn.Module):
         model_params = BACKBONES[backbone]
 
         in_feat = model_params["in_feat"]
-        cnn_chan1 = 20
-        mix_feat = in_feat + len(orders) - (2 * 2)
+        cnn_chan1 = 32
+        cnn_chan2 = 64
+        mix_feat = in_feat + len(orders)
         fc_feat1 = in_feat // 4
         fc_feat2 = in_feat // 16
 
         self.conv = nn.Sequential(
-            nn.Conv1d(1, cnn_chan1, kernel_size=(3,), bias=False),
+            nn.Conv1d(1, cnn_chan1, 3, padding=1, bias=False),
             nn.BatchNorm1d(cnn_chan1),
             nn.SiLU(inplace=True),
             #
-            nn.Conv1d(cnn_chan1, 1, kernel_size=(3,), bias=False),
-            nn.BatchNorm1d(1),
+            nn.Conv1d(cnn_chan1, cnn_chan2, 3, padding=1, bias=False),
+            nn.BatchNorm1d(cnn_chan2),
             nn.SiLU(inplace=True),
         )
 
@@ -114,7 +116,8 @@ class HerbariumHead(nn.Module):
         """Run the classifier forwards with a phylogenetic order (one-hot)."""
         x0 = torch.unsqueeze(x0, dim=1)
         x0 = self.conv(x0)
-        x0 = x0.squeeze()
+        x0 = x0.permute(0, 2, 1)
+        x0 = F.adaptive_avg_pool1d(x0, 1).squeeze()
         x = torch.cat((x0, x1), dim=1)
         x = self.fc(x)
         return x
