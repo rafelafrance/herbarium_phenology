@@ -6,6 +6,8 @@ import torch
 import torchvision
 from torch import nn
 
+IMAGENET_MEAN = (0.485, 0.456, 0.406)
+IMAGENET_STD_DEV = (0.229, 0.224, 0.225)
 
 BACKBONES = {
     "b0": {
@@ -64,7 +66,7 @@ BACKBONES = {
 class HerbariumBackbone(nn.Module):
     """Backbone for all of the trait nets."""
 
-    def __init__(self, backbone: str):
+    def __init__(self, backbone: str, freeze: bool = False):
         super().__init__()
 
         model_params = BACKBONES[backbone]
@@ -72,8 +74,8 @@ class HerbariumBackbone(nn.Module):
         self.model = model_params["backbone"](pretrained=False)
         self.model.classifier = nn.Identity()
 
-        # for param in self.model.parameters():
-        #     param.requires_grad = False
+        for param in self.model.parameters():
+            param.requires_grad = freeze
 
     def forward(self, x):
         """Build image output."""
@@ -123,8 +125,8 @@ class HerbariumModelExp(nn.Module):
 
         model_params = BACKBONES[backbone]
         self.size = model_params["size"]
-        self.mean = model_params.get("mean", (0.485, 0.456, 0.406))  # ImageNet
-        self.std_dev = model_params.get("std_dev", (0.229, 0.224, 0.225))  # ImageNet
+        self.mean = model_params.get("mean", IMAGENET_MEAN)
+        self.std_dev = model_params.get("std_dev", IMAGENET_STD_DEV)
 
         self.backbone = HerbariumBackbone(backbone)
         self.head = HerbariumHead(orders, backbone)
