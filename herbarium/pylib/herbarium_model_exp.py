@@ -3,7 +3,6 @@ import logging
 from pathlib import Path
 
 import torch
-import torch.nn.functional as F
 import torchvision
 from torch import nn
 
@@ -14,30 +13,40 @@ BACKBONES = {
         "size": (224, 224),
         "dropout": 0.2,
         "in_feat": 1280,
+        "mean": [0.7743, 0.7529, 0.7100],
+        "std_dev": [0.2250, 0.2326, 0.2449],
     },
     "b1": {
         "backbone": torchvision.models.efficientnet_b1,
         "size": (240, 240),
         "dropout": 0.2,
         "in_feat": 1280,
+        "mean": [0.7743, 0.7529, 0.7100],
+        "std_dev": [0.2250, 0.2326, 0.2449],  # TODO
     },
     "b2": {
         "backbone": torchvision.models.efficientnet_b2,
         "size": (260, 260),
         "dropout": 0.3,
         "in_feat": 1408,
+        "mean": [0.7743, 0.7529, 0.7100],
+        "std_dev": [0.2250, 0.2326, 0.2449],  # TODO
     },
     "b3": {
         "backbone": torchvision.models.efficientnet_b3,
         "size": (300, 300),
         "dropout": 0.3,
         "in_feat": 1536,
+        "mean": [0.7743, 0.7529, 0.7100],
+        "std_dev": [0.2286, 0.2365, 0.2492],  # TODO
     },
     "b4": {
         "backbone": torchvision.models.efficientnet_b4,
         "size": (380, 380),
         "dropout": 0.4,
         "in_feat": 1792,
+        "mean": [0.7743, 0.7529, 0.7100],
+        "std_dev": [0.2286, 0.2365, 0.2492],
     },
     # b5: {"size": (456, 456), }
     # b6: {"size": (528, 528), }
@@ -46,6 +55,8 @@ BACKBONES = {
         "size": (600, 600),
         "dropout": 0.5,
         "in_feat": 2560,
+        "mean": [0.7743, 0.7529, 0.7100],
+        "std_dev": [0.2286, 0.2365, 0.2492],  # TODO
     },
 }
 
@@ -58,11 +69,11 @@ class HerbariumBackbone(nn.Module):
 
         model_params = BACKBONES[backbone]
 
-        self.model = model_params["backbone"](pretrained=True)
+        self.model = model_params["backbone"](pretrained=False)
         self.model.classifier = nn.Identity()
 
-        for param in self.model.parameters():
-            param.requires_grad = False
+        # for param in self.model.parameters():
+        #     param.requires_grad = False
 
     def forward(self, x):
         """Build image output."""
@@ -75,30 +86,15 @@ class HerbariumHead(nn.Module):
     def __init__(self, orders: list[str], backbone: str):
         super().__init__()
 
-        self.orders = orders
-
         model_params = BACKBONES[backbone]
 
-        in_feat = model_params["in_feat"]
-        cnn_chan1 = 32
-        cnn_chan2 = 64
-        mix_feat = in_feat + len(orders)
+        in_feat = model_params["in_feat"] + len(orders)
         fc_feat1 = in_feat // 4
         fc_feat2 = in_feat // 16
 
-        self.conv = nn.Sequential(
-            nn.Conv1d(1, cnn_chan1, 3, padding=1, bias=False),
-            nn.BatchNorm1d(cnn_chan1),
-            nn.SiLU(inplace=True),
-            #
-            nn.Conv1d(cnn_chan1, cnn_chan2, 3, padding=1, bias=False),
-            nn.BatchNorm1d(cnn_chan2),
-            nn.SiLU(inplace=True),
-        )
-
-        self.fc = nn.Sequential(
+        self.model = nn.Sequential(
             nn.Dropout(p=model_params["dropout"], inplace=True),
-            nn.Linear(in_features=mix_feat, out_features=fc_feat1, bias=False),
+            nn.Linear(in_features=in_feat, out_features=fc_feat1, bias=False),
             nn.SiLU(inplace=True),
             nn.BatchNorm1d(num_features=fc_feat1),
             #
@@ -114,12 +110,8 @@ class HerbariumHead(nn.Module):
 
     def forward(self, x0, x1):
         """Run the classifier forwards with a phylogenetic order (one-hot)."""
-        x0 = torch.unsqueeze(x0, dim=1)
-        x0 = self.conv(x0)
-        x0 = x0.permute(0, 2, 1)
-        x0 = F.adaptive_avg_pool1d(x0, 1).squeeze()
         x = torch.cat((x0, x1), dim=1)
-        x = self.fc(x)
+        x = self.model(x)
         return x
 
 
@@ -131,11 +123,10 @@ class HerbariumModelExp(nn.Module):
 
         model_params = BACKBONES[backbone]
         self.size = model_params["size"]
-        self.mean = (0.485, 0.456, 0.406)  # ImageNet
-        self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
+        self.mean = model_params.get("mean", (0.485, 0.456, 0.406))  # ImageNet
+        self.std_dev = model_params.get("std_dev", (0.229, 0.224, 0.225))  # ImageNet
 
         self.backbone = HerbariumBackbone(backbone)
-
         self.head = HerbariumHead(orders, backbone)
 
         self.state = torch.load(load_model) if load_model else {}

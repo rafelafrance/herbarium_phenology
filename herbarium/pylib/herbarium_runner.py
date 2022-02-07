@@ -37,7 +37,7 @@ class HerbariumRunner(ABC):
 
     @abstractmethod
     def run(self):
-        """Run the function of the class"""
+        """Perform the main function of the class."""
 
 
 class HerbariumTrainingRunner(HerbariumRunner):

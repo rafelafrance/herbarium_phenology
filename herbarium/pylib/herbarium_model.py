@@ -117,7 +117,6 @@ class HerbariumModel(nn.Module):
         self.std_dev = (0.229, 0.224, 0.225)  # ImageNet
 
         self.backbone = HerbariumBackbone(backbone)
-
         self.head = HerbariumHead(orders, backbone)
 
         self.state = torch.load(load_model) if load_model else {}
