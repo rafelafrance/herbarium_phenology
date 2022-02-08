@@ -7,11 +7,13 @@ from pathlib import Path
 from pylib import db
 from pylib import log
 from pylib import validate_args as val
-from pylib.const import ALL_TRAITS
+from pylib.const import TRAITS
 from pylib.herbarium_model import BACKBONES
 from pylib.herbarium_model import HerbariumModel
-from pylib.herbarium_model_exp import HerbariumModelExp
+from pylib.herbarium_model import HydraModel
 from pylib.herbarium_runner import HerbariumTrainingRunner
+
+# from pylib.herbarium_model_exp import HerbariumModelExp
 
 
 def parse_args():
@@ -55,7 +57,7 @@ def parse_args():
 
     arg_parser.add_argument(
         "--trait",
-        choices=ALL_TRAITS,
+        choices=TRAITS,
         required=True,
         help="""Train to classify this trait.""",
     )
@@ -126,7 +128,6 @@ def parse_args():
         action="store_true",
         help="""Run an experimental model.""",
     )
-
     args = arg_parser.parse_args()
 
     val.validate_split_set(args.database, args.split_set)
@@ -143,7 +144,8 @@ def main():
     orders = db.select_all_orders(args.database)
 
     if args.experiment:
-        model = HerbariumModelExp(orders, args.backbone, args.load_model)
+        # model = HerbariumModelExp(orders, args.backbone, args.load_model)
+        model = HydraModel(orders, args.backbone, args.load_model, args.trait)
     else:
         model = HerbariumModel(orders, args.backbone, args.load_model)
 

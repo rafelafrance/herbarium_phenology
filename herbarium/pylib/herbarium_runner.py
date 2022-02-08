@@ -13,6 +13,7 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from . import db
+from .const import TRAIT_2_INT
 from .herbarium_dataset import HerbariumDataset
 from .herbarium_dataset import InferenceDataset
 
@@ -50,6 +51,8 @@ class HerbariumTrainingRunner(HerbariumRunner):
         self.split_set = args.split_set
         self.save_model = args.save_model
         self.target_set = args.target_set
+
+        self.use_col = TRAIT_2_INT[self.trait]
 
         self.writer = SummaryWriter(args.log_dir)
 
@@ -95,6 +98,7 @@ class HerbariumTrainingRunner(HerbariumRunner):
             targets = targets.to(self.device)
 
             preds = self.model(images, orders)
+            preds = preds[:, self.use_col].to(self.device)
             loss = criterion(preds, targets)
 
             if optimizer:

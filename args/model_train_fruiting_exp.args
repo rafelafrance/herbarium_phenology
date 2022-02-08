@@ -5,8 +5,8 @@
 --trait=fruiting
 --backbone=b0
 --log-dir=data/runs/b0_fruiting_full
---learning-rate=0.01
---batch-size=16
+--learning-rate=0.001
+--batch-size=64
 --workers=8
---epochs=100
+--epochs=50
 --experiment

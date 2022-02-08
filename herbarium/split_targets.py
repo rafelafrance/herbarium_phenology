@@ -7,7 +7,7 @@ from pathlib import Path
 
 from pylib import db
 from pylib import validate_args as val
-from pylib.const import ALL_TRAITS
+from pylib.const import TRAITS
 from tqdm import tqdm
 
 
@@ -133,7 +133,7 @@ def parse_args():
 
     arg_parser.add_argument(
         "--trait",
-        choices=ALL_TRAITS,
+        choices=TRAITS,
         required=True,
         help="""Which trait to classify.""",
     )

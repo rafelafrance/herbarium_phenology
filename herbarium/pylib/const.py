@@ -19,8 +19,6 @@ TERMS = Csv.read_csv(VOCAB_DIR / "herbarium.csv")
 
 # #########################################################################
 # Trait related constants
-ALL_TRAITS = " flowering fruiting leaf_out ".split()
-ALL_TRAIT_FIELDS = """
-    flowering not_flowering
-    fruiting  not_fruiting
-    leaf_out  not_leaf_out """.split()
+TRAITS = " flowering fruiting leaf_out ".split()
+TRAIT_2_INT = {t: i for i, t in enumerate(TRAITS)}
+TRAIT_2_STR = {i: t for i, t in enumerate(TRAITS)}

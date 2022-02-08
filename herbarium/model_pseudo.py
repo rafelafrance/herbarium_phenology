@@ -7,7 +7,7 @@ from pathlib import Path
 from pylib import db
 from pylib import log
 from pylib import validate_args as val
-from pylib.const import ALL_TRAITS
+from pylib.const import TRAITS
 from pylib.herbarium_model import BACKBONES
 from pylib.herbarium_model import HerbariumModel
 from pylib.herbarium_runner import HerbariumPseudoRunner
@@ -54,7 +54,7 @@ def parse_args():
 
     arg_parser.add_argument(
         "--trait",
-        choices=ALL_TRAITS,
+        choices=TRAITS,
         required=True,
         help="""Which trait to infer.""",
     )

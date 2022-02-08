@@ -38,7 +38,7 @@ class HerbariumDataset(Dataset):
                     rec["path"],
                     rec["coreid"],
                     self.to_order(self.orders, rec),
-                    torch.tensor([rec["target"]], dtype=torch.float),
+                    torch.tensor(rec["target"], dtype=torch.float),
                 )
             )
         return sheets
