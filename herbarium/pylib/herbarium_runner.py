@@ -98,7 +98,8 @@ class HerbariumTrainingRunner(HerbariumRunner):
             targets = targets.to(self.device)
 
             preds = self.model(images, orders)
-            preds = preds[:, self.use_col].to(self.device)
+            # preds = preds[:, self.use_col].to(self.device)  # for hydra
+
             loss = criterion(preds, targets)
 
             if optimizer:

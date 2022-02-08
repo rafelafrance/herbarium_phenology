@@ -15,7 +15,7 @@ from pylib.herbarium_runner import HerbariumTestRunner
 
 def parse_args():
     """Process command-line arguments."""
-    description = """Test a herbarium phenology classifier model."""
+    description = """Test a herbarium phenology trait classifier."""
     arg_parser = argparse.ArgumentParser(
         description=textwrap.dedent(description), fromfile_prefix_chars="@"
     )

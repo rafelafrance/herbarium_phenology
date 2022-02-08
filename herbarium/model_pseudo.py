@@ -15,7 +15,7 @@ from pylib.herbarium_runner import HerbariumPseudoRunner
 
 def parse_args():
     """Process command-line arguments."""
-    description = """Create a target dataset from an inference set."""
+    description = """Use pseudo-labels for training a herbarium trait classifier."""
     arg_parser = argparse.ArgumentParser(
         description=textwrap.dedent(description), fromfile_prefix_chars="@"
     )

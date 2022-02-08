@@ -10,15 +10,15 @@ from pylib import validate_args as val
 from pylib.const import TRAITS
 from pylib.herbarium_model import BACKBONES
 from pylib.herbarium_model import HerbariumModel
-from pylib.herbarium_model import HydraModel
+from pylib.herbarium_model_exp import HerbariumModelExp
 from pylib.herbarium_runner import HerbariumTrainingRunner
 
-# from pylib.herbarium_model_exp import HerbariumModelExp
+# from pylib.herbarium_model_exp import HydraModel
 
 
 def parse_args():
     """Process command-line arguments."""
-    description = """Train a herbarium phenology classifier model."""
+    description = """Train a herbarium phenology trait classifier."""
     arg_parser = argparse.ArgumentParser(
         description=textwrap.dedent(description), fromfile_prefix_chars="@"
     )
@@ -144,8 +144,8 @@ def main():
     orders = db.select_all_orders(args.database)
 
     if args.experiment:
-        # model = HerbariumModelExp(orders, args.backbone, args.load_model)
-        model = HydraModel(orders, args.backbone, args.load_model, args.trait)
+        model = HerbariumModelExp(orders, args.backbone, args.load_model)
+        # model = HydraModel(orders, args.backbone, args.load_model, args.trait)
     else:
         model = HerbariumModel(orders, args.backbone, args.load_model)
 
