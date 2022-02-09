@@ -1,10 +1,10 @@
 --database=data/angiosperms.sqlite
---save-model=data/models/fruiting/b0_fruiting_cyclic.pt
+--save-model=data/models/fruiting/b7_fruiting_cyclic.pt
 --split-set=fruiting
 --target-set=first_run
 --trait=fruiting
---backbone=b0
---log-dir=data/runs/b0_fruiting_cyclic
---batch-size=128
+--backbone=b7
+--log-dir=data/runs/b7_fruiting_cyclic
+--batch-size=8
 --workers=8
 --epochs=100
