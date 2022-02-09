@@ -59,7 +59,8 @@ class HerbariumTrainingRunner(HerbariumRunner):
         self.train_loader = self.train_dataloader()
         self.val_loader = self.val_dataloader()
         self.optimizer = self.configure_optimizers()
-        self.criterion = self.configure_criterion(self.train_loader.dataset)
+        self.scheduler = self.configure_scheduler()
+        self.loss_fn = self.configure_loss_fn(self.train_loader.dataset)
 
         self.best_loss = self.model.state.get("best_loss", np.Inf)
         self.best_acc = self.model.state.get("accuracy", 0.0)
@@ -76,18 +77,21 @@ class HerbariumTrainingRunner(HerbariumRunner):
         for epoch in range(self.start_epoch, self.end_epoch):
             self.model.train()
             train_stats = self.one_epoch(
-                self.train_loader, self.criterion, self.optimizer
+                self.train_loader, self.loss_fn, self.optimizer
             )
 
+            if self.scheduler:
+                self.scheduler.step()
+
             self.model.eval()
-            val_stats = self.one_epoch(self.val_loader, self.criterion)
+            val_stats = self.one_epoch(self.val_loader, self.loss_fn)
 
             is_best = self.save_checkpoint(val_stats, epoch)
             self.log_stats(train_stats, val_stats, epoch, is_best)
 
         self.writer.close()
 
-    def one_epoch(self, loader, criterion, optimizer=None):
+    def one_epoch(self, loader, loss_fn, optimizer=None):
         """Train or validate an epoch."""
         running_loss = 0.0
         running_acc = 0.0
@@ -100,7 +104,7 @@ class HerbariumTrainingRunner(HerbariumRunner):
             preds = self.model(images, orders)
             # preds = preds[:, self.use_col].to(self.device)  # for hydra
 
-            loss = criterion(preds, targets)
+            loss = loss_fn(preds, targets)
 
             if optimizer:
                 optimizer.zero_grad()
@@ -120,12 +124,19 @@ class HerbariumTrainingRunner(HerbariumRunner):
             optimizer.load_state_dict(self.model.state["optimizer_state"])
         return optimizer
 
-    def configure_criterion(self, dataset):
-        """Configure the criterion for model improvement."""
+    def configure_scheduler(self):
+        """Schedule the rate of change in the optimizer."""
+        scheduler = optim.lr_scheduler.CyclicLR(
+            self.optimizer, 0.001, 0.01, step_size_up=10, cycle_momentum=False
+        )
+        return scheduler
+
+    def configure_loss_fn(self, dataset):
+        """Configure the loss_fn for model improvement."""
         pos_weight = dataset.pos_weight()
         pos_weight = torch.tensor(pos_weight, dtype=torch.float).to(self.device)
-        criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
-        return criterion
+        loss_fn = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+        return loss_fn
 
     def train_dataloader(self):
         """Load the training split for the data."""
@@ -180,7 +191,7 @@ class HerbariumTrainingRunner(HerbariumRunner):
     def log_stats(self, train_stats, val_stats, epoch, is_best):
         """Log results of the epoch."""
         logging.info(
-            f"{epoch:2}: "
+            f"{epoch:4}: "
             f"Train: loss {train_stats['loss']:0.6f} acc {train_stats['acc']:0.6f} "
             f"Valid: loss {val_stats['loss']:0.6f} acc {val_stats['acc']:0.6f}"
             f"{' ++' if is_best else ''}"
@@ -244,7 +255,7 @@ class HerbariumTestRunner(HerbariumRunner):
         self.target_set = args.target_set
 
         self.test_loader = self.test_dataloader()
-        self.criterion = self.configure_criterion(self.test_loader.dataset)
+        self.loss_fn = self.configure_loss_fn(self.test_loader.dataset)
 
     def test_dataloader(self):
         """Load the validation split for the data."""
@@ -270,12 +281,12 @@ class HerbariumTestRunner(HerbariumRunner):
             pin_memory=True,
         )
 
-    def configure_criterion(self, dataset):
-        """Configure the criterion for model improvement."""
+    def configure_loss_fn(self, dataset):
+        """Configure the loss_fn for model improvement."""
         pos_weight = dataset.pos_weight()
         pos_weight = torch.tensor(pos_weight, dtype=torch.float).to(self.device)
-        criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
-        return criterion
+        loss_fn = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+        return loss_fn
 
     def run(self):
         """Test the model on hold-out data."""
@@ -294,7 +305,7 @@ class HerbariumTestRunner(HerbariumRunner):
             targets = targets.to(self.device)
 
             preds = self.model(images, orders)
-            loss = self.criterion(preds, targets)
+            loss = self.loss_fn(preds, targets)
 
             test_loss += loss.item()
             test_acc += accuracy(preds, targets)
@@ -394,25 +405,25 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
         for epoch in range(self.start_epoch, self.end_epoch):
             self.model.train()
             train_stats = self.one_epoch(
-                self.train_loader, self.criterion, self.optimizer
+                self.train_loader, self.loss_fn, self.optimizer
             )
 
             alpha = self.alpha(epoch)
             pseudo_stats = {"loss": 0.0}
             if alpha > 0.0:
                 pseudo_stats = self.pseudo_epoch(
-                    self.pseudo_loader, self.criterion, self.optimizer, alpha
+                    self.pseudo_loader, self.loss_fn, self.optimizer, alpha
                 )
 
             self.model.eval()
-            val_stats = self.one_epoch(self.val_loader, self.criterion)
+            val_stats = self.one_epoch(self.val_loader, self.loss_fn)
 
             is_best = self.save_checkpoint(val_stats, epoch)
             self.logger(train_stats, pseudo_stats, val_stats, epoch, is_best, alpha)
 
         self.writer.close()
 
-    def pseudo_epoch(self, loader, criterion, optimizer, alpha):
+    def pseudo_epoch(self, loader, loss_fn, optimizer, alpha):
         """Train or validate an epoch."""
         running_loss = 0.0
 
@@ -423,7 +434,7 @@ class HerbariumPseudoRunner(HerbariumTrainingRunner):
             preds = self.model(images, orders)
             targets = torch.round(torch.sigmoid(preds))
 
-            loss = alpha * criterion(preds, targets)
+            loss = alpha * loss_fn(preds, targets)
 
             optimizer.zero_grad()
             loss.backward()
