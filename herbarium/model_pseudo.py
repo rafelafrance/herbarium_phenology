@@ -10,7 +10,7 @@ from pylib import validate_args as val
 from pylib.const import TRAITS
 from pylib.herbarium_model import BACKBONES
 from pylib.herbarium_model import HerbariumModel
-from pylib.herbarium_runner import HerbariumPseudoRunner
+from pylib.herbarium_runner_exp import HerbariumPseudoRunner
 
 
 def parse_args():
