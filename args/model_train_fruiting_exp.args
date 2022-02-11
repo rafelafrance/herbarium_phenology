@@ -3,10 +3,10 @@
 --split-set=fruiting
 --target-set=first_run
 --trait=fruiting
+--model=train_all
 --backbone=b0
 --log-dir=data/runs/b0_fruiting_full
 --learning-rate=0.001
 --batch-size=64
 --workers=8
 --epochs=50
---experiment

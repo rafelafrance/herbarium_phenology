@@ -4,16 +4,13 @@ import argparse
 import textwrap
 from pathlib import Path
 
-from herbarium.models.backbone_params import BACKBONES
-from herbarium.models.herbarium_full_model import HerbariumFullModel
-from herbarium.models.herbarium_model import HerbariumModel
-from herbarium.pylib import const
-from herbarium.pylib import db
-from herbarium.pylib import log
-from herbarium.pylib import validate_args as val
-from herbarium.runners import training_runner
-
-# from pylib.herbarium_model_exp import HydraModel
+from models.model_util import BACKBONES
+from models.model_util import MODELS
+from pylib import const
+from pylib import db
+from pylib import log
+from pylib import validate_args as val
+from runners import training_runner
 
 
 def main():
@@ -23,11 +20,7 @@ def main():
     args = parse_args()
     orders = db.select_all_orders(args.database)
 
-    if args.experiment:
-        model = HerbariumFullModel(orders, args.backbone, args.load_model)
-        # model = HydraModel(orders, args.backbone, args.load_model, args.trait)
-    else:
-        model = HerbariumModel(orders, args.backbone, args.load_model)
+    model = MODELS[args.model](orders, args.backbone, args.load_model)
 
     training_runner.train(model, orders, args)
 
@@ -81,10 +74,17 @@ def parse_args():
     )
 
     arg_parser.add_argument(
+        "--model",
+        choices=list(MODELS.keys()),
+        default=list(MODELS.keys())[0],
+        help="""Which model architecture.""",
+    )
+
+    arg_parser.add_argument(
         "--backbone",
         choices=list(BACKBONES.keys()),
         default=list(BACKBONES.keys())[0],
-        help="""Which neural network backbone to use.""",
+        help="""Which neural network backbone for the model.""",
     )
 
     arg_parser.add_argument(
@@ -141,11 +141,6 @@ def parse_args():
         help="""Limit the input to this many records.""",
     )
 
-    arg_parser.add_argument(
-        "--experiment",
-        action="store_true",
-        help="""Run an experimental model.""",
-    )
     args = arg_parser.parse_args()
 
     val.validate_split_set(args.database, args.split_set)

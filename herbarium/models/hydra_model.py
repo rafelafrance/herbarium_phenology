@@ -1,14 +1,12 @@
-import logging
+"""This model feed the backbone to all heads, one for each trait."""
 from pathlib import Path
 
 import torch
 from torch import nn
 
-from herbarium.models.backbone_params import IMAGENET_MEAN
-from herbarium.models.backbone_params import IMAGENET_STD_DEV
-from herbarium.models.herbarium_full_model import BACKBONES
-from herbarium.models.herbarium_model import HerbariumBackbone as HydraBackbone
-from herbarium.models.herbarium_model import HerbariumHead as HydraHead
+from . import model_util
+from .herbarium_model import HerbariumBackbone
+from .herbarium_model import HerbariumHead
 from herbarium.pylib.const import TRAIT_2_INT
 from herbarium.pylib.const import TRAITS
 
@@ -21,13 +19,10 @@ class HydraModel(nn.Module):
     ):
         super().__init__()
 
-        model_params = BACKBONES[backbone]
-        self.size = model_params["size"]
-        self.mean = model_params.get("mean", IMAGENET_MEAN)
-        self.std_dev = model_params.get("std_dev", IMAGENET_STD_DEV)
+        model_util.get_backbone_params(self, backbone)
 
-        self.backbone = HydraBackbone(backbone)
-        self.heads = nn.ModuleList([HydraHead(orders, backbone) for _ in TRAITS])
+        self.backbone = HerbariumBackbone(backbone)
+        self.heads = nn.ModuleList([HerbariumHead(orders, backbone) for _ in TRAITS])
 
         self.count = len(TRAITS)
         if trait:
@@ -36,10 +31,7 @@ class HydraModel(nn.Module):
         else:
             self.use_head = [True] * self.count
 
-        self.state = torch.load(load_model) if load_model else {}
-        if self.state.get("model_state"):
-            logging.info("Loading the model.")
-            self.load_state_dict(self.state["model_state"])
+        model_util.load_model_state(self, load_model)
 
     def forward(self, x0, x1):
         """feed the backbone to all of the classifier heads we're using."""

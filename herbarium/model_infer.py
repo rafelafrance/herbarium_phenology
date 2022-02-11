@@ -4,8 +4,8 @@ import argparse
 import textwrap
 from pathlib import Path
 
-from models.backbone_params import BACKBONES
-from models.herbarium_model import HerbariumModel
+from models.model_util import BACKBONES
+from models.model_util import MODELS
 from pylib import db
 from pylib import log
 from pylib.const import TRAITS
@@ -19,7 +19,7 @@ def main():
     args = parse_args()
     orders = db.select_all_orders(args.database)
 
-    model = HerbariumModel(orders, args.backbone, args.load_model)
+    model = MODELS[args.model](orders, args.backbone, args.load_model)
 
     inference_runner.infer(model, orders, args)
 
@@ -43,10 +43,17 @@ def parse_args():
     )
 
     arg_parser.add_argument(
+        "--model",
+        choices=list(MODELS.keys()),
+        default=list(MODELS.keys())[0],
+        help="""Which model architecture.""",
+    )
+
+    arg_parser.add_argument(
         "--backbone",
         choices=list(BACKBONES.keys()),
         default=list(BACKBONES.keys())[0],
-        help="""Which neural network backbone to use.""",
+        help="""Which neural network backbone for the model.""",
     )
 
     arg_parser.add_argument(

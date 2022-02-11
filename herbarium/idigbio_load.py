@@ -10,11 +10,10 @@ from typing import Any
 
 import pandas as pd
 from pylib import log
+from pylib.download_images import MULTIMEDIA
+from pylib.download_images import OCCURRENCE
+from pylib.download_images import OCCURRENCE_RAW
 from tqdm import tqdm
-
-from herbarium.pylib.download_images import MULTIMEDIA
-from herbarium.pylib.download_images import OCCURRENCE
-from herbarium.pylib.download_images import OCCURRENCE_RAW
 
 
 def load_idigbio_data(db: Path, zip_file: Path, chunk_size: int) -> None:
