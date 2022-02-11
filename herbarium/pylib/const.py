@@ -19,7 +19,3 @@ TERMS = Csv.read_csv(VOCAB_DIR / "herbarium.csv")
 TRAITS = " flowering fruiting leaf_out ".split()
 TRAIT_2_INT = {t: i for i, t in enumerate(TRAITS)}
 TRAIT_2_STR = {i: t for i, t in enumerate(TRAITS)}
-
-# #########################################################################
-IMAGENET_MEAN = (0.485, 0.456, 0.406)
-IMAGENET_STD_DEV = (0.229, 0.224, 0.225)

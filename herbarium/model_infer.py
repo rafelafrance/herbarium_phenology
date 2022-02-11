@@ -4,12 +4,26 @@ import argparse
 import textwrap
 from pathlib import Path
 
+from models.backbone_params import BACKBONES
+from models.herbarium_model import HerbariumModel
 from pylib import db
 from pylib import log
 from pylib.const import TRAITS
-from pylib.herbarium_model import BACKBONES
-from pylib.herbarium_model import HerbariumModel
-from pylib.herbarium_runner import HerbariumInferenceRunner
+from runners import inference_runner
+
+
+def main():
+    """Infer traits."""
+    log.started()
+
+    args = parse_args()
+    orders = db.select_all_orders(args.database)
+
+    model = HerbariumModel(orders, args.backbone, args.load_model)
+
+    inference_runner.infer(model, orders, args)
+
+    log.finished()
 
 
 def parse_args():
@@ -81,21 +95,6 @@ def parse_args():
 
     args = arg_parser.parse_args()
     return args
-
-
-def main():
-    """Infer traits."""
-    log.started()
-
-    args = parse_args()
-    orders = db.select_all_orders(args.database)
-
-    model = HerbariumModel(orders, args.backbone, args.load_model)
-
-    runner = HerbariumInferenceRunner(model, orders, args)
-    runner.run()
-
-    log.finished()
 
 
 if __name__ == "__main__":

@@ -8,9 +8,24 @@ from pylib import db
 from pylib import log
 from pylib import validate_args as val
 from pylib.const import TRAITS
-from pylib.herbarium_model import BACKBONES
-from pylib.herbarium_model import HerbariumModel
-from pylib.herbarium_runner_exp import HerbariumPseudoRunner
+from runners import pseudo_runner
+
+from herbarium.models.backbone_params import BACKBONES
+from herbarium.models.herbarium_model import HerbariumModel
+
+
+def main():
+    """Train a model using pseudo labels."""
+    log.started()
+
+    args = parse_args()
+    orders = db.select_all_orders(args.database)
+
+    model = HerbariumModel(orders, args.backbone, args.load_model)
+
+    pseudo_runner.train(model, orders, args)
+
+    log.finished()
 
 
 def parse_args():
@@ -149,21 +164,6 @@ def parse_args():
     val.validate_target_set(args.database, args.target_set)
 
     return args
-
-
-def main():
-    """Infer traits."""
-    log.started()
-
-    args = parse_args()
-    orders = db.select_all_orders(args.database)
-
-    model = HerbariumModel(orders, args.backbone, args.load_model)
-
-    runner = HerbariumPseudoRunner(model, orders, args)
-    runner.run()
-
-    log.finished()
 
 
 if __name__ == "__main__":

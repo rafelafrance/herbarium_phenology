@@ -3,52 +3,11 @@ import logging
 from pathlib import Path
 
 import torch
-import torchvision
 from torch import nn
 
-from .const import IMAGENET_MEAN
-from .const import IMAGENET_STD_DEV
-
-BACKBONES = {
-    "b0": {
-        "backbone": torchvision.models.efficientnet_b0,
-        "size": (224, 224),
-        "dropout": 0.2,
-        "in_feat": 1280,
-    },
-    "b1": {
-        "backbone": torchvision.models.efficientnet_b1,
-        "size": (240, 240),
-        "dropout": 0.2,
-        "in_feat": 1280,
-    },
-    "b2": {
-        "backbone": torchvision.models.efficientnet_b2,
-        "size": (260, 260),
-        "dropout": 0.3,
-        "in_feat": 1408,
-    },
-    "b3": {
-        "backbone": torchvision.models.efficientnet_b3,
-        "size": (300, 300),
-        "dropout": 0.3,
-        "in_feat": 1536,
-    },
-    "b4": {
-        "backbone": torchvision.models.efficientnet_b4,
-        "size": (380, 380),
-        "dropout": 0.4,
-        "in_feat": 1792,
-    },
-    # b5: {"size": (456, 456), }
-    # b6: {"size": (528, 528), }
-    "b7": {
-        "backbone": torchvision.models.efficientnet_b7,
-        "size": (600, 600),
-        "dropout": 0.5,
-        "in_feat": 2560,
-    },
-}
+from .backbone_params import BACKBONES
+from .backbone_params import IMAGENET_MEAN
+from .backbone_params import IMAGENET_STD_DEV
 
 
 class HerbariumBackbone(nn.Module):

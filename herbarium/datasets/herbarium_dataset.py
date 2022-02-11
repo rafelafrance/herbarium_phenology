@@ -7,10 +7,9 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-from .const import ROOT_DIR
+from herbarium.pylib.const import ROOT_DIR
 
 Sheet = namedtuple("Sheet", "path coreid order target")
-InferenceSheet = namedtuple("InferenceSheet", "path coreid order")
 
 
 class HerbariumDataset(Dataset):
@@ -38,7 +37,7 @@ class HerbariumDataset(Dataset):
                     rec["path"],
                     rec["coreid"],
                     self.to_order(self.orders, rec),
-                    # torch.tensor(rec["target"], dtype=torch.float),  $ for hydra
+                    # torch.tensor(rec["target"], dtype=torch.float),  # for hydra
                     torch.tensor([rec["target"]], dtype=torch.float),
                 )
             )
@@ -92,19 +91,3 @@ class HerbariumDataset(Dataset):
         pos = sum(s.target for s in self.sheets)
         pos_wt = (len(self) - pos) / pos if pos > 0.0 else 1.0
         return [pos_wt]
-
-
-class InferenceDataset(HerbariumDataset):
-    """Create a dataset from images in a directory."""
-
-    def build_sheets(self, image_recs) -> list[InferenceSheet]:
-        """Build the sheets used for inference."""
-        sheets: list[InferenceSheet] = []
-        for rec in image_recs:
-            order = self.to_order(self.orders, rec)
-            sheets.append(InferenceSheet(rec["path"], rec["coreid"], order))
-        return sheets
-
-    def __getitem__(self, index):
-        image, sheet = self.raw_item(index)
-        return image, sheet.order, sheet.coreid

@@ -4,16 +4,34 @@ import argparse
 import textwrap
 from pathlib import Path
 
-from pylib import db
-from pylib import log
-from pylib import validate_args as val
-from pylib.const import TRAITS
-from pylib.herbarium_model import BACKBONES
-from pylib.herbarium_model import HerbariumModel
-from pylib.herbarium_model_exp import HerbariumModelExp
-from pylib.herbarium_runner import HerbariumTrainingRunner
+from herbarium.models.backbone_params import BACKBONES
+from herbarium.models.herbarium_full_model import HerbariumFullModel
+from herbarium.models.herbarium_model import HerbariumModel
+from herbarium.pylib import const
+from herbarium.pylib import db
+from herbarium.pylib import log
+from herbarium.pylib import validate_args as val
+from herbarium.runners import training_runner
 
 # from pylib.herbarium_model_exp import HydraModel
+
+
+def main():
+    """Train a model using just pytorch."""
+    log.started()
+
+    args = parse_args()
+    orders = db.select_all_orders(args.database)
+
+    if args.experiment:
+        model = HerbariumFullModel(orders, args.backbone, args.load_model)
+        # model = HydraModel(orders, args.backbone, args.load_model, args.trait)
+    else:
+        model = HerbariumModel(orders, args.backbone, args.load_model)
+
+    training_runner.train(model, orders, args)
+
+    log.finished()
 
 
 def parse_args():
@@ -57,7 +75,7 @@ def parse_args():
 
     arg_parser.add_argument(
         "--trait",
-        choices=TRAITS,
+        choices=const.TRAITS,
         required=True,
         help="""Train to classify this trait.""",
     )
@@ -134,25 +152,6 @@ def parse_args():
     val.validate_target_set(args.database, args.target_set)
 
     return args
-
-
-def main():
-    """Train a model using just pytorch."""
-    log.started()
-
-    args = parse_args()
-    orders = db.select_all_orders(args.database)
-
-    if args.experiment:
-        model = HerbariumModelExp(orders, args.backbone, args.load_model)
-        # model = HydraModel(orders, args.backbone, args.load_model, args.trait)
-    else:
-        model = HerbariumModel(orders, args.backbone, args.load_model)
-
-    runner = HerbariumTrainingRunner(model, orders, args)
-    runner.run()
-
-    log.finished()
 
 
 if __name__ == "__main__":

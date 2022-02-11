@@ -8,9 +8,24 @@ from pylib import db
 from pylib import log
 from pylib import validate_args as val
 from pylib.const import TRAITS
-from pylib.herbarium_model import BACKBONES
-from pylib.herbarium_model import HerbariumModel
-from pylib.herbarium_runner import HerbariumTestRunner
+from runners import testing_runner
+
+from herbarium.models.backbone_params import BACKBONES
+from herbarium.models.herbarium_model import HerbariumModel
+
+
+def main():
+    """Train a model using just pytorch."""
+    log.started()
+
+    args = parse_args()
+    orders = db.select_all_orders(args.database)
+
+    model = HerbariumModel(orders, args.backbone, args.load_model)
+
+    testing_runner.test(model, orders, args)
+
+    log.finished()
 
 
 def parse_args():
@@ -101,21 +116,6 @@ def parse_args():
     val.validate_target_set(args.database, args.target_set)
 
     return args
-
-
-def main():
-    """Train a model using just pytorch."""
-    log.started()
-
-    args = parse_args()
-    orders = db.select_all_orders(args.database)
-
-    model = HerbariumModel(orders, args.backbone, args.load_model)
-
-    runner = HerbariumTestRunner(model, orders, args)
-    runner.run()
-
-    log.finished()
 
 
 if __name__ == "__main__":
