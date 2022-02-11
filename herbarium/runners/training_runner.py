@@ -12,7 +12,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from herbarium.datasets.herbarium_dataset import HerbariumDataset
 from herbarium.pylib import db
-from herbarium.runners import runner_util
+from herbarium.runners import runner_utils
 
 
 @dataclass
@@ -91,7 +91,7 @@ def one_epoch(model, device, loader, loss_fn, optimizer=None):
             optimizer.step()
 
         running_loss += loss.item()
-        running_acc += runner_util.accuracy(preds, targets)
+        running_acc += runner_utils.accuracy(preds, targets)
 
     return running_acc / len(loader), running_loss / len(loader)
 
@@ -121,7 +121,7 @@ def get_train_loader(args, model, orders):
         num_workers=args.workers,
         shuffle=True,
         pin_memory=True,
-        drop_last=len(args.dataset) % args.batch_size == 1,
+        drop_last=len(dataset) % args.batch_size == 1,
     )
 
 

@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 from herbarium.datasets.herbarium_dataset import HerbariumDataset
 from herbarium.pylib import db
-from herbarium.runners import runner_util
+from herbarium.runners import runner_utils
 
 
 @dataclass
@@ -58,7 +58,7 @@ def run_test(model, device, loader, loss_fn):
         loss = loss_fn(preds, targets)
 
         running_loss += loss.item()
-        running_acc += runner_util.accuracy(preds, targets)
+        running_acc += runner_utils.accuracy(preds, targets)
 
         preds = torch.sigmoid(preds)
 

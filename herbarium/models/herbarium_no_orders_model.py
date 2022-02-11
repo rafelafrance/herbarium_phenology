@@ -3,9 +3,9 @@ from pathlib import Path
 
 from torch import nn
 
-from . import model_util
+from . import model_utils
+from .backbones import BACKBONES
 from .herbarium_model import HerbariumBackbone
-from .model_util import BACKBONES
 
 
 class HerbariumNoOrdersHead(nn.Module):
@@ -54,12 +54,12 @@ class HerbariumNoOrdersModel(nn.Module):
 
         self.trait = trait
 
-        model_util.get_backbone_params(self, backbone)
+        model_utils.get_backbone_params(self, backbone)
 
         self.backbone = HerbariumBackbone(backbone)
         self.head = HerbariumNoOrdersHead(orders, backbone)
 
-        model_util.load_model_state(self, load_model)
+        model_utils.load_model_state(self, load_model)
 
     def forward(self, x, _):
         """Feed the backbone to all of the classifiers."""

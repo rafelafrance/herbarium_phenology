@@ -4,11 +4,11 @@ from pathlib import Path
 import torch
 from torch import nn
 
-from . import model_util
+from . import model_utils
+from ..pylib.const import TRAIT_2_INT
+from ..pylib.const import TRAITS
 from .herbarium_model import HerbariumBackbone
 from .herbarium_model import HerbariumHead
-from herbarium.pylib.const import TRAIT_2_INT
-from herbarium.pylib.const import TRAITS
 
 
 class HydraModel(nn.Module):
@@ -19,7 +19,7 @@ class HydraModel(nn.Module):
     ):
         super().__init__()
 
-        model_util.get_backbone_params(self, backbone)
+        model_utils.get_backbone_params(self, backbone)
 
         self.backbone = HerbariumBackbone(backbone)
         self.heads = nn.ModuleList([HerbariumHead(orders, backbone) for _ in TRAITS])
@@ -31,7 +31,7 @@ class HydraModel(nn.Module):
         else:
             self.use_head = [True] * self.count
 
-        model_util.load_model_state(self, load_model)
+        model_utils.load_model_state(self, load_model)
 
     def forward(self, x0, x1):
         """feed the backbone to all of the classifier heads we're using."""

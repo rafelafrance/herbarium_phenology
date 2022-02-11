@@ -4,12 +4,12 @@ import argparse
 import textwrap
 from pathlib import Path
 
-from models.model_util import BACKBONES
-from models.model_util import MODELS
-from pylib import db
-from pylib import log
-from pylib.const import TRAITS
-from runners import inference_runner
+from herbarium.models.all_models import MODELS
+from herbarium.models.backbones import BACKBONES
+from herbarium.pylib import db
+from herbarium.pylib import log
+from herbarium.pylib.const import TRAITS
+from herbarium.runners import inference_runner
 
 
 def main():

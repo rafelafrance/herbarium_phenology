@@ -1,12 +1,13 @@
 --database=data/angiosperms.sqlite
---save-model=data/models/fruiting/b0_fruiting_full.pt
+--save-model=data/models/fruiting/b0_junk.pt
 --split-set=fruiting
 --target-set=first_run
 --trait=fruiting
---model=train_all
+--model=cnn_head
 --backbone=b0
---log-dir=data/runs/b0_fruiting_full
+--log-dir=data/runs/b0_junk
 --learning-rate=0.001
 --batch-size=64
 --workers=8
---epochs=50
+--epochs=5
+--limit=20

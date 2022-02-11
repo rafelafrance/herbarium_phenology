@@ -4,9 +4,9 @@ from pathlib import Path
 
 from torch import nn
 
-from . import model_util
+from . import model_utils
+from .backbones import BACKBONES
 from .herbarium_model import HerbariumHead
-from .model_util import BACKBONES
 
 # Because we are training the entire model we are no longer using ImageNet parameters
 FULL_BACKBONES = copy.deepcopy(BACKBONES)
@@ -67,7 +67,7 @@ class HerbariumFullModel(nn.Module):
         self.backbone = HerbariumFullBackbone(backbone)
         self.head = HerbariumHead(orders, backbone)
 
-        model_util.load_model_state(self, load_model)
+        model_utils.load_model_state(self, load_model)
 
     def forward(self, x0, x1):
         """Feed the backbone to all of the classifiers."""
