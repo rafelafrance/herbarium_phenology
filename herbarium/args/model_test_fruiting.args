@@ -1,9 +1,10 @@
 --database=data/angiosperms.sqlite
---backbone=b7
---load-model=data/models/fruiting/b7_fruiting_cyclic.pt
+--model=base
+--backbone=b0
+--load-model=data/models/fruiting/b0_fruiting_cyclic.pt
 --split-set=fruiting
---test-set=b7_fruiting_cyclic
+--test-set=b0_fruiting_cyclic
 --target-set=first_run
 --trait=fruiting
---batch-size=8
+--batch-size=128
 --workers=8

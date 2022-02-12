@@ -6,7 +6,7 @@ from torch import nn
 
 from . import model_utils
 from .backbones import BACKBONES
-from .herbarium_model import HerbariumHead
+from .base_model import BaseHead
 
 # Because we are training the entire model we are no longer using ImageNet parameters
 FULL_BACKBONES = copy.deepcopy(BACKBONES)
@@ -30,7 +30,7 @@ FULL_BACKBONES["b7"]["mean"] = [0.7743, 0.7529, 0.7100]
 FULL_BACKBONES["b7"]["std_dev"] = [0.2286, 0.2365, 0.2492]  # TODO
 
 
-class HerbariumFullBackbone(nn.Module):
+class FullBackbone(nn.Module):
     """Get the EfficientNet backbone."""
 
     def __init__(self, backbone: str, freeze: bool = False):
@@ -49,7 +49,7 @@ class HerbariumFullBackbone(nn.Module):
         return self.model(x)
 
 
-class HerbariumFullModel(nn.Module):
+class FullModel(nn.Module):
     """The full model."""
 
     def __init__(
@@ -64,8 +64,8 @@ class HerbariumFullModel(nn.Module):
         self.mean = model_params["mean"]
         self.std_dev = model_params["std_dev"]
 
-        self.backbone = HerbariumFullBackbone(backbone)
-        self.head = HerbariumHead(orders, backbone)
+        self.backbone = FullBackbone(backbone)
+        self.head = BaseHead(orders, backbone)
 
         model_utils.load_model_state(self, load_model)
 

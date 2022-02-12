@@ -6,10 +6,10 @@ from torch import nn
 
 from . import model_utils
 from .backbones import BACKBONES
-from .herbarium_model import HerbariumBackbone
+from .base_model import BaseBackbone
 
 
-class HerbariumEchoHead(nn.Module):
+class EchoHead(nn.Module):
     """Classify a trait using backbone output & phylogenetic orders as sidecar data."""
 
     def __init__(self, orders: list[str], backbone: str):
@@ -54,7 +54,7 @@ class HerbariumEchoHead(nn.Module):
         return x
 
 
-class HerbariumEchoModel(nn.Module):
+class EchoModel(nn.Module):
     """The utils model for a single trait."""
 
     def __init__(
@@ -66,8 +66,8 @@ class HerbariumEchoModel(nn.Module):
 
         model_utils.get_backbone_params(self, backbone)
 
-        self.backbone = HerbariumBackbone(backbone)
-        self.head = HerbariumEchoHead(orders, backbone)
+        self.backbone = BaseBackbone(backbone)
+        self.head = EchoHead(orders, backbone)
 
         model_utils.load_model_state(self, load_model)
 

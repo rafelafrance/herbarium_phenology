@@ -1,15 +1,34 @@
-"""Create EfficientNets."""
+"""Create EfficientNets that use plant orders as well as images for input."""
 from pathlib import Path
 
+import torch
 from torch import nn
 
 from . import model_utils
 from .backbones import BACKBONES
-from .herbarium_model import HerbariumBackbone
 
 
-class HerbariumNoOrdersHead(nn.Module):
-    """Classify a trait using backbone output as input."""
+class BaseBackbone(nn.Module):
+    """Pretrained backbone."""
+
+    def __init__(self, backbone: str):
+        super().__init__()
+
+        model_params = BACKBONES[backbone]
+
+        self.model = model_params["backbone"](pretrained=True)
+        self.model.classifier = nn.Identity()
+
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+    def forward(self, x):
+        """Build image output."""
+        return self.model(x)
+
+
+class BaseHead(nn.Module):
+    """Classify a trait using backbone output & phylogenetic orders as sidecar data."""
 
     def __init__(self, orders: list[str], backbone: str):
         super().__init__()
@@ -18,7 +37,7 @@ class HerbariumNoOrdersHead(nn.Module):
 
         model_params = BACKBONES[backbone]
 
-        in_feat = model_params["in_feat"]
+        in_feat = model_params["in_feat"] + len(orders)
         fc_feat1 = in_feat // 4
         fc_feat2 = in_feat // 16
 
@@ -38,13 +57,14 @@ class HerbariumNoOrdersHead(nn.Module):
             # nn.Sigmoid(),
         )
 
-    def forward(self, x):
-        """Run the classifier forwards."""
+    def forward(self, x0, x1):
+        """Run the classifier forwards with a phylogenetic order (one-hot)."""
+        x = torch.cat((x0, x1), dim=1)
         x = self.model(x)
         return x
 
 
-class HerbariumNoOrdersModel(nn.Module):
+class BaseModel(nn.Module):
     """The utils model for a single trait."""
 
     def __init__(
@@ -56,13 +76,13 @@ class HerbariumNoOrdersModel(nn.Module):
 
         model_utils.get_backbone_params(self, backbone)
 
-        self.backbone = HerbariumBackbone(backbone)
-        self.head = HerbariumNoOrdersHead(orders, backbone)
+        self.backbone = BaseBackbone(backbone)
+        self.head = BaseHead(orders, backbone)
 
         model_utils.load_model_state(self, load_model)
 
-    def forward(self, x, _):
+    def forward(self, x0, x1):
         """Feed the backbone to all of the classifiers."""
-        x = self.backbone(x)
-        x = self.head(x)
+        x0 = self.backbone(x0)
+        x = self.head(x0, x1)
         return x

@@ -1,16 +1,16 @@
 """All current models"""
-from .herbarium_cnn_model import HerbariumCnnModel
-from .herbarium_echo_model import HerbariumEchoModel
-from .herbarium_full_model import HerbariumFullModel
-from .herbarium_model import HerbariumModel
-from .herbarium_no_orders_model import HerbariumNoOrdersModel
+from .base_model import BaseModel
+from .cnn_model import CnnModel
+from .echo_model import EchoModel
+from .full_model import FullModel
 from .hydra_model import HydraModel
+from .no_orders_model import NoOrdersModel
 
 MODELS = {
-    "utils": HerbariumModel,
-    "train_all": HerbariumFullModel,
-    "no_orders": HerbariumNoOrdersModel,
-    "cnn_head": HerbariumCnnModel,
-    "echo": HerbariumEchoModel,
+    "base": BaseModel,
+    "train_all": FullModel,
+    "no_orders": NoOrdersModel,
+    "cnn_head": CnnModel,
+    "echo": EchoModel,
     "hydra": HydraModel,
 }

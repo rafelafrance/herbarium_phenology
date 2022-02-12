@@ -7,8 +7,8 @@ from torch import nn
 from . import model_utils
 from ..consts import TRAIT_2_INT
 from ..consts import TRAITS
-from .herbarium_model import HerbariumBackbone
-from .herbarium_model import HerbariumHead
+from .base_model import BaseBackbone
+from .base_model import BaseHead
 
 
 class HydraModel(nn.Module):
@@ -21,8 +21,8 @@ class HydraModel(nn.Module):
 
         model_utils.get_backbone_params(self, backbone)
 
-        self.backbone = HerbariumBackbone(backbone)
-        self.heads = nn.ModuleList([HerbariumHead(orders, backbone) for _ in TRAITS])
+        self.backbone = BaseBackbone(backbone)
+        self.heads = nn.ModuleList([BaseHead(orders, backbone) for _ in TRAITS])
 
         self.count = len(TRAITS)
         if trait:

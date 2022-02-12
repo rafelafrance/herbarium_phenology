@@ -3,6 +3,7 @@
 --split-set=flowering
 --target-set=first_run
 --trait=flowering
+--model=base
 --backbone=b0
 --load-model=data/models/flowering/b0_flowering_1.pt
 --batch-size=64

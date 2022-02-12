@@ -3,6 +3,7 @@
 --split-set=fruiting
 --target-set=first_run
 --trait=fruiting
+--model=base
 --backbone=b0
 --load-model=data/models/fruiting/b0_fruiting_pseudo_1.pt
 --log-dir=data/runs/b0_fruiting_pseudo

@@ -3,8 +3,9 @@
 --split-set=leaf_out
 --target-set=first_run
 --trait=leaf_out
+--model=base
 --backbone=b0
 --save-model=data/models/leaf_out/b0_leaf_out_1.pt
---batch-size=64
+--batch-size=128
 --workers=8
 --epochs=50
