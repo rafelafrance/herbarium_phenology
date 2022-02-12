@@ -4,12 +4,12 @@ import argparse
 import textwrap
 from pathlib import Path
 
-from pylib.models.all_models import MODELS
-from pylib.models.backbones import BACKBONES
-from pylib.runners import inference_runner
-from pylib.utils import db
-from pylib.utils import log
-from pylib.utils.const import TRAITS
+from .pylib import db
+from .pylib import log
+from .pylib.consts import TRAITS
+from .pylib.models.all_models import MODELS
+from .pylib.models.backbones import BACKBONES
+from .pylib.runners import inference_runner
 
 
 def main():

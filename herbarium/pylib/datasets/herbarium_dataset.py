@@ -7,7 +7,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-from ..utils.const import ROOT_DIR
+from ..consts import ROOT_DIR
 
 Sheet = namedtuple("Sheet", "path coreid order target")
 

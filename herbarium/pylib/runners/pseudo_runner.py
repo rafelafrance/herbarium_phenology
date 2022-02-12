@@ -9,8 +9,8 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from . import training_runner as tr
+from .. import db
 from ..datasets.inference_dataset import InferenceDataset
-from ..utils import db
 
 
 @dataclass

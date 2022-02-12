@@ -6,8 +6,8 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
+from .. import db
 from ..datasets.inference_dataset import InferenceDataset
-from ..utils import db
 
 
 def infer(model, orders, args: Namespace):

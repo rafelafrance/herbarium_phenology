@@ -4,13 +4,13 @@ import argparse
 import textwrap
 from pathlib import Path
 
-from pylib.models.all_models import MODELS
-from pylib.models.backbones import BACKBONES
-from pylib.runners import training_runner
-from pylib.utils import const
-from pylib.utils import db
-from pylib.utils import log
-from pylib.utils import validate_args as val
+from .pylib import consts
+from .pylib import db
+from .pylib import log
+from .pylib import validate_args as val
+from .pylib.models.all_models import MODELS
+from .pylib.models.backbones import BACKBONES
+from .pylib.runners import training_runner
 
 
 def main():
@@ -68,7 +68,7 @@ def parse_args():
 
     arg_parser.add_argument(
         "--trait",
-        choices=const.TRAITS,
+        choices=consts.TRAITS,
         required=True,
         help="""Train to classify this trait.""",
     )

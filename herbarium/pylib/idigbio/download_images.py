@@ -12,7 +12,9 @@ from PIL.Image import DecompressionBombWarning
 from skimage import io
 from tqdm import tqdm
 
-from . import db
+from .. import db
+from ..consts import TRAITS
+from .idigbio_consts import COLUMN
 
 # Make a few attempts to download a page
 ATTEMPTS = 3
@@ -20,29 +22,6 @@ ATTEMPTS = 3
 # Set a timeout for requests
 TIMEOUT = 10
 socket.setdefaulttimeout(TIMEOUT)
-
-# The column that holds the image URL
-COLUMN = "accessuri"
-
-# The name of columns in the iDigBio zip file that we want
-OCCURRENCE = """ coreid dwc:basisOfRecord dwc:kingdom dwc:phylum dwc:class
-    dwc:order dwc:family dwc:genus dwc:specificEpithet dwc:scientificName
-    dwc:eventDate dwc:continent dwc:country dwc:stateProvince dwc:county dwc:locality
-    idigbio:geoPoint
-    """.split()
-
-# The name of columns we want in the iDigBio zip file
-OCCURRENCE_RAW = """ coreid dwc:reproductiveCondition dwc:occurrenceRemarks
-    dwc:dynamicProperties dwc:fieldNotes
-    """.split()
-
-# The name of columns we want in the iDigBio zip file
-MULTIMEDIA = """ coreid accessURI """.split()
-
-# Extra flags
-TRAITS = """
-        flowering      fruiting     leaf_out
-    not_flowering  not_fruiting not_leaf_out """.split()
 
 # Catch these errors during downloads and image validation
 # Python error handling sucks!
@@ -67,16 +46,17 @@ def sample_records(database, csv_dir, splits=8, limit=100):
     rows = []
     for order in tqdm(orders):
         for trait in TRAITS:
-            sql = f"""
+            sql = """
                 select coreid, accessuri
                   from angiosperms
-                where {trait} = 1
+                  join targets using (coreid)
+                where trait = ?
                   and order_ = ?
                   and coreid not in (select coreid from images)
              order by random()
             """
             sql, _ = db.build_select(sql, limit=limit)
-            rows += db.rows_as_dicts(database, sql, [order, limit])
+            rows += db.rows_as_dicts(database, sql, [trait, order, limit])
 
     for i, array in enumerate(np.array_split(rows, splits)):
         df = pd.DataFrame(array.tolist())

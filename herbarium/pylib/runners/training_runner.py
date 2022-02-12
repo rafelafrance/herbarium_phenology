@@ -10,9 +10,9 @@ from torch import optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
+from .. import db
 from ..datasets.herbarium_dataset import HerbariumDataset
 from ..runners import runner_utils
-from ..utils import db
 
 
 @dataclass

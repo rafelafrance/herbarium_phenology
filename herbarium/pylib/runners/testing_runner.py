@@ -8,9 +8,9 @@ from torch import nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
+from .. import db
 from ..datasets.herbarium_dataset import HerbariumDataset
 from ..runners import runner_utils
-from ..utils import db
 
 
 @dataclass

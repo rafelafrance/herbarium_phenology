@@ -4,13 +4,13 @@ import argparse
 import textwrap
 from pathlib import Path
 
-from pylib.models.all_models import MODELS
-from pylib.models.backbones import BACKBONES
-from pylib.runners import testing_runner
-from pylib.utils import db
-from pylib.utils import log
-from pylib.utils import validate_args as val
-from pylib.utils.const import TRAITS
+from .pylib import db
+from .pylib import log
+from .pylib import validate_args as val
+from .pylib.consts import TRAITS
+from .pylib.models.all_models import MODELS
+from .pylib.models.backbones import BACKBONES
+from .pylib.runners import testing_runner
 
 
 def main():
