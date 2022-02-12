@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Test a model that classifies herbarium traits."""
+"""Test a model that classifies utils traits."""
 import argparse
 import textwrap
 from pathlib import Path
@@ -8,12 +8,13 @@ from herbarium.models.all_models import MODELS
 from herbarium.models.backbones import BACKBONES
 from herbarium.pylib import db
 from herbarium.pylib import log
+from herbarium.pylib import validate_args as val
 from herbarium.pylib.const import TRAITS
-from herbarium.runners import inference_runner
+from herbarium.runners import testing_runner
 
 
 def main():
-    """Infer traits."""
+    """Train a model using just pytorch."""
     log.started()
 
     args = parse_args()
@@ -21,14 +22,14 @@ def main():
 
     model = MODELS[args.model](orders, args.backbone, args.load_model)
 
-    inference_runner.infer(model, orders, args)
+    testing_runner.test(model, orders, args)
 
     log.finished()
 
 
 def parse_args():
     """Process command-line arguments."""
-    description = """Run inference using a herbarium phenology trait classifier."""
+    description = """Test a utils utils trait classifier."""
     arg_parser = argparse.ArgumentParser(
         description=textwrap.dedent(description), fromfile_prefix_chars="@"
     )
@@ -61,26 +62,41 @@ def parse_args():
         type=Path,
         metavar="PATH",
         required=True,
-        help="""Use this model for inference.""",
+        help="""Use this model for testing.""",
     )
 
     arg_parser.add_argument(
-        "--inference-set",
+        "--test-set",
         metavar="NAME",
         required=True,
-        help="""Name this inference set.""",
+        help="""Name this test set.""",
+    )
+
+    arg_parser.add_argument(
+        "--split-set",
+        metavar="NAME",
+        required=True,
+        help="""Which data split set to use.""",
+    )
+
+    arg_parser.add_argument(
+        "--target-set",
+        metavar="NAME",
+        required=True,
+        help="""Use this target set for trait target values.""",
     )
 
     arg_parser.add_argument(
         "--trait",
         choices=TRAITS,
         required=True,
-        help="""Which trait to infer.""",
+        help="""Which trait to classify.""",
     )
 
     arg_parser.add_argument(
         "--batch-size",
         type=int,
+        metavar="INT",
         default=16,
         help="""Input batch size. (default: %(default)s)""",
     )
@@ -101,6 +117,10 @@ def parse_args():
     )
 
     args = arg_parser.parse_args()
+
+    val.validate_split_set(args.database, args.split_set)
+    val.validate_target_set(args.database, args.target_set)
+
     return args
 
 

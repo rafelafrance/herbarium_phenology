@@ -142,7 +142,7 @@ def select_all_target_sets(database: DbPath) -> list[str]:
 
 
 def create_images_table(database: DbPath, drop: bool = False) -> None:
-    """Create a table with paths to the valid herbarium sheet images."""
+    """Create a table with paths to the valid utils sheet images."""
     sql = """
         create table if not exists images (
             coreid text primary key,

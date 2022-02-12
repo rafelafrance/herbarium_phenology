@@ -62,7 +62,7 @@ ERRORS = (
 
 
 def sample_records(database, csv_dir, splits=8, limit=100):
-    """Get a broad sample of herbarium specimens."""
+    """Get a broad sample of utils specimens."""
     orders = db.select_all_orders(database)
     rows = []
     for order in tqdm(orders):

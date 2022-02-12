@@ -5,8 +5,8 @@ import torch
 from torch import nn
 
 from . import model_utils
-from ..pylib.const import TRAIT_2_INT
-from ..pylib.const import TRAITS
+from ..utils.const import TRAIT_2_INT
+from ..utils.const import TRAITS
 from .herbarium_model import HerbariumBackbone
 from .herbarium_model import HerbariumHead
 

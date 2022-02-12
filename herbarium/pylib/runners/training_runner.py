@@ -1,4 +1,4 @@
-"""Train a model to classify herbarium traits."""
+"""Train a model to classify utils traits."""
 import argparse
 import logging
 from dataclasses import dataclass
@@ -10,9 +10,9 @@ from torch import optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-from herbarium.datasets.herbarium_dataset import HerbariumDataset
-from herbarium.pylib import db
-from herbarium.runners import runner_utils
+from ..datasets.herbarium_dataset import HerbariumDataset
+from ..runners import runner_utils
+from ..utils import db
 
 
 @dataclass
@@ -29,7 +29,7 @@ class Stats:
 
 
 def train(model, orders, args: argparse.Namespace):
-    """Train a herbarium model."""
+    """Train a utils model."""
     device = torch.device("cuda" if torch.has_cuda else "cpu")
     model.to(device)
 

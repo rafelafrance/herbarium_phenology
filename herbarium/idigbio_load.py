@@ -17,6 +17,24 @@ from herbarium.pylib.download_images import OCCURRENCE
 from herbarium.pylib.download_images import OCCURRENCE_RAW
 
 
+def main():
+    """Load the data."""
+    log.started()
+    args = parse_args()
+
+    if args.show_csv_files:
+        print(show_csv_files(args.zip_file))
+        return
+
+    if args.show_csv_headers:
+        print(show_csv_headers(args.zip_file, args.show_csv_headers))
+        return
+
+    load_idigbio_data(args.database, args.zip_file, args.chunk_size)
+
+    log.finished()
+
+
 def load_idigbio_data(db: Path, zip_file: Path, chunk_size: int) -> None:
     """Load the iDigBio data into a database."""
     coreid = load_multimedia(db, zip_file, chunk_size)
@@ -151,24 +169,6 @@ def parse_args():
 
     args = arg_parser.parse_args()
     return args
-
-
-def main():
-    """Load the data."""
-    log.started()
-    args = parse_args()
-
-    if args.show_csv_files:
-        print(show_csv_files(args.zip_file))
-        return
-
-    if args.show_csv_headers:
-        print(show_csv_headers(args.zip_file, args.show_csv_headers))
-        return
-
-    load_idigbio_data(args.database, args.zip_file, args.chunk_size)
-
-    log.finished()
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from . import training_runner as tr
 from ..datasets.inference_dataset import InferenceDataset
-from herbarium.pylib import db
+from ..utils import db
 
 
 @dataclass
@@ -28,7 +28,7 @@ class Stats:
 
 
 def train(model, orders, args: argparse.Namespace):
-    """Train a herbarium model with pseudo-labels."""
+    """Train a utils model with pseudo-labels."""
     device = torch.device("cuda" if torch.has_cuda else "cpu")
     model.to(device)
 

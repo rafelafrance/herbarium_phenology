@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
-"""Train a model to classify herbarium traits."""
+"""Test a model that classifies utils traits."""
 import argparse
 import textwrap
 from pathlib import Path
 
 from herbarium.models.all_models import MODELS
 from herbarium.models.backbones import BACKBONES
-from herbarium.pylib import const
 from herbarium.pylib import db
 from herbarium.pylib import log
-from herbarium.pylib import validate_args as val
-from herbarium.runners import training_runner
+from herbarium.pylib.const import TRAITS
+from herbarium.runners import inference_runner
 
 
 def main():
-    """Train a model using just pytorch."""
+    """Infer traits."""
     log.started()
 
     args = parse_args()
@@ -22,14 +21,14 @@ def main():
 
     model = MODELS[args.model](orders, args.backbone, args.load_model)
 
-    training_runner.train(model, orders, args)
+    inference_runner.infer(model, orders, args)
 
     log.finished()
 
 
 def parse_args():
     """Process command-line arguments."""
-    description = """Train a herbarium phenology trait classifier."""
+    description = """Run inference using a utils utils trait classifier."""
     arg_parser = argparse.ArgumentParser(
         description=textwrap.dedent(description), fromfile_prefix_chars="@"
     )
@@ -37,40 +36,10 @@ def parse_args():
     arg_parser.add_argument(
         "--database",
         "--db",
-        type=Path,
         metavar="PATH",
+        type=Path,
         required=True,
         help="""Path to the SQLite3 database (angiosperm data).""",
-    )
-
-    arg_parser.add_argument(
-        "--save-model",
-        type=Path,
-        metavar="PATH",
-        required=True,
-        help="""Save best models to this path.""",
-    )
-
-    arg_parser.add_argument(
-        "--split-set",
-        metavar="NAME",
-        required=True,
-        help="""Which data split to use. Splits are saved in the database and each
-            one is used for a specific purpose.""",
-    )
-
-    arg_parser.add_argument(
-        "--target-set",
-        metavar="NAME",
-        required=True,
-        help="""Use this target set for trait target values.""",
-    )
-
-    arg_parser.add_argument(
-        "--trait",
-        choices=const.TRAITS,
-        required=True,
-        help="""Train to classify this trait.""",
     )
 
     arg_parser.add_argument(
@@ -91,29 +60,27 @@ def parse_args():
         "--load-model",
         type=Path,
         metavar="PATH",
-        help="""Continue training with weights from this model.""",
+        required=True,
+        help="""Use this model for inference.""",
     )
 
     arg_parser.add_argument(
-        "--log-dir",
-        type=Path,
-        metavar="DIR",
-        help="""Save tensorboard logs to this directory.""",
+        "--inference-set",
+        metavar="NAME",
+        required=True,
+        help="""Name this inference set.""",
     )
 
     arg_parser.add_argument(
-        "--learning-rate",
-        "--lr",
-        type=float,
-        metavar="FLOAT",
-        default=0.001,
-        help="""Initial learning rate. (default: %(default)s)""",
+        "--trait",
+        choices=TRAITS,
+        required=True,
+        help="""Which trait to infer.""",
     )
 
     arg_parser.add_argument(
         "--batch-size",
         type=int,
-        metavar="INT",
         default=16,
         help="""Input batch size. (default: %(default)s)""",
     )
@@ -127,14 +94,6 @@ def parse_args():
     )
 
     arg_parser.add_argument(
-        "--epochs",
-        type=int,
-        metavar="INT",
-        default=100,
-        help="""How many epochs to train. (default: %(default)s)""",
-    )
-
-    arg_parser.add_argument(
         "--limit",
         type=int,
         metavar="INT",
@@ -142,10 +101,6 @@ def parse_args():
     )
 
     args = arg_parser.parse_args()
-
-    val.validate_split_set(args.database, args.split_set)
-    val.validate_target_set(args.database, args.target_set)
-
     return args
 
 

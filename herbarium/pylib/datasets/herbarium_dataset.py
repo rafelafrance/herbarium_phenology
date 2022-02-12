@@ -7,7 +7,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-from herbarium.pylib.const import ROOT_DIR
+from ..utils.const import ROOT_DIR
 
 Sheet = namedtuple("Sheet", "path coreid order target")
 

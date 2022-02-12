@@ -3,7 +3,8 @@ import spacy
 from traiter.pipes.add_entity_data import ADD_ENTITY_DATA
 from traiter.tokenizer_util import append_tokenizer_regexes
 
-from .const import TERMS
+from .terms import TERMS
+
 
 # from traiter.pipes.debug import debug_tokens
 

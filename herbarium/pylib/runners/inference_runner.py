@@ -6,8 +6,8 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from herbarium.datasets.inference_dataset import InferenceDataset
-from herbarium.pylib import db
+from ..datasets.inference_dataset import InferenceDataset
+from ..utils import db
 
 
 def infer(model, orders, args: Namespace):

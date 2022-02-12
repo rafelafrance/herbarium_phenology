@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-"""Create a target dataset from inferred traits."""
+"""Train a model to classify utils traits."""
 import argparse
 import textwrap
 from pathlib import Path
 
 from herbarium.models.all_models import MODELS
 from herbarium.models.backbones import BACKBONES
+from herbarium.pylib import const
 from herbarium.pylib import db
 from herbarium.pylib import log
 from herbarium.pylib import validate_args as val
-from herbarium.pylib.const import TRAITS
-from herbarium.runners import pseudo_runner
+from herbarium.runners import training_runner
 
 
 def main():
-    """Train a model using pseudo labels."""
+    """Train a model using just pytorch."""
     log.started()
 
     args = parse_args()
@@ -22,14 +22,14 @@ def main():
 
     model = MODELS[args.model](orders, args.backbone, args.load_model)
 
-    pseudo_runner.train(model, orders, args)
+    training_runner.train(model, orders, args)
 
     log.finished()
 
 
 def parse_args():
     """Process command-line arguments."""
-    description = """Use pseudo-labels for training a herbarium trait classifier."""
+    description = """Train a utils utils trait classifier."""
     arg_parser = argparse.ArgumentParser(
         description=textwrap.dedent(description), fromfile_prefix_chars="@"
     )
@@ -37,8 +37,8 @@ def parse_args():
     arg_parser.add_argument(
         "--database",
         "--db",
-        metavar="PATH",
         type=Path,
+        metavar="PATH",
         required=True,
         help="""Path to the SQLite3 database (angiosperm data).""",
     )
@@ -63,14 +63,14 @@ def parse_args():
         "--target-set",
         metavar="NAME",
         required=True,
-        help="""Give the target dataset this name.""",
+        help="""Use this target set for trait target values.""",
     )
 
     arg_parser.add_argument(
         "--trait",
-        choices=TRAITS,
+        choices=const.TRAITS,
         required=True,
-        help="""Which trait to infer.""",
+        help="""Train to classify this trait.""",
     )
 
     arg_parser.add_argument(
@@ -139,29 +139,6 @@ def parse_args():
         type=int,
         metavar="INT",
         help="""Limit the input to this many records.""",
-    )
-
-    arg_parser.add_argument(
-        "--unlabeled-limit",
-        type=int,
-        metavar="INT",
-        help="""How many unlabeled images to use.""",
-    )
-
-    arg_parser.add_argument(
-        "--pseudo-max",
-        type=float,
-        metavar="FLOAT",
-        default=3.0,
-        help="""Final pseudo label loss weight. (default: %(default)s)""",
-    )
-
-    arg_parser.add_argument(
-        "--pseudo-start",
-        type=float,
-        metavar="INT",
-        default=0,
-        help="""Start adding pseudo labels at this epoch.""",
     )
 
     args = arg_parser.parse_args()
