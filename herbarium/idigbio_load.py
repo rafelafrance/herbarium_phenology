@@ -9,12 +9,11 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+from pylib.utils import log
+from pylib.utils.download_images import MULTIMEDIA
+from pylib.utils.download_images import OCCURRENCE
+from pylib.utils.download_images import OCCURRENCE_RAW
 from tqdm import tqdm
-
-from herbarium.pylib import log
-from herbarium.pylib.download_images import MULTIMEDIA
-from herbarium.pylib.download_images import OCCURRENCE
-from herbarium.pylib.download_images import OCCURRENCE_RAW
 
 
 def main():

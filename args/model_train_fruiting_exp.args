@@ -3,7 +3,7 @@
 --split-set=fruiting
 --target-set=first_run
 --trait=fruiting
---model=cnn_head
+--model=echo
 --backbone=b0
 --log-dir=data/runs/b0_junk
 --learning-rate=0.001

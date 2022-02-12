@@ -5,11 +5,10 @@ import sqlite3
 import textwrap
 from pathlib import Path
 
+from pylib.utils import db
+from pylib.utils import validate_args as val
+from pylib.utils.const import TRAITS
 from tqdm import tqdm
-
-from herbarium.pylib import db
-from herbarium.pylib import validate_args as val
-from herbarium.pylib.const import TRAITS
 
 
 def assign_records(args, orders):

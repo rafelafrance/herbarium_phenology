@@ -4,6 +4,7 @@
 .vscode/
 .idea/
 .mypy_cache/
+.virtual_documents/
 .~lock.*
 *.swp
 
