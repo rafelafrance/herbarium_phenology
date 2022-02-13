@@ -9,10 +9,10 @@ from torchvision import transforms
 
 from ..consts import ROOT_DIR
 
-Sheet = namedtuple("Sheet", "path coreid order target")
+LabeledSheet = namedtuple("LabeledSheet", "path coreid order target")
 
 
-class HerbariumDataset(Dataset):
+class LabeledDataset(Dataset):
     """Generate augmented data."""
 
     def __init__(
@@ -28,16 +28,15 @@ class HerbariumDataset(Dataset):
         self.transform = self.build_transforms(model, augment)
         self.sheets = self.build_sheets(image_recs)
 
-    def build_sheets(self, image_recs) -> list[Sheet]:
+    def build_sheets(self, image_recs) -> list[LabeledSheet]:
         """Build the sheets we are using for the dataset."""
-        sheets: list[Sheet] = []
+        sheets: list[LabeledSheet] = []
         for rec in image_recs:
             sheets.append(
-                Sheet(
+                LabeledSheet(
                     rec["path"],
                     rec["coreid"],
                     self.to_order(self.orders, rec),
-                    # torch.tensor(rec["target"], dtype=torch.float),  # for hydra
                     torch.tensor([rec["target"]], dtype=torch.float),
                 )
             )

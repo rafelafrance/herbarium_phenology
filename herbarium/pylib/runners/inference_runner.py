@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from .. import db
-from ..datasets.inference_dataset import InferenceDataset
+from ..datasets.unlabeled_dataset import UnlabeledDataset
 
 
 def infer(model, orders, args: Namespace):
@@ -47,7 +47,7 @@ def get_data_loader(args, model, orders):
     logging.info("Loading inference data.")
     db.create_inferences_table(args.database)
     raw_data = db.select_images(args.database, limit=args.limit)
-    dataset = InferenceDataset(raw_data, model, orders=orders)
+    dataset = UnlabeledDataset(raw_data, model, orders=orders)
     return DataLoader(
         dataset,
         batch_size=args.batch_size,

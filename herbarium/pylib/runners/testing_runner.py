@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from .. import db
-from ..datasets.herbarium_dataset import HerbariumDataset
+from ..datasets.labeled_dataset import LabeledDataset
 from ..runners import runner_utils
 
 
@@ -108,7 +108,7 @@ def get_data_loader(args, model, orders):
         trait=args.trait,
         limit=args.limit,
     )
-    dataset = HerbariumDataset(raw_data, model, orders=orders, augment=False)
+    dataset = LabeledDataset(raw_data, model, orders=orders, augment=False)
     return DataLoader(
         dataset,
         batch_size=args.batch_size,

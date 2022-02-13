@@ -10,7 +10,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 from . import training_runner as tr
 from .. import db
-from ..datasets.inference_dataset import InferenceDataset
+from ..datasets.unlabeled_dataset import UnlabeledDataset
 
 
 @dataclass
@@ -107,7 +107,7 @@ def get_pseudo_loader(args, model, orders):
         trait=args.trait,
         limit=args.unlabeled_limit,
     )
-    dataset = InferenceDataset(raw_data, model, orders=orders)
+    dataset = UnlabeledDataset(raw_data, model, orders=orders)
     return DataLoader(
         dataset,
         batch_size=args.batch_size,

@@ -1,20 +1,20 @@
 """Generate inference data."""
 from collections import namedtuple
 
-from .herbarium_dataset import HerbariumDataset
+from .labeled_dataset import LabeledDataset
 
-InferenceSheet = namedtuple("InferenceSheet", "path coreid order")
+UnlabeledSheet = namedtuple("UnlabeledSheet", "path coreid order")
 
 
-class InferenceDataset(HerbariumDataset):
+class UnlabeledDataset(LabeledDataset):
     """Create a dataset from images in a directory."""
 
-    def build_sheets(self, image_recs) -> list[InferenceSheet]:
+    def build_sheets(self, image_recs) -> list[UnlabeledSheet]:
         """Build the sheets used for inference."""
-        sheets: list[InferenceSheet] = []
+        sheets: list[UnlabeledSheet] = []
         for rec in image_recs:
             order = self.to_order(self.orders, rec)
-            sheets.append(InferenceSheet(rec["path"], rec["coreid"], order))
+            sheets.append(UnlabeledSheet(rec["path"], rec["coreid"], order))
         return sheets
 
     def __getitem__(self, index):

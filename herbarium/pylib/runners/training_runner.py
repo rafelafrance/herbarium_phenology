@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from .. import db
-from ..datasets.herbarium_dataset import HerbariumDataset
+from ..datasets.labeled_dataset import LabeledDataset
 from ..runners import runner_utils
 
 
@@ -114,7 +114,7 @@ def get_train_loader(args, model, orders):
         trait=args.trait,
         limit=args.limit,
     )
-    dataset = HerbariumDataset(raw_data, model, orders=orders, augment=True)
+    dataset = LabeledDataset(raw_data, model, orders=orders, augment=True)
     return DataLoader(
         dataset,
         batch_size=args.batch_size,
@@ -136,7 +136,7 @@ def get_val_loader(args, model, orders):
         trait=args.trait,
         limit=args.limit,
     )
-    dataset = HerbariumDataset(raw_data, model, orders=orders, augment=False)
+    dataset = LabeledDataset(raw_data, model, orders=orders, augment=False)
     return DataLoader(
         dataset,
         batch_size=args.batch_size,
