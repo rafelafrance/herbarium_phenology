@@ -29,7 +29,7 @@ def main():
 
 def parse_args():
     """Process command-line arguments."""
-    description = """Use pseudo-labels for training a utils trait classifier."""
+    description = """Use pseudo-labels for training a herbarium trait classifier."""
     arg_parser = argparse.ArgumentParser(
         description=textwrap.dedent(description), fromfile_prefix_chars="@"
     )
@@ -55,8 +55,7 @@ def parse_args():
         "--split-set",
         metavar="NAME",
         required=True,
-        help="""Which data split to use. Splits are saved in the database and each
-            one is used for a specific purpose.""",
+        help="""Which data split to use.""",
     )
 
     arg_parser.add_argument(

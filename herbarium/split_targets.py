@@ -1,110 +1,27 @@
 #!/usr/bin/env python3
-"""Create split runs from images."""
+"""Split labeled images into training, testing, and validation datasets."""
 import argparse
-import sqlite3
 import textwrap
 from pathlib import Path
 
-from tqdm import tqdm
-
 from .pylib import db
+from .pylib import split_utils
 from .pylib import validate_args as val
 from .pylib.consts import TRAITS
 
 
-def assign_records(args, orders):
-    """Assign records to splits.
-
-    We want to distribute the database records over the orders and targets in proportion
-    to the desired distribution as much as possible.
-    """
-    delete_split_set(args.database, args.split_set)
-
-    used = extend_split_set(
-        args.database, args.split_set, args.base_split_set, args.target_set, args.trait
-    )
-
-    for order in tqdm(orders):
-        for target in (0.0, 1.0):
-            sql = """
-               select coreid
-                 from targets
-                 join images using (coreid)
-                 join angiosperms using (coreid)
-                where target_set = ?
-                  and trait = ?
-                  and order_ = ?
-                  and target = ?
-             order by random()
-            """
-            rows = db.rows_as_dicts(
-                args.database, sql, [args.target_set, args.trait, order, target]
-            )
-
-            coreids = {row["coreid"] for row in rows} - used
-            used |= coreids
-
-            batch = [{"split_set": args.split_set, "coreid": i} for i in coreids]
-
-            count = len(coreids)
-
-            # Try to make sure we get a validation record
-            val_split = round(count * (args.test_split + args.val_split))
-            if val_split <= 2 and count >= 2:
-                val_split = 2
-
-            # Try to make sure we get a test record
-            test_split = round(count * args.test_split)
-            if test_split == 0 and count >= 1:
-                test_split = 1
-
-            # Distribute the records
-            for i in range(count):
-                if i <= test_split:
-                    split = "test"
-                elif i <= val_split:
-                    split = "val"
-                else:
-                    split = "train"
-
-                batch[i]["split"] = split
-
-            db.insert_splits(args.database, batch)
-
-
-def extend_split_set(database, split_set, base_split_set, target_set, trait):
-    """Start with this as the base split set."""
-    if not base_split_set:
-        return set()
-
-    sql = """
-        select split_set, split, coreid
-          from splits
-          join images using (coreid)
-          join targets using (coreid)
-         where split_set = ?
-           and target_set = ?
-           and trait = ?
-    """
-    batch = db.rows_as_dicts(database, sql, [base_split_set, target_set, trait])
-    for row in batch:
-        row["split_set"] = split_set
-
-    db.insert_splits(database, batch)
-
-    return {r["coreid"] for r in batch}
-
-
-def delete_split_set(database, split_set):
-    """Remove the old split set before adding new data."""
-    sql = """delete from splits where split_set = ?"""
-    with sqlite3.connect(database) as cxn:
-        cxn.execute(sql, (split_set,))
+def main():
+    """Infer traits."""
+    args = parse_args()
+    orders = db.select_all_orders(args.database)
+    split_utils.assign_records(args, orders)
 
 
 def parse_args():
     """Process command-line arguments."""
-    description = """Split images into training, validation, and test sets."""
+    description = """Split labeled images into training, testing, and validation
+        datasets. Note: We attempt to spread images from each order into all three
+        datasets."""
     arg_parser = argparse.ArgumentParser(
         description=textwrap.dedent(description), fromfile_prefix_chars="@"
     )
@@ -144,7 +61,7 @@ def parse_args():
         metavar="NAME",
         help="""Start with this split set. Add split records from this set before
             adding any new records from the --target-set. The is so we don't train
-            on a previous test data when updating a model.""",
+            on a previous test data when updating a model with new data.""",
     )
 
     arg_parser.add_argument(
@@ -174,13 +91,6 @@ def parse_args():
             data used to evaluate the model after training. (default: %(default)s)""",
     )
 
-    arg_parser.add_argument(
-        "--limit",
-        type=int,
-        metavar="INT",
-        help="""Limit the input to this many records.""",
-    )
-
     args = arg_parser.parse_args()
 
     val.validate_target_set(args.database, args.target_set)
@@ -188,13 +98,6 @@ def parse_args():
         val.validate_split_set(args.database, args.base_split_set)
 
     return args
-
-
-def main():
-    """Infer traits."""
-    args = parse_args()
-    orders = db.select_all_orders(args.database)
-    assign_records(args, orders)
 
 
 if __name__ == "__main__":

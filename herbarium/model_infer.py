@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Test a model that classifies utils traits."""
+"""Test a model that classifies herbarium traits."""
 import argparse
 import textwrap
 from pathlib import Path
@@ -28,7 +28,7 @@ def main():
 
 def parse_args():
     """Process command-line arguments."""
-    description = """Run inference using a utils utils trait classifier."""
+    description = """Infer herbarium traits with a trained model."""
     arg_parser = argparse.ArgumentParser(
         description=textwrap.dedent(description), fromfile_prefix_chars="@"
     )

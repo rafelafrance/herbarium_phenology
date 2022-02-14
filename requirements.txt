@@ -4,6 +4,7 @@ numpy
 pandas
 regex
 scikit-image
+scikit-learn
 spacy
 tqdm
 
