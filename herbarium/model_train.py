@@ -55,7 +55,7 @@ def parse_args():
         "--split-set",
         metavar="NAME",
         required=True,
-        help="""Which data split to use.""",
+        help="""Which data split set to use.""",
     )
 
     arg_parser.add_argument(

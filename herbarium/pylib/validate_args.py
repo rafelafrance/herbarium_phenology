@@ -1,4 +1,4 @@
-"""Common function for dealing with model training, validation, or inference."""
+"""Validate input arguments."""
 import sys
 
 from . import db

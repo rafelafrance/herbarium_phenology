@@ -3,7 +3,7 @@ import sqlite3
 
 from tqdm import tqdm
 
-from herbarium.pylib import db
+from . import db
 
 
 def assign_records(args, orders):

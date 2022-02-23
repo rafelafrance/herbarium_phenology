@@ -1,3 +1,4 @@
+"""Parameters for various efficient net net models."""
 import torchvision
 
 IMAGENET_MEAN = (0.485, 0.456, 0.406)

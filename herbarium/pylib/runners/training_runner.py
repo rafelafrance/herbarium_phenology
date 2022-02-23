@@ -29,7 +29,7 @@ class Stats:
 
 
 def train(model, orders, args: argparse.Namespace):
-    """Train a utils model."""
+    """Train a model."""
     device = torch.device("cuda" if torch.has_cuda else "cpu")
     model.to(device)
 

@@ -1,23 +1,30 @@
 # Herbarium phenology![Python application](https://github.com/rafelafrance/herbarium_phenology/workflows/CI/badge.svg)
 
-## Extracting phenological information from digitized herbarium specimens
+Extracting phenological information from digitized herbarium specimens.
 
-TODO list:
-- Scrape angiosperm class and family data from authoritative websites.
-- Load iDigBio data. (I am currently using data from another project.)
-- ~~Filter iDigBio data to only include angiosperms~~
-- ~~Get flowering, fruiting, and leaf-out information from iDigBio fields using a variety of NLP techniques.~~
-- ~~Train a neural network(s) to classify images as flowering, fruiting, and leaf-out.~~
-- ~~Download image data targeted at underrepresented traits (flowering, fruiting, etc.) and phylogenetic orders.~~
-- ~~Use semi-supervised learning to build up data for missing traits. Most herbarium records have annotations about one trait.~~
-- ~~Fun & games with the model architecture.~~
-- Create detailed notes of what we're doing and link to them in the README.
+## Project Summary
+
+Over the last few decades there has been a lot of effort to digitize herbarium specimens by photographing them and recording any of their annotations into databases, however, this effort has mostly been manual and labor-intensive resulting in only a fraction of herbarium specimens being fully annotated.
+
+This project uses neural networks to automate the annotation of one set of biologically significant traits, relating to [phenology](https://en.wikipedia.org/wiki/Phenology): flowering, fruiting, and leaf-out.
+
+The basic steps are:
+
+1. Obtain a database of herbarium images with corresponding annotations.
+   1. We are using the [iDigBio database](https://www.idigbio.org/) for this.
+2. Clean and filter the iDigBio database to contain only angiosperm records with images.
+3. Find a subset of these records for training that meet the following criteria:
+   1. It has an annotation of the presence or absence of at least one of the phenological traits. We use the [spaCy](https://spacy.io/) library to mine the database's free text fields for these traits.
+   2. It has an annotation of the specimen's phylogenetic order.
+   3. It has exactly one image associated with the specimen. More than one image creates confusion as to which image contains the trait.
+4. Train a neural network(s) to recognize the traits. We are using the [pytorch](https://pytorch.org/) library to build the neural networks.
+5. Use the networks to annotate records.
 
 This project extends Brian Stucky's work located [here](https://gitlab.com/stuckyb/herbarium_phenology).
 
 ## Setup
 
-**TODO**: This is a tad bit complicated. Make an install script.
+**TODO**: This is a bit complicated. Make an install script.
 
 1. Create a virtual environment
    1. Make sure you have a virtual environment manager installed. I use `virtualenv`.
