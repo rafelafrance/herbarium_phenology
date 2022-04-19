@@ -57,4 +57,11 @@ pip install -U 'python-lsp-server[all]'
 pip install -U pre-commit pre-commit-hooks
 pip install -U autopep8 flake8 isort pylint yapf pydocstyle black
 pip install -U jupyter jupyter_nbextensions_configurator ipyparallel
-pip install -U jupyter_nbextensions_configurator
+pip install -U jupyterlab jupyterlab_code_formatter jupyterlab-drawio
+pip install -U jupyterlab-lsp jupyterlab-spellchecker jupyterlab-git
+pip install -U aquirdturtle-collapsible-headings
+pip install -U nbdime
+
+jupyter labextension install jupyterlab_onedarkpro
+jupyter server extension enable --py jupyterlab_git
+jupyter serverextension enable --py jupyterlab_code_formatter

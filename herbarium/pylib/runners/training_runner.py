@@ -3,7 +3,6 @@ import argparse
 import logging
 from dataclasses import dataclass
 
-import numpy as np
 import torch
 from torch import nn
 from torch import optim
@@ -21,11 +20,11 @@ class Stats:
 
     is_best: bool = False
     best_acc: float = 0.0
-    best_loss: float = np.Inf
+    best_loss: float = float("Inf")
     train_acc: float = 0.0
-    train_loss: float = np.Inf
+    train_loss: float = float("Inf")
     val_acc: float = 0.0
-    val_loss: float = np.Inf
+    val_loss: float = float("Inf")
 
 
 def train(model, orders, args: argparse.Namespace):
@@ -46,7 +45,7 @@ def train(model, orders, args: argparse.Namespace):
 
     stats = Stats(
         best_acc=model.state.get("accuracy", 0.0),
-        best_loss=model.state.get("best_loss", np.Inf),
+        best_loss=model.state.get("best_loss", float("Inf")),
     )
 
     end_epoch, start_epoch = get_epoch_range(args, model)
