@@ -1,6 +1,6 @@
 """Create a trait pipeline."""
 import spacy
-from traiter.pipes.add_entity_data import ADD_ENTITY_DATA
+from traiter.old_pipes.add_entity_data import ADD_ENTITY_DATA
 from traiter.tokenizer_util import append_tokenizer_regexes
 
 from .terms import TERMS
