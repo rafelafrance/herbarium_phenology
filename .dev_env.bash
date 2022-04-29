@@ -12,7 +12,7 @@ if [[ ! -z "$VIRTUAL_ENV" ]]; then
 fi
 
 rm -rf .venv
-virtualenv -p python3.9 .venv
+python3.10 -m venv .venv
 source ./.venv/bin/activate
 
 python -m pip install --upgrade pip setuptools wheel
@@ -29,15 +29,14 @@ python -m spacy download en_core_web_sm
 # Use the 2nd line if you don't have traiter installed locally
 
 # pip install -e ../traiter/traiter
- pip install git+https://github.com/rafelafrance/traiter.git@master#egg=traiter
+pip install git+https://github.com/rafelafrance/traiter.git@master#egg=traiter
 
 
 # ###############################################################################
 # Setup pytorch (Uncomment the one that works for your computer. GPU is better.)
 # You will absolutely need one of these.
 
-pip3 install torch==1.10.2+cu113 torchvision==0.11.3+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html# pip3 install torch torchvision
-# pip3 install torch torchvision
+pip3 install -U torch torchvision --extra-index-url https://download.pytorch.org/whl/cu113
 
 
 # ##############################################################################
@@ -52,16 +51,32 @@ mkdir -p data/output
 # ##############################################################################
 # Dev only pip installs (not required because they're personal preference)
 
-pip install -U pynvim
-pip install -U 'python-lsp-server[all]'
-pip install -U pre-commit pre-commit-hooks
-pip install -U autopep8 flake8 isort pylint yapf pydocstyle black
-pip install -U jupyter jupyter_nbextensions_configurator ipyparallel
-pip install -U jupyterlab jupyterlab_code_formatter jupyterlab-drawio
-pip install -U jupyterlab-lsp jupyterlab-spellchecker jupyterlab-git
-pip install -U aquirdturtle-collapsible-headings
-pip install -U nbdime
+python -m pip install -U tensorboard
+python -m pip install -U pynvim
+python -m pip install -U 'python-lsp-server[all]'
+python -m pip install -U pre-commit pre-commit-hooks
+python -m pip install -U autopep8 flake8 isort pylint yapf pydocstyle black
+python -m pip install -U jupyter jupyter_nbextensions_configurator ipyparallel
+python -m pip install -U jupyter_nbextensions_configurator jupyterlab_code_formatter
+
+python -m pip install -U jupyterlab
+python -m pip install -U jupyterlab_code_formatter
+python -m pip install -U jupyterlab-drawio
+python -m pip install -U jupyterlab-lsp
+python -m pip install -U jupyterlab-spellchecker
+python -m pip install -U jupyterlab-git
+python -m pip install -U aquirdturtle-collapsible-headings
+python -m pip install -U nbdime
+
+python -m pip install -U jupyterlab-git==0.36.0
 
 jupyter labextension install jupyterlab_onedarkpro
 jupyter server extension enable --py jupyterlab_git
 jupyter serverextension enable --py jupyterlab_code_formatter
+
+
+
+# ##############################################################################
+# I Run pre-commit hooks (optional)
+
+pre-commit install
