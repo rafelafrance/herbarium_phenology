@@ -5,10 +5,14 @@ from typing import Union
 DbPath = Union[Path, str]
 
 
-def select(database: DbPath, sql, **kwargs):
+def select(database: DbPath, sql, one_column=False, **kwargs):
     with sqlite3.connect(database) as cxn:
         cxn.row_factory = sqlite3.Row
         rows = cxn.execute(sql, dict(kwargs))
+
+        if one_column:
+            return [r[0] for r in rows]
+
         return [dict(r) for r in rows]
 
 
@@ -69,7 +73,7 @@ def canned_select(database: DbPath, key: str, one_column=False, **kwargs):
             select distinct order_
             from   splits
             join   angiosperms using (coreid)
-            where  split_set = ?
+            where  split_set = :split_set
             order by order_
             """,
         "tests": """
@@ -85,9 +89,7 @@ def canned_select(database: DbPath, key: str, one_column=False, **kwargs):
     if kwargs.get("limit"):
         sql += " limit :limit"
 
-    rows = select(database, sql, **kwargs)
-    if one_column:
-        rows = [list(r.values())[0] for r in rows]
+    rows = select(database, sql, one_column=one_column, **kwargs)
     return rows
 
 
