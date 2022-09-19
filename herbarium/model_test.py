@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Test a model that classifies herbarium traits."""
 import argparse
 import textwrap
 from pathlib import Path
 
-from .pylib import db
+from .pylib import db_new
 from .pylib import log
 from .pylib import validate_args as val
 from .pylib.consts import TRAITS
@@ -14,11 +13,10 @@ from .pylib.runners import testing_runner
 
 
 def main():
-    """Train a model using just pytorch."""
     log.started()
 
     args = parse_args()
-    orders = db.select_all_orders(args.database)
+    orders = db_new.canned_select(args.database, "orders")
 
     model = MODELS[args.model](orders, args.backbone, args.load_model)
 
@@ -28,7 +26,6 @@ def main():
 
 
 def parse_args():
-    """Process command-line arguments."""
     description = """Test a trained classifier on a hold-out dataset."""
     arg_parser = argparse.ArgumentParser(
         description=textwrap.dedent(description), fromfile_prefix_chars="@"

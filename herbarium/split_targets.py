@@ -1,24 +1,21 @@
 #!/usr/bin/env python3
-"""Split labeled images into training, testing, and validation datasets."""
 import argparse
 import textwrap
 from pathlib import Path
 
-from .pylib import db
+from .pylib import db_new
 from .pylib import split_utils
 from .pylib import validate_args as val
 from .pylib.consts import TRAITS
 
 
 def main():
-    """Infer traits."""
     args = parse_args()
-    orders = db.select_all_orders(args.database)
+    orders = db_new.canned_select(args.database, "orders")
     split_utils.assign_records(args, orders)
 
 
 def parse_args():
-    """Process command-line arguments."""
     description = """Split labeled images into training, testing, and validation
         datasets. Note: We attempt to spread images from each order into all three
         datasets."""

@@ -9,7 +9,6 @@ from .pylib.idigbio import idigbio_utils
 
 
 def main():
-    """Load the data."""
     log.started()
     args = parse_args()
 
@@ -27,7 +26,6 @@ def main():
 
 
 def parse_args():
-    """Process command-line arguments."""
     description = """
         Load iDigBio Data.
 

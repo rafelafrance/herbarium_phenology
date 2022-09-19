@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Test a model that classifies herbarium traits."""
 import argparse
 import textwrap
 from pathlib import Path
 
-from .pylib import db
+from .pylib import db_new
 from .pylib import log
 from .pylib.consts import TRAITS
 from .pylib.models.all_models import MODELS
@@ -13,11 +12,10 @@ from .pylib.runners import inference_runner
 
 
 def main():
-    """Infer traits."""
     log.started()
 
     args = parse_args()
-    orders = db.select_all_orders(args.database)
+    orders = db_new.canned_select(args.database, "orders")
 
     model = MODELS[args.model](orders, args.backbone, args.load_model)
 
@@ -27,7 +25,6 @@ def main():
 
 
 def parse_args():
-    """Process command-line arguments."""
     description = """Infer herbarium traits with a trained model."""
     arg_parser = argparse.ArgumentParser(
         description=textwrap.dedent(description), fromfile_prefix_chars="@"
