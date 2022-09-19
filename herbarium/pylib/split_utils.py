@@ -1,9 +1,7 @@
 """Split labeled images into training, testing, and validation datasets."""
-import sqlite3
-
 from tqdm import tqdm
 
-from . import db
+from . import db_new
 
 
 def assign_records(args, orders):
@@ -12,7 +10,7 @@ def assign_records(args, orders):
     We want to distribute the database records over the orders and targets in proportion
     to the desired distribution as much as possible.
     """
-    delete_split_set(args.database, args.split_set)
+    db_new.canned_delete(args.database, "splits", split_set=args.split_set)
 
     used = extend_split_set(
         args.database, args.split_set, args.base_split_set, args.target_set, args.trait
@@ -25,14 +23,19 @@ def assign_records(args, orders):
                  from targets
                  join images using (coreid)
                  join angiosperms using (coreid)
-                where target_set = ?
-                  and trait = ?
-                  and order_ = ?
-                  and target = ?
+                where target_set = :target_set
+                  and trait = :trait
+                  and order_ = :order
+                  and target = :target
              order by random()
             """
-            rows = db.rows_as_dicts(
-                args.database, sql, [args.target_set, args.trait, order, target]
+            rows = db_new.select(
+                args.database,
+                sql,
+                target_set=args.target_set,
+                trait=args.trait,
+                order_=order,
+                target=target,
             )
 
             coreids = {row["coreid"] for row in rows} - used
@@ -63,7 +66,7 @@ def assign_records(args, orders):
 
                 batch[i]["split"] = split
 
-            db.insert_splits(args.database, batch)
+            db_new.canned_insert(args.database, "splits", batch)
 
 
 def extend_split_set(database, split_set, base_split_set, target_set, trait):
@@ -76,21 +79,20 @@ def extend_split_set(database, split_set, base_split_set, target_set, trait):
           from splits
           join images using (coreid)
           join targets using (coreid)
-         where split_set = ?
-           and target_set = ?
-           and trait = ?
+         where split_set = :split_set
+           and target_set = :target_set
+           and trait = :trait
     """
-    batch = db.rows_as_dicts(database, sql, [base_split_set, target_set, trait])
+    batch = db_new.select(
+        database,
+        sql,
+        split_set=base_split_set,
+        target_set=target_set,
+        trait=trait,
+    )
     for row in batch:
         row["split_set"] = split_set
 
-    db.insert_splits(database, batch)
+    db_new.canned_insert(database, "splits", batch)
 
     return {r["coreid"] for r in batch}
-
-
-def delete_split_set(database, split_set):
-    """Remove the old split set before adding new data."""
-    sql = """delete from splits where split_set = ?"""
-    with sqlite3.connect(database) as cxn:
-        cxn.execute(sql, (split_set,))
