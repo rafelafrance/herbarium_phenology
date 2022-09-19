@@ -9,9 +9,9 @@ from torch import optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-from .. import db
+from .. import db_old
 from ..datasets.labeled_dataset import LabeledDataset
-from ..runners import runner_utils
+from ..engines import engine_utils
 
 
 @dataclass
@@ -90,7 +90,7 @@ def one_epoch(model, device, loader, loss_fn, optimizer=None):
             optimizer.step()
 
         running_loss += loss.item()
-        running_acc += runner_utils.accuracy(preds, targets)
+        running_acc += engine_utils.accuracy(preds, targets)
 
     return running_acc / len(loader), running_loss / len(loader)
 
@@ -105,7 +105,7 @@ def get_epoch_range(args, model):
 def get_train_loader(args, model, orders):
     """Build the training data loader."""
     logging.info("Loading training data.")
-    raw_data = db.select_split(
+    raw_data = db_old.select_split(
         database=args.database,
         split_set=args.split_set,
         split="train",
@@ -127,7 +127,7 @@ def get_train_loader(args, model, orders):
 def get_val_loader(args, model, orders):
     """Build the validation data loader."""
     logging.info("Loading validation data.")
-    raw_data = db.select_split(
+    raw_data = db_old.select_split(
         database=args.database,
         split_set=args.split_set,
         split="val",

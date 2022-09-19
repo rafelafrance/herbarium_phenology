@@ -4,8 +4,8 @@ import argparse
 import textwrap
 from pathlib import Path
 
-from .pylib import log
-from .pylib.idigbio import idigbio_utils
+from pylib import log
+from pylib.idigbio import idigbio_utils
 
 
 def main():

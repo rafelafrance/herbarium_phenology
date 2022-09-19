@@ -8,9 +8,9 @@ from torch import nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from .. import db
+from .. import db_old
 from ..datasets.labeled_dataset import LabeledDataset
-from ..runners import runner_utils
+from ..engines import engine_utils
 
 
 @dataclass
@@ -58,7 +58,7 @@ def run_test(model, device, loader, loss_fn):
         loss = loss_fn(preds, targets)
 
         running_loss += loss.item()
-        running_acc += runner_utils.accuracy(preds, targets)
+        running_acc += engine_utils.accuracy(preds, targets)
 
         preds = torch.sigmoid(preds)
 
@@ -79,14 +79,14 @@ def run_test(model, device, loader, loss_fn):
 
 def insert_test_records(database, batch, test_set, split_set, trait):
     """Add test records to the database."""
-    db.create_tests_table(database)
+    db_old.create_tests_table(database)
 
     for row in batch:
         row["test_set"] = test_set
         row["split_set"] = split_set
         row["trait"] = trait
 
-    db.insert_tests(database, batch, test_set, split_set)
+    db_old.insert_tests(database, batch, test_set, split_set)
 
 
 def get_loss_fn(dataset, device):
@@ -100,7 +100,7 @@ def get_loss_fn(dataset, device):
 def get_data_loader(args, model, orders):
     """Build the test data loader."""
     logging.info("Loading test data.")
-    raw_data = db.select_split(
+    raw_data = db_old.select_split(
         database=args.database,
         split_set=args.split_set,
         split="test",

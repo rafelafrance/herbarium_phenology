@@ -12,7 +12,7 @@ from PIL.Image import DecompressionBombWarning
 from skimage import io
 from tqdm import tqdm
 
-from .. import db
+from .. import db_old
 from ..consts import TRAITS
 from .idigbio_consts import COLUMN
 
@@ -42,7 +42,7 @@ ERRORS = (
 
 def sample_records(database, csv_dir, splits=8, limit=100):
     """Get a broad sample of utils specimens."""
-    orders = db.select_all_orders(database)
+    orders = db_old.select_all_orders(database)
     rows = []
     for order in tqdm(orders):
         for trait in TRAITS:
@@ -55,8 +55,8 @@ def sample_records(database, csv_dir, splits=8, limit=100):
                   and coreid not in (select coreid from images)
              order by random()
             """
-            sql, _ = db.build_select(sql, limit=limit)
-            rows += db.rows_as_dicts(database, sql, [trait, order, limit])
+            sql, _ = db_old.build_select(sql, limit=limit)
+            rows += db_old.rows_as_dicts(database, sql, [trait, order, limit])
 
     for i, array in enumerate(np.array_split(rows, splits)):
         df = pd.DataFrame(array.tolist())
@@ -87,10 +87,10 @@ def download_images(csv_file, image_dir, error=None):
 
 def validate_images(image_dir, database, error, glob="*.jpg", every=100):
     """Put valid image paths into the database."""
-    db.create_images_table(database)
+    db_old.create_images_table(database)
 
     sql = """select * from images"""
-    existing = {r["coreid"] for r in db.rows_as_dicts(database, sql)}
+    existing = {r["coreid"] for r in db_old.rows_as_dicts(database, sql)}
     new_paths = {p for p in image_dir.glob(glob) if p.stem not in existing}
     images = []
 
@@ -120,10 +120,10 @@ def validate_images(image_dir, database, error, glob="*.jpg", every=100):
                         image.close()
 
                 if len(images) % every == 0:
-                    db.insert_images(database, images)
+                    db_old.insert_images(database, images)
                     images = []
 
-    db.insert_images(database, images)
+    db_old.insert_images(database, images)
 
 
 # def get_image_norm(database, classifier, split_set, batch_size=16, num_workers=4):

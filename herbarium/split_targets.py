@@ -3,15 +3,15 @@ import argparse
 import textwrap
 from pathlib import Path
 
-from .pylib import db_new
-from .pylib import split_utils
-from .pylib import validate_args as val
-from .pylib.consts import TRAITS
+from pylib import db
+from pylib import split_utils
+from pylib import validate_args as val
+from pylib.consts import TRAITS
 
 
 def main():
     args = parse_args()
-    orders = db_new.canned_select(args.database, "orders")
+    orders = db.canned_select(args.database, "orders")
     split_utils.assign_records(args, orders)
 
 

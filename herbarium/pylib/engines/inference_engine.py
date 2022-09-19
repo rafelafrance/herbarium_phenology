@@ -6,7 +6,7 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from .. import db
+from .. import db_old
 from ..datasets.unlabeled_dataset import UnlabeledDataset
 
 
@@ -45,8 +45,8 @@ def run_inference(model, device, loader):
 def get_data_loader(args, model, orders):
     """Load the test data loader."""
     logging.info("Loading inference data.")
-    db.create_inferences_table(args.database)
-    raw_data = db.select_images(args.database, limit=args.limit)
+    db_old.create_inferences_table(args.database)
+    raw_data = db_old.select_images(args.database, limit=args.limit)
     dataset = UnlabeledDataset(raw_data, model, orders=orders)
     return DataLoader(
         dataset,
@@ -58,10 +58,10 @@ def get_data_loader(args, model, orders):
 
 def insert_inference_records(database, batch, inference_set, trait):
     """Add inference records to the database."""
-    db.create_inferences_table(database)
+    db_old.create_inferences_table(database)
 
     for row in batch:
         row["inference_set"] = inference_set
         row["trait"] = trait
 
-    db.insert_inferences(database, batch, inference_set)
+    db_old.insert_inferences(database, batch, inference_set)

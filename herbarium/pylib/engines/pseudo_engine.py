@@ -7,8 +7,8 @@ import torch
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-from . import training_runner as tr
-from .. import db
+from . import training_engine as tr
+from .. import db_old
 from ..datasets.unlabeled_dataset import UnlabeledDataset
 
 
@@ -100,7 +100,7 @@ def alpha(epoch, pseudo_start, pseudo_max):
 def get_pseudo_loader(args, model, orders):
     """Load the pseudo-dataset and loader."""
     logging.info("Loading pseudo-training data.")
-    raw_data = db.select_pseudo_split(
+    raw_data = db_old.select_pseudo_split(
         database=args.database,
         target_set=args.target_set,
         trait=args.trait,

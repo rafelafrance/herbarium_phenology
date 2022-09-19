@@ -1,7 +1,7 @@
 """Split labeled images into training, testing, and validation datasets."""
 from tqdm import tqdm
 
-from . import db_new
+from . import db
 
 
 def assign_records(args, orders):
@@ -10,7 +10,7 @@ def assign_records(args, orders):
     We want to distribute the database records over the orders and targets in proportion
     to the desired distribution as much as possible.
     """
-    db_new.canned_delete(args.database, "splits", split_set=args.split_set)
+    db.canned_delete(args.database, "splits", split_set=args.split_set)
 
     used = extend_split_set(
         args.database, args.split_set, args.base_split_set, args.target_set, args.trait
@@ -29,7 +29,7 @@ def assign_records(args, orders):
                   and target = :target
              order by random()
             """
-            rows = db_new.select(
+            rows = db.select(
                 args.database,
                 sql,
                 target_set=args.target_set,
@@ -66,7 +66,7 @@ def assign_records(args, orders):
 
                 batch[i]["split"] = split
 
-            db_new.canned_insert(args.database, "splits", batch)
+            db.canned_insert(args.database, "splits", batch)
 
 
 def extend_split_set(database, split_set, base_split_set, target_set, trait):
@@ -83,7 +83,7 @@ def extend_split_set(database, split_set, base_split_set, target_set, trait):
            and target_set = :target_set
            and trait = :trait
     """
-    batch = db_new.select(
+    batch = db.select(
         database,
         sql,
         split_set=base_split_set,
@@ -93,6 +93,6 @@ def extend_split_set(database, split_set, base_split_set, target_set, trait):
     for row in batch:
         row["split_set"] = split_set
 
-    db_new.canned_insert(database, "splits", batch)
+    db.canned_insert(database, "splits", batch)
 
     return {r["coreid"] for r in batch}

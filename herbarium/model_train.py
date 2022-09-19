@@ -3,24 +3,24 @@ import argparse
 import textwrap
 from pathlib import Path
 
-from .pylib import consts
-from .pylib import db_new
-from .pylib import log
-from .pylib import validate_args as val
-from .pylib.models.all_models import MODELS
-from .pylib.models.backbones import BACKBONES
-from .pylib.runners import training_runner
+from pylib import consts
+from pylib import db
+from pylib import log
+from pylib import validate_args as val
+from pylib.engines import training_engine
+from pylib.models.all_models import MODELS
+from pylib.models.backbones import BACKBONES
 
 
 def main():
     log.started()
 
     args = parse_args()
-    orders = db_new.canned_select(args.database, "orders")
+    orders = db.canned_select(args.database, "orders")
 
     model = MODELS[args.model](orders, args.backbone, args.load_model)
 
-    training_runner.train(model, orders, args)
+    training_engine.train(model, orders, args)
 
     log.finished()
 
