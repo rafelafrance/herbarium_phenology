@@ -12,7 +12,7 @@ from PIL.Image import DecompressionBombWarning
 from skimage import io
 from tqdm import tqdm
 
-from .. import db_old
+from .. import db
 from ..consts import TRAITS
 from .idigbio_consts import COLUMN
 
@@ -42,7 +42,7 @@ ERRORS = (
 
 def sample_records(database, csv_dir, splits=8, limit=100):
     """Get a broad sample of utils specimens."""
-    orders = db_old.select_all_orders(database)
+    orders = db.canned_select(database, "orders", one_column=True)
     rows = []
     for order in tqdm(orders):
         for trait in TRAITS:
@@ -50,13 +50,12 @@ def sample_records(database, csv_dir, splits=8, limit=100):
                 select coreid, accessuri
                   from angiosperms
                   join targets using (coreid)
-                where trait = ?
-                  and order_ = ?
+                where trait = :trait
+                  and order_ = :order
                   and coreid not in (select coreid from images)
              order by random()
             """
-            sql, _ = db_old.build_select(sql, limit=limit)
-            rows += db_old.rows_as_dicts(database, sql, [trait, order, limit])
+            rows += db.select(database, sql, trait=trait, order=order, limit=limit)
 
     for i, array in enumerate(np.array_split(rows, splits)):
         df = pd.DataFrame(array.tolist())
@@ -87,10 +86,10 @@ def download_images(csv_file, image_dir, error=None):
 
 def validate_images(image_dir, database, error, glob="*.jpg", every=100):
     """Put valid image paths into the database."""
-    db_old.create_images_table(database)
+    db.create_table(database, "images")
 
     sql = """select * from images"""
-    existing = {r["coreid"] for r in db_old.rows_as_dicts(database, sql)}
+    existing = {r["coreid"] for r in db.select(database, sql)}
     new_paths = {p for p in image_dir.glob(glob) if p.stem not in existing}
     images = []
 
@@ -120,10 +119,10 @@ def validate_images(image_dir, database, error, glob="*.jpg", every=100):
                         image.close()
 
                 if len(images) % every == 0:
-                    db_old.insert_images(database, images)
+                    db.canned_insert(database, "images", images)
                     images = []
 
-    db_old.insert_images(database, images)
+    db.canned_insert(database, "images", images)
 
 
 # def get_image_norm(database, classifier, split_set, batch_size=16, num_workers=4):

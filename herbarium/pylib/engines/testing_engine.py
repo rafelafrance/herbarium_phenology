@@ -1,4 +1,3 @@
-"""Test the model on hold-out data."""
 import logging
 from argparse import Namespace
 from dataclasses import dataclass
@@ -8,21 +7,18 @@ from torch import nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from .. import db_old
+from .. import db
 from ..datasets.labeled_dataset import LabeledDataset
 from ..engines import engine_utils
 
 
 @dataclass
 class Stats:
-    """Gather statistics while training."""
-
     acc: float
     loss: float
 
 
 def test(model, orders, args: Namespace):
-    """Test the model on hold-out data."""
     device = torch.device("cuda" if torch.has_cuda else "cpu")
     model.to(device)
 
@@ -39,7 +35,6 @@ def test(model, orders, args: Namespace):
 
 
 def run_test(model, device, loader, loss_fn):
-    """Test the model on holdout data."""
     logging.info("Testing started.")
 
     model.eval()
@@ -79,14 +74,15 @@ def run_test(model, device, loader, loss_fn):
 
 def insert_test_records(database, batch, test_set, split_set, trait):
     """Add test records to the database."""
-    db_old.create_tests_table(database)
+    db.create_table(database, "tests")
 
     for row in batch:
         row["test_set"] = test_set
         row["split_set"] = split_set
         row["trait"] = trait
 
-    db_old.insert_tests(database, batch, test_set, split_set)
+    db.canned_delete(database, "tests", test_set=test_set, split_set=split_set)
+    db.canned_insert(database, batch, test_set)
 
 
 def get_loss_fn(dataset, device):
@@ -100,8 +96,9 @@ def get_loss_fn(dataset, device):
 def get_data_loader(args, model, orders):
     """Build the test data loader."""
     logging.info("Loading test data.")
-    raw_data = db_old.select_split(
-        database=args.database,
+    raw_data = db.canned_select(
+        args.database,
+        "split",
         split_set=args.split_set,
         split="test",
         target_set=args.target_set,

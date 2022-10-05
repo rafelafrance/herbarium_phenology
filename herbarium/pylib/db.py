@@ -6,6 +6,9 @@ DbPath = Union[Path, str]
 
 
 def select(database: DbPath, sql, one_column=False, **kwargs):
+    if kwargs.get("limit"):
+        sql += " limit :limit"
+
     with sqlite3.connect(database) as cxn:
         cxn.row_factory = sqlite3.Row
         rows = cxn.execute(sql, dict(kwargs))

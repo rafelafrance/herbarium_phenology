@@ -9,15 +9,13 @@ from torch import optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-from .. import db_old
+from .. import db
 from ..datasets.labeled_dataset import LabeledDataset
 from ..engines import engine_utils
 
 
 @dataclass
 class Stats:
-    """Gather statistics while training."""
-
     is_best: bool = False
     best_acc: float = 0.0
     best_loss: float = float("Inf")
@@ -28,7 +26,6 @@ class Stats:
 
 
 def train(model, orders, args: argparse.Namespace):
-    """Train a model."""
     device = torch.device("cuda" if torch.has_cuda else "cpu")
     model.to(device)
 
@@ -96,17 +93,16 @@ def one_epoch(model, device, loader, loss_fn, optimizer=None):
 
 
 def get_epoch_range(args, model):
-    """Calculate the epoch range."""
     start_epoch = model.state.get("epoch", 0) + 1
     end_epoch = start_epoch + args.epochs
     return end_epoch, start_epoch
 
 
 def get_train_loader(args, model, orders):
-    """Build the training data loader."""
     logging.info("Loading training data.")
-    raw_data = db_old.select_split(
-        database=args.database,
+    raw_data = db.canned_select(
+        args.database,
+        "split",
         split_set=args.split_set,
         split="train",
         target_set=args.target_set,
@@ -125,10 +121,10 @@ def get_train_loader(args, model, orders):
 
 
 def get_val_loader(args, model, orders):
-    """Build the validation data loader."""
     logging.info("Loading validation data.")
-    raw_data = db_old.select_split(
-        database=args.database,
+    raw_data = db.canned_select(
+        args.database,
+        "split",
         split_set=args.split_set,
         split="val",
         target_set=args.target_set,

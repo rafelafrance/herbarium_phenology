@@ -6,12 +6,11 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from .. import db_old
+from .. import db
 from ..datasets.unlabeled_dataset import UnlabeledDataset
 
 
 def infer(model, orders, args: Namespace):
-    """Run inference on images."""
     device = torch.device("cuda" if torch.has_cuda else "cpu")
 
     infer_loader = get_data_loader(args, model, orders)
@@ -43,10 +42,9 @@ def run_inference(model, device, loader):
 
 
 def get_data_loader(args, model, orders):
-    """Load the test data loader."""
     logging.info("Loading inference data.")
-    db_old.create_inferences_table(args.database)
-    raw_data = db_old.select_images(args.database, limit=args.limit)
+    db.create_table(args.database, "inferences")
+    raw_data = db.canned_select(args.database, "images", limit=args.limit)
     dataset = UnlabeledDataset(raw_data, model, orders=orders)
     return DataLoader(
         dataset,
@@ -58,10 +56,11 @@ def get_data_loader(args, model, orders):
 
 def insert_inference_records(database, batch, inference_set, trait):
     """Add inference records to the database."""
-    db_old.create_inferences_table(database)
+    db.create_table(database, "inferences")
 
     for row in batch:
         row["inference_set"] = inference_set
         row["trait"] = trait
 
-    db_old.insert_inferences(database, batch, inference_set)
+    db.canned_delete(database, "inferences", inference_set=inference_set)
+    db.canned_insert(database, "inferences", batch)
