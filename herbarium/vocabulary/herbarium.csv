@@ -1,16 +1,4 @@
 label,pattern
-abbrev_flowering,fl
-abbrev_flowering,flo
-abbrev_flowering,fls
-abbrev_flowering,flw
-abbrev_flowering,yfl
-abbrev_flowering_fruiting,f/f
-abbrev_fruiting,fr
-abbrev_fruiting,fru
-abbrev_fruiting,yfr
-abbrev_leaf_out,lvs
-abbrev_leaf_out,v
-abbrev_leaf_out,vg
 flowering,bloom
 flowering,blooming
 flowering,blooms
@@ -18,6 +6,8 @@ flowering,corolla
 flowering,corollas
 flowering,cyme
 flowering,cymes
+flowering,fl
+flowering,flo
 flowering,flor
 flowering,flores
 flowering,flower
@@ -25,6 +15,8 @@ flowering,flowering
 flowering,flowers
 flowering,flr
 flowering,flrs
+flowering,fls
+flowering,flw
 flowering,in bloom
 flowering,inflor
 flowering,inflorescence
@@ -49,6 +41,8 @@ flowering,stigmas
 flowering,stigmata
 flowering,tepal
 flowering,tepals
+flowering,yfl
+flowering_fruiting,f/f
 flowering_fruiting,flowerandfruit
 fruiting,achene
 fruiting,achenes
@@ -64,8 +58,10 @@ fruiting,drupe
 fruiting,drupes
 fruiting,follicle
 fruiting,follicles
+fruiting,fr
 fruiting,frt
 fruiting,frts
+fruiting,fru
 fruiting,fruit
 fruiting,fruited
 fruiting,fruiting
@@ -84,6 +80,7 @@ fruiting,pulses
 fruiting,samara
 fruiting,seed
 fruiting,seeds
+fruiting,yfr
 leaf_out,blade
 leaf_out,blades
 leaf_out,bract
@@ -93,8 +90,11 @@ leaf_out,foliage
 leaf_out,hoja
 leaf_out,leaf
 leaf_out,leaves
+leaf_out,lvs
+leaf_out,v
 leaf_out,veg
 leaf_out,vegetative
+leaf_out,vg
 not_flowering,after flowering
 not_flowering,after flowers
 not_flowering,flower: n
