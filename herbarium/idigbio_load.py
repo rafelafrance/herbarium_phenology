@@ -57,7 +57,7 @@ def parse_args():
         type=int,
         default=1_000_000,
         metavar="N",
-        help="""The number of lines read from the CSV file at a time.
+        help="""The number of lines to read from the CSV file at a time.
             (default: %(default)s)""",
     )
 

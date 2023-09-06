@@ -47,7 +47,7 @@ def assign_records(args, orders):
 
             # Try to make sure we get a validation record
             val_split = round(count * (args.test_split + args.val_split))
-            if val_split <= 2 and count >= 2:
+            if val_split <= 2 <= count:
                 val_split = 2
 
             # Try to make sure we get a test record
